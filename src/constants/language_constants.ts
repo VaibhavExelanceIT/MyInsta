@@ -1,0 +1,16 @@
+export const LanguageConstant = {
+  changeLanguage: 'change_language',
+  urdu: 'urdu',
+  english: 'english',
+  hindi: 'hindi',
+  home: 'home',
+  settings: 'settings',
+  login: 'login',
+  forgetPassword: 'forgetPassword',
+  email: 'email',
+  password: 'password',
+  doNotHaveAccount: 'doNotHaveAccount',
+  signup: 'signup',
+  from: 'from',
+  facebook: 'facebook',
+};

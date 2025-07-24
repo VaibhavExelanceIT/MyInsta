@@ -1,0 +1,17 @@
+{
+    "change_language": "تغيير اللغة",
+    "english": "إنجليزي",
+    "hindi": "الهندية",
+    "urdu":"العربية / الأردية",
+    "home": "بيت",
+    "settings": "إعدادات",
+    "login" :"تسجيل الدخول",
+    "forgetPassword":"نسيت كلمة المرور؟",
+     "email" :"بريد إلكتروني",
+    "password" : "كلمة المرور",
+    "doNotHaveAccount":"ليس لديك حساب؟ ",
+    "signup":"اشتراك",
+    "from":"من",
+    "facebook":"فيسبوك"
+
+} 
