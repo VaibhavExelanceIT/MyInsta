@@ -12,6 +12,12 @@
     "doNotHaveAccount":"ليس لديك حساب؟ ",
     "signup":"اشتراك",
     "from":"من",
-    "facebook":"فيسبوك"
+    "facebook":"فيسبوك",
+    "firstname" : "الاسم الأول",
+    "lastname":"اسم العائلة",
+    "gender": "جنس",
+  "mobile_no": "رقم الهاتف المحمول",
+  "DOB": "تاريخ الميلاد",
+  "confirm_password": "تأكيد كلمة المرور" 
 
 } 

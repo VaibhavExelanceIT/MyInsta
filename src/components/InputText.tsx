@@ -1,14 +1,23 @@
 import React from 'react';
-import { StyleSheet, TextInput, useColorScheme, View } from 'react-native';
+import {
+  StyleSheet,
+  TextInput,
+  TextInputFocusEvent,
+  useColorScheme,
+  View,
+} from 'react-native';
 
 interface ComponentProp {
   PlaceHolder: string;
+  value: string;
+  onChange?: (value: string) => void;
+  onBlur?: (e: TextInputFocusEvent) => void;
+  isEditable?: boolean;
 }
 
 const InputText: React.FC<ComponentProp> = props => {
-  const { PlaceHolder } = props || {};
+  const { PlaceHolder, onChange, value, onBlur, isEditable } = props || {};
   const colorScheme = useColorScheme();
-
   return (
     <View>
       <TextInput
@@ -18,6 +27,10 @@ const InputText: React.FC<ComponentProp> = props => {
         }
         placeholder={PlaceHolder}
         placeholderTextColor={colorScheme === 'light' ? '#BOBOBO' : '#000000'}
+        onChangeText={onChange}
+        value={value}
+        onBlur={onBlur}
+        editable={isEditable}
       />
     </View>
   );
@@ -27,6 +40,8 @@ export default InputText;
 
 const styles = StyleSheet.create({
   inputDarkTheme: {
+    marginTop: 20,
+    marginBottom: 10,
     backgroundColor: '#E8E6E6',
     borderColor: '#E0DDDD',
     color: '#000000',
@@ -35,6 +50,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   inputText: {
+    marginTop: 20,
+    marginBottom: 10,
     backgroundColor: '#E8E6E6',
     borderColor: '#E0DDDD',
     borderWidth: 2,

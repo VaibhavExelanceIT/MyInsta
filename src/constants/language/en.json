@@ -12,5 +12,12 @@
     "doNotHaveAccount" : "Don't have an account? ",
     "signup": "signup",
     "from":"from",
-    "facebook":"FACEBOOK"
+    "facebook":"FACEBOOK",
+    "firstname":"First Name",
+    "lastname" :"Last Name",
+    "gender": "Gender",
+  "mobile_no": "Mobile Number",
+  "DOB": "Date of Birth",
+  "confirm_password": "Confirm Password"
+
   } 

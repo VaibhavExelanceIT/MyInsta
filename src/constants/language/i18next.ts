@@ -18,7 +18,7 @@ i18n.use(initReactI18next).init({
       translation: arabic,
     },
   },
-  lng: I18nManager.isRTL ? 'ar' : 'hi',
+  lng: I18nManager.isRTL ? 'ar' : 'en',
   fallbackLng: 'en',
   interpolation: {
     escapeValue: false,

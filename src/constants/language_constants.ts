@@ -13,4 +13,10 @@ export const LanguageConstant = {
   signup: 'signup',
   from: 'from',
   facebook: 'facebook',
+  firstname: 'firstname',
+  lastname: 'lastname',
+  gender: 'gender',
+  mobile_no: 'mobile_no',
+  DOB: 'DOB',
+  confirm_password: 'confirm_password',
 };
