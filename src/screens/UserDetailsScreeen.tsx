@@ -14,8 +14,11 @@ import { t } from 'i18next';
 import { Formik } from 'formik';
 import firestore from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
-import { RadioButton, useTheme } from 'react-native-paper';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+} from '@react-native-firebase/auth';
 
 import { darkTheme } from '../theme/darkTheme';
 import InputText from '../components/InputText';
@@ -23,6 +26,7 @@ import { lightTheme } from '../theme/lightTheme';
 import { instadark, instalight } from '../helper/images';
 import ButtonComponent from '../components/ButtonComponent';
 import { LanguageConstant } from '../constants/language_constants';
+import RadioButtonComponent from '../components/RadioButtonComponent';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required('First Name is Required'),
@@ -59,7 +63,6 @@ interface userData {
 }
 const UserDetailsScreeen = ({ route }: any) => {
   const email: string = route.params.email;
-  const theme1 = useTheme();
 
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
@@ -84,12 +87,30 @@ const UserDetailsScreeen = ({ route }: any) => {
           DOB: values.DOB,
           email: values.email,
           gender: values.gender,
-          password: values.password,
           mobileNo: values.mobileNo,
           lastName: values.lastName,
           firstName: values.firstName,
         })
         .then(() => {
+          createUserWithEmailAndPassword(
+            getAuth(),
+            values.email,
+            values.password,
+          )
+            .then(() => {
+              console.log('User account created & signed in!');
+            })
+            .catch(error => {
+              if (error.code === 'auth/email-already-in-use') {
+                console.log('That email address is already in use!');
+              }
+
+              if (error.code === 'auth/invalid-email') {
+                console.log('That email address is invalid!');
+              }
+
+              console.error(error);
+            });
           console.log(values);
           showMessage({
             type: 'success',
@@ -172,42 +193,10 @@ const UserDetailsScreeen = ({ route }: any) => {
                 <Text style={styles.errorText}>{errors.lastName}</Text>
               )}
 
-              <View>
-                <Text
-                  style={colorScheme === 'dark' ? styles.genderTextStyle : {}}
-                >
-                  {'Gender'}
-                </Text>
-                <RadioButton.Group
-                  onValueChange={handleChange('gender')}
-                  value={values.gender}
-                >
-                  <View style={styles.radiobtnView}>
-                    <RadioButton value="Male" theme={theme1} />
-                    <Text
-                      style={colorScheme === 'dark' ? styles.textStyle : {}}
-                    >
-                      {'Male'}
-                    </Text>
-                  </View>
-                  <View style={styles.radiobtnView}>
-                    <RadioButton value="Female" theme={theme1} />
-                    <Text
-                      style={colorScheme === 'dark' ? styles.textStyle : {}}
-                    >
-                      {'Female'}
-                    </Text>
-                  </View>
-                  <View style={styles.radiobtnView}>
-                    <RadioButton value="Other" theme={theme1} />
-                    <Text
-                      style={colorScheme === 'dark' ? styles.textStyle : {}}
-                    >
-                      {'Other'}
-                    </Text>
-                  </View>
-                </RadioButton.Group>
-              </View>
+              <RadioButtonComponent
+                value={values.gender}
+                onChange={handleChange('gender')}
+              />
               {errors.gender && touched.gender && (
                 <Text style={styles.errorText}>{errors.gender}</Text>
               )}

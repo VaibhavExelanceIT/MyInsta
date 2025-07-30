@@ -16,13 +16,13 @@ import { Formik } from 'formik';
 import { useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
-import { RadioButton, useTheme } from 'react-native-paper';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import {
   getAuth,
   GoogleAuthProvider,
   signInWithCredential,
+  createUserWithEmailAndPassword,
 } from '@react-native-firebase/auth';
 
 import { darkTheme } from '../theme/darkTheme';
@@ -36,6 +36,7 @@ import {
   googlelogo,
   microsoftlogo,
 } from '../helper/images';
+import RadioButtonComponent from '../components/RadioButtonComponent';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required('First Name is Required'),
@@ -73,7 +74,7 @@ interface userData {
 
 const SignupScreen = () => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const theme1 = useTheme();
+
   const navigation = useNavigation<any>();
   const googleSignIn = async () => {
     console.log('inside the signin');
@@ -123,11 +124,30 @@ const SignupScreen = () => {
           email: values.email,
           gender: values.gender,
           mobileNo: values.mobileNo,
-          password: values.password,
           lastName: values.lastName,
           firstName: values.firstName,
         })
         .then(() => {
+          createUserWithEmailAndPassword(
+            getAuth(),
+            values.email,
+            values.password,
+          )
+            .then(() => {
+              navigation.navigate('DrawerNavigation', { email: values.email });
+              console.log('User account created & signed in!');
+            })
+            .catch(error => {
+              if (error.code === 'auth/email-already-in-use') {
+                console.log('That email address is already in use!');
+              }
+
+              if (error.code === 'auth/invalid-email') {
+                console.log('That email address is invalid!');
+              }
+
+              console.error(error);
+            });
           console.log(values);
           showMessage({
             type: 'success',
@@ -207,42 +227,10 @@ const SignupScreen = () => {
                 <Text style={styles.errorText}>{errors.lastName}</Text>
               )}
 
-              <View>
-                <Text
-                  style={colorScheme === 'dark' ? styles.genderTextStyle : {}}
-                >
-                  {'Gender'}
-                </Text>
-                <RadioButton.Group
-                  value={values.gender}
-                  onValueChange={handleChange('gender')}
-                >
-                  <View style={styles.radiobtnView}>
-                    <RadioButton value="Male" theme={theme1} />
-                    <Text
-                      style={colorScheme === 'dark' ? styles.textStyle : {}}
-                    >
-                      {'Male'}
-                    </Text>
-                  </View>
-                  <View style={styles.radiobtnView}>
-                    <RadioButton value="Female" theme={theme1} />
-                    <Text
-                      style={colorScheme === 'dark' ? styles.textStyle : {}}
-                    >
-                      {'Female'}
-                    </Text>
-                  </View>
-                  <View style={styles.radiobtnView}>
-                    <RadioButton value="Other" theme={theme1} />
-                    <Text
-                      style={colorScheme === 'dark' ? styles.textStyle : {}}
-                    >
-                      {'Other'}
-                    </Text>
-                  </View>
-                </RadioButton.Group>
-              </View>
+              <RadioButtonComponent
+                value={values.gender}
+                onChange={handleChange('gender')}
+              />
               {errors.gender && touched.gender && (
                 <Text style={styles.errorText}>{errors.gender}</Text>
               )}

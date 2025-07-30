@@ -2,13 +2,11 @@ import React from 'react';
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import {
-  LoginScreen,
-  SignupScreen,
-  UserDetailsScreeen,
-} from '../helper/screens';
+import { LoginScreen, SignupScreen } from '../helper/screens';
 import { useTranslation } from 'react-i18next';
 import { LanguageConstant } from '../constants/language_constants';
+import DrawerNavigation from './DrawerNavigation';
+// import BottomTabNavigation from './BottomTabNavigation';
 
 const Stack = createNativeStackNavigator();
 const RootStack = () => {
@@ -21,21 +19,9 @@ const RootStack = () => {
       screenOptions={{ headerShown: false }}
       initialRouteName="loginScreen"
     >
-      <Stack.Screen
-        name="loginScreen"
-        component={LoginScreen}
-        options={{ title: t(LanguageConstant.login) }}
-      />
-      <Stack.Screen
-        name="SignupScreen"
-        component={SignupScreen}
-        options={{ title: t(LanguageConstant.login) }}
-      />
-      <Stack.Screen
-        name="UserDetailsScreeen"
-        component={UserDetailsScreeen}
-        options={{ title: t(LanguageConstant.login) }}
-      />
+      <Stack.Screen name="loginScreen" component={LoginScreen} />
+      <Stack.Screen name="SignupScreen" component={SignupScreen} />
+      <Stack.Screen name="DrawerNavigation" component={DrawerNavigation} />
     </Stack.Navigator>
   );
 };

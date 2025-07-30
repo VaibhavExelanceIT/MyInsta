@@ -135,6 +135,8 @@ const LoginScreen = () => {
           description: 'Your are logged in',
           type: 'success',
         });
+        console.log(values.email);
+        navigation.navigate('DrawerNavigation', { email: values.email });
       })
       .catch(() => {
         showMessage({
@@ -190,8 +192,8 @@ const LoginScreen = () => {
       <View style={styles.formView}>
         <Formik
           initialValues={{
-            email: '',
-            password: '',
+            email: 'vai@gmail.com',
+            password: 'Vai@123456',
           }}
           onSubmit={values => {
             console.log(values);

@@ -27,9 +27,7 @@ const LoginScreen = () => {
       <Text style={[styles.text, { color: theme.text }]}>
         {t(LanguageConstant.settings)}
       </Text>
-      <Text style={[styles.text, { color: theme.text }]}>
-        {t(LanguageConstant.book)}
-      </Text>
+
       <Text style={[styles.text, { color: theme.text }]}>
         {t(LanguageConstant.english)}
       </Text>
