@@ -20,7 +20,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     let delegate = ReactNativeDelegate()
     let factory = RCTReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()
-     [[RCTI18nUtil, sharedInstance] allowRTL:YES];
+    //  [[RCTI18nUtil, sharedInstance] allowRTL:YES];
 
     reactNativeDelegate = delegate
     reactNativeFactory = factory
@@ -44,27 +44,21 @@ class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
 
   override func bundleURL() -> URL? {
  #if DEBUG
-     return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
+      RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
  #else
-     return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+      Bundle.main.url(forResource: "main", withExtension: "jsbundle")
  #endif
    }
-#if DEBUG
-     RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
-#else
-     Bundle.main.url(forResource: "main", withExtension: "jsbundle")
-#endif
-  }
+
 
    
-   override func createRootView(
-     with bridge: RCTBridge,
-     moduleName: String,
-     initProps: [AnyHashable: Any]?
-   ) -> UIView {
-     let rootView = super.createRootView(with: bridge, moduleName: moduleName, initProps: initProps!)
-     RNBootSplash.initWithStoryboard("BootSplash", rootView: rootView)
-     return rootView
-   }
-
+  //  override func createRootView(
+  //    with bridge: RCTBridge,
+  //    moduleName: String,
+  //    initProps: [AnyHashable: Any]?
+  //  ) -> UIView {
+  //    let rootView = super.createRootView(with: bridge, moduleName: moduleName, initProps: initProps!)
+  //    RNBootSplash.initWithStoryboard("BootSplash", rootView: rootView)
+  //    return rootView
+  //  }
 }
