@@ -37,6 +37,7 @@ import {
   microsoftlogo,
 } from '../helper/images';
 import RadioButtonComponent from '../components/RadioButtonComponent';
+import auth from '@react-native-firebase/auth';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required('First Name is Required'),
@@ -76,6 +77,7 @@ const SignupScreen = () => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
   const navigation = useNavigation<any>();
+
   const googleSignIn = async () => {
     console.log('inside the signin');
     try {
@@ -93,8 +95,12 @@ const SignupScreen = () => {
       );
 
       const useremail = signInResult?.data?.user?.email;
+      showMessage({
+        message: 'success',
+        description: "Fill up the Form's Details.",
+        type: 'warning',
+      });
 
-      Alert.alert('You are Loggedin');
       navigation.navigate('UserDetailsScreeen', { email: useremail });
       return signInWithCredential(getAuth(), googleCredential);
     } catch (error) {
@@ -112,57 +118,62 @@ const SignupScreen = () => {
     setDatePickerVisibility(false);
   };
 
-  const usersCollection = firestore().collection('UsersData');
-
   const writefirestore = async (values: userData) => {
-    try {
-      await usersCollection
-        .add({
-          DOB: values.DOB,
-          userImage:
-            'https://www.pexels.com/photo/blue-bmw-sedan-near-green-lawn-grass-170811/',
-          email: values.email,
-          gender: values.gender,
-          mobileNo: values.mobileNo,
-          lastName: values.lastName,
-          firstName: values.firstName,
-        })
-        .then(() => {
-          createUserWithEmailAndPassword(
-            getAuth(),
-            values.email,
-            values.password,
-          )
+    createUserWithEmailAndPassword(getAuth(), values.email, values.password)
+      .then(() => {
+        const currentUser = auth().currentUser;
+        const userId = currentUser ? currentUser.uid : null;
+        console.log('🚀 ~ AddPostScreen ~ userId:', userId);
+
+        if (userId !== null) {
+          let userDocumentRef: any;
+          userDocumentRef = firestore().collection('UsersData');
+          const usersCollection = firestore()
+            .collection('UsersData')
+            .doc(userId);
+          usersCollection
+            .set({
+              DOB: values.DOB,
+              userImage:
+                'https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?_gl=1*k2m0me*_ga*MTk3NDc0NTgxMi4xNzQ3OTk4NTM2*_ga_8JE65Q40S6*czE3NTQzMDExMjMkbzMkZzEkdDE3NTQzMDE4MzgkajYwJGwwJGgw',
+              email: values.email,
+              gender: values.gender,
+              mobileNo: values.mobileNo,
+              lastName: values.lastName,
+              firstName: values.firstName,
+            })
             .then(() => {
+              showMessage({
+                message: 'success',
+                description: 'Your are logged in',
+                type: 'success',
+              });
               navigation.navigate('DrawerNavigation', { email: values.email });
               console.log('User account created & signed in!');
             })
             .catch(error => {
-              if (error.code === 'auth/email-already-in-use') {
-                console.log('That email address is already in use!');
-              }
-
-              if (error.code === 'auth/invalid-email') {
-                console.log('That email address is invalid!');
-              }
-
-              console.error(error);
+              showMessage({
+                type: 'danger',
+                message: 'Error',
+                description: 'There is some error in the data',
+              });
+              console.log(error);
             });
-          console.log(values);
-          showMessage({
-            type: 'success',
-            message: 'success',
-            description: 'User Registrated',
-          });
-        });
-    } catch (error) {
-      showMessage({
-        type: 'danger',
-        message: 'Error',
-        description: 'There is some error in the data',
+        } else {
+          Alert.alert('There is some Error');
+        }
+      })
+      .catch(error => {
+        if (error.code === 'auth/email-already-in-use') {
+          console.log('That email address is already in use!');
+        }
+
+        if (error.code === 'auth/invalid-email') {
+          console.log('That email address is invalid!');
+        }
+
+        console.error(error);
       });
-      console.log(error);
-    }
   };
 
   return (
@@ -192,7 +203,7 @@ const SignupScreen = () => {
             confirmPassword: '',
           }}
           onSubmit={values => {
-            console.log(values);
+            // console.log(values);
             writefirestore(values);
           }}
           validationSchema={validationSchema}

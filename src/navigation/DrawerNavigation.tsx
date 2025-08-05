@@ -1,6 +1,4 @@
-/* eslint-disable react/no-unstable-nested-components */
-import React, { useState } from 'react';
-
+import React, { useEffect, useState } from 'react';
 import {
   Image,
   StyleSheet,
@@ -9,20 +7,86 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-
 import {
   createDrawerNavigator,
   DrawerContentScrollView,
   DrawerItem,
 } from '@react-navigation/drawer';
-
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import auth from '@react-native-firebase/auth';
 import BottomTabNavigation from './BottomTabNavigation';
+import { showMessage } from 'react-native-flash-message';
+import { LanguageConstant } from '../constants/language_constants';
+import { t } from 'i18next';
 
 const Drawer = createDrawerNavigator();
-const DrawerNavigation = () => {
-  let [focused, setFocused] = useState('');
 
+const DrawerNavigation = ({ navigation }: any) => {
+  const [focused, setFocused] = useState('HomeScreen');
   const dimensions = useWindowDimensions();
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('state', () => {
+      const state = navigation.getState();
+      // console.log('Navigation state:', JSON.stringify(state, null, 2));
+      const drawerRoute = state?.routes.find(
+        (r: { name: string }) => r.name === 'DrawerNavigation',
+      );
+      // console.log('drawerRoute', drawerRoute);
+      const tabState = drawerRoute?.state?.routes.find(
+        (r: { name: string }) => r.name === 'MyTab',
+      )?.state;
+      // console.log('tabState', tabState);
+      const currentRoute = tabState?.routes?.[tabState.index]?.name;
+
+      // console.log('Current route:', currentRoute);
+      if (
+        currentRoute &&
+        [
+          'HomeScreen',
+          'SearchScreen',
+          'AddPostScreen',
+          'NotificationScreen',
+          'ProfileScreen',
+        ].includes(currentRoute)
+      ) {
+        setFocused(currentRoute);
+      }
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  const signOutGoogle = async () => {
+    try {
+      const currentUser = GoogleSignin.getCurrentUser();
+      if (currentUser) {
+        await GoogleSignin.revokeAccess();
+        await GoogleSignin.signOut();
+        showMessage({
+          message: t(LanguageConstant.success),
+          description: t(LanguageConstant.user_signout_message),
+          type: 'success',
+        });
+        navigation.popToTop();
+      } else {
+        await auth().signOut();
+        showMessage({
+          message: t(LanguageConstant.success),
+          description: t(LanguageConstant.user_signout_message),
+          type: 'success',
+        });
+        navigation.popToTop();
+      }
+    } catch (error) {
+      showMessage({
+        message: t(LanguageConstant.error),
+        description: t(LanguageConstant.error_signin_out),
+        type: 'danger',
+      });
+      console.error('Error while signing out:', error);
+    }
+  };
+
   return (
     <Drawer.Navigator
       initialRouteName="MyTab"
@@ -30,16 +94,11 @@ const DrawerNavigation = () => {
         headerShown: false,
         overlayColor: 'transparent',
         drawerStyle: {
-          backgroundColor: '#c6cbef',
+          backgroundColor: '#FFFFFF',
         },
         drawerType: dimensions.width >= 768 ? 'permanent' : 'front',
-        // drawerPosition: 'right',
       }}
       drawerContent={props => {
-        const tintColor = {
-          tintColor: focused ? 'black' : 'red',
-        };
-
         return (
           <View style={{ flex: 1 }}>
             <DrawerContentScrollView {...props}>
@@ -47,75 +106,58 @@ const DrawerNavigation = () => {
                 <View style={styles.imageView}>
                   {/* <Image source={images.userIcon} style={styles.HeaderImage} /> */}
                 </View>
-                <DrawerItem
-                  label={'Home'}
-                  icon={() => (
-                    <Image
-                      // source={images.homeIcon}
-                      style={[styles.DrawerImage, tintColor]}
-                    />
-                  )}
-                  onPress={() => {
-                    // props.navigation.navigate('HomeScreen');
-                    setFocused('HomeScreen');
-                    props.navigation.navigate('MyTab', {
-                      screen: 'HomeScreen',
-                    });
-                    console.log('=====>', focused);
-                  }}
-                  style={styles.MarginBottom}
-                  focused={focused === 'HomeScreen'}
-                  activeBackgroundColor="orangered"
-                  activeTintColor="white"
-                />
-                <DrawerItem
-                  label={'Whislist'}
-                  icon={() => (
-                    <Image
-                      // source={images.whislistIcon}
-                      style={[styles.DrawerImage, tintColor]}
-                    />
-                  )}
-                  onPress={() => {
-                    // focused = 'WhislistScreen';
-                    setFocused('WhislistScreen');
-                    props.navigation.navigate('MyTab', {
-                      screen: 'WhislistScreen',
-                    });
-                    console.log('=====>', focused);
-                  }}
-                  focused={focused === 'WhislistScreen'}
-                  activeBackgroundColor="orangered"
-                  style={styles.MarginBottom}
-                  activeTintColor="white"
-                />
-
-                <DrawerItem
-                  label={'Profile'}
-                  icon={() => <Image style={[styles.DrawerImage, tintColor]} />}
-                  onPress={() => {
-                    // focused = 'ProfileScreen';
-                    setFocused('ProfileScreen');
-                    props.navigation.navigate('MyTab', {
-                      screen: 'ProfileScreen',
-                    });
-                    console.log('=====>', focused);
-                  }}
-                  focused={focused === 'ProfileScreen'}
-                  activeBackgroundColor="orangered"
-                  style={styles.MarginBottom}
-                  activeTintColor="white"
-                />
+                {[
+                  { name: 'HomeScreen', label: 'Home' },
+                  { name: 'SearchScreen', label: 'Search' },
+                  { name: 'AddPostScreen', label: 'Add Post' },
+                  { name: 'NotificationScreen', label: 'Notifications' },
+                  { name: 'ProfileScreen', label: 'Profile' },
+                ].map(item => (
+                  <DrawerItem
+                    key={item.name}
+                    label={item.label}
+                    icon={() => (
+                      <Image
+                        // source={images.homeIcon} // Replace with actual image source
+                        style={[
+                          styles.DrawerImage,
+                          {
+                            tintColor: focused === item.name ? 'black' : 'red',
+                          },
+                        ]}
+                      />
+                    )}
+                    onPress={() => {
+                      setFocused(item.name);
+                      props.navigation.navigate('MyTab', { screen: item.name });
+                    }}
+                    style={styles.MarginBottom}
+                    focused={focused === item.name}
+                    activeBackgroundColor="black"
+                    activeTintColor="white"
+                  />
+                ))}
               </View>
             </DrawerContentScrollView>
-
             <View style={styles.logoutView}>
               <TouchableOpacity
                 onPress={() => {
-                  props.navigation.navigate('LoginScreen');
+                  signOutGoogle();
+                  props.navigation.navigate('loginScreen');
                 }}
               >
-                <Text>Logout</Text>
+                <Text
+                  style={{
+                    backgroundColor: 'red',
+                    padding: 5,
+                    borderRadius: 10,
+                    color: '#FFFFFF',
+                    elevation: 10,
+                    fontWeight: '900',
+                  }}
+                >
+                  Logout
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -153,9 +195,5 @@ const styles = StyleSheet.create({
     flex: 0.1,
     margin: 20,
     flexDirection: 'row-reverse',
-  },
-  logoutImages: {
-    height: 30,
-    width: 30,
   },
 });

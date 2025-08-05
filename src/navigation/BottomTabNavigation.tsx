@@ -1,6 +1,5 @@
 import React from 'react';
-import { Easing, StyleSheet } from 'react-native';
-/* eslint-disable react/no-unstable-nested-components */
+import { Easing, StyleSheet, useColorScheme } from 'react-native';
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
@@ -12,16 +11,47 @@ import {
   ProfileScreen,
 } from '../helper/screens';
 
-import Add from '../assets/icons/add.svg';
-import Home from '../assets/icons/home.svg';
-import Notification from '../assets/icons/notification.svg';
-import Search from '../assets/icons/search.svg';
-import Profile from '../assets/icons/profile.svg';
+import {
+  HomeFill,
+  SearchOutline,
+  AddOutline,
+  NotificationOutline,
+  ProfileOutline,
+  HomeOutline,
+  SearchFill,
+  AddDark,
+  HomeFillDark,
+  SearchFillDark,
+  HomeOutlineDark,
+  SearchOutlineDark,
+  ProfileOutlineDark,
+} from '../helper/icon';
+import { darkTheme } from '../theme/darkTheme';
+import { lightTheme } from '../theme/lightTheme';
+import { DrawerActions } from '@react-navigation/native';
 
 const Tab = createBottomTabNavigator();
 const BottomTabNavigation = () => {
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
   return (
-    <Tab.Navigator screenOptions={{ animation: 'fade', headerShown: false }}>
+    <Tab.Navigator
+      screenOptions={{
+        animation: 'fade',
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarVariant: 'uikit',
+        tabBarStyle: {
+          height: '10%',
+          paddingTop: 10,
+          paddingVertical: 10,
+          paddingHorizontal: 10,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          backgroundColor: theme.background,
+        },
+      }}
+    >
       <Tab.Screen
         name={'HomeScreen'}
         component={HomeScreen}
@@ -34,15 +64,27 @@ const BottomTabNavigation = () => {
             },
           },
 
-          tabBarActiveTintColor: 'red',
           headerShown: false,
 
-          tabBarIcon: ({}) => <Home />,
+          tabBarIcon: ({ focused }) =>
+            focused ? (
+              <>{colorScheme == 'dark' ? <HomeFillDark /> : <HomeFill />}</>
+            ) : colorScheme == 'dark' ? (
+              <HomeOutlineDark />
+            ) : (
+              <HomeOutline />
+            ),
         }}
       />
       <Tab.Screen
         name={'SearchScreen'}
         component={SearchScreen}
+        listeners={({ navigation }) => ({
+          tabPress: e => {
+            e.preventDefault();
+            navigation.dispatch(DrawerActions.jumpTo('SearchScreen'));
+          },
+        })}
         options={{
           transitionSpec: {
             animation: 'timing',
@@ -53,7 +95,19 @@ const BottomTabNavigation = () => {
           },
 
           tabBarActiveTintColor: 'red',
-          tabBarIcon: ({}) => <Search />,
+
+          tabBarIcon: ({ focused }) =>
+            focused ? (
+              <>{colorScheme == 'dark' ? <SearchFillDark /> : <SearchFill />}</>
+            ) : (
+              <>
+                {colorScheme == 'dark' ? (
+                  <SearchOutlineDark />
+                ) : (
+                  <SearchOutline />
+                )}
+              </>
+            ),
         }}
       />
       <Tab.Screen
@@ -70,7 +124,12 @@ const BottomTabNavigation = () => {
 
           tabBarActiveTintColor: 'red',
 
-          tabBarIcon: ({}) => <Add />,
+          tabBarIcon: ({ focused }) =>
+            focused ? (
+              <>{colorScheme == 'dark' ? <AddDark /> : <AddOutline />}</>
+            ) : (
+              <>{colorScheme == 'dark' ? <AddDark /> : <AddOutline />}</>
+            ),
         }}
       />
       <Tab.Screen
@@ -86,7 +145,30 @@ const BottomTabNavigation = () => {
           },
           tabBarActiveTintColor: 'red',
 
-          tabBarIcon: ({}) => <Notification height={25} />,
+          tabBarIcon: ({ focused }) =>
+            focused ? (
+              <>
+                {colorScheme == 'dark' ? (
+                  <NotificationOutline
+                    stroke={'#000000'}
+                    fill={'#FFFFFF'}
+                    height={25}
+                    width={25}
+                  />
+                ) : (
+                  <NotificationOutline
+                    stroke={'#FFFFFF'}
+                    fill={'#000000'}
+                    height={25}
+                    width={25}
+                  />
+                )}
+              </>
+            ) : colorScheme == 'dark' ? (
+              <NotificationOutline stroke={'#FFFFFF'} height={25} width={25} />
+            ) : (
+              <NotificationOutline height={25} width={25} />
+            ),
         }}
       />
       <Tab.Screen
@@ -102,7 +184,24 @@ const BottomTabNavigation = () => {
           },
           tabBarActiveTintColor: 'red',
 
-          tabBarIcon: ({}) => <Profile height={25} />,
+          tabBarIcon: ({ focused }) =>
+            focused ? (
+              <>
+                {colorScheme == 'dark' ? (
+                  <ProfileOutlineDark height={30} width={30} />
+                ) : (
+                  <ProfileOutline height={25} width={25} />
+                )}
+              </>
+            ) : (
+              <>
+                {colorScheme == 'dark' ? (
+                  <ProfileOutlineDark height={30} width={30} />
+                ) : (
+                  <ProfileOutline height={25} width={25} />
+                )}
+              </>
+            ),
         }}
       />
     </Tab.Navigator>

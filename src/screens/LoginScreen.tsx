@@ -9,6 +9,7 @@ import {
   I18nManager,
   useColorScheme,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 
 import * as Yup from 'yup';
@@ -19,9 +20,10 @@ import {
   GoogleAuthProvider,
   signInWithCredential,
   signInWithEmailAndPassword,
+  onAuthStateChanged,
 } from '@react-native-firebase/auth';
 import RNRestart from 'react-native-restart';
-import { useTranslation } from 'react-i18next';
+
 import { useNavigation } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -39,18 +41,18 @@ import {
 } from '../helper/images';
 import InputText from '../components/InputText';
 import ButtonComponent from '../components/ButtonComponent';
+import { t } from 'i18next';
 
 const validationSchema = Yup.object().shape({
   email: Yup.string()
-    .required('Email is required')
-    .email("well that's not an email"),
+    .required(t(LanguageConstant.email_required))
+    .email(t(LanguageConstant.email_error)),
   password: Yup.string()
-    .label('Password')
-    .required('Password is required')
-    .matches(/\d/, 'Password must have a number')
-    .matches(/\w*[a-z]\w*/, 'Password must have a small letter')
-    .matches(/\w*[A-Z]\w*/, 'Password must have a capital letter')
-    .min(8, ({ min }) => `Password must be at least ${min} characters`),
+    .label(t(LanguageConstant.password))
+    .required(t(LanguageConstant.password_required))
+    .matches(/\d/, t(LanguageConstant.password_must_number))
+    .matches(/\w*[a-z]\w*/, t(LanguageConstant.password_must_small))
+    .matches(/\w*[A-Z]\w*/, t(LanguageConstant.password_must_capital)),
 });
 interface usertype {
   email: string;
@@ -59,18 +61,32 @@ interface usertype {
 
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    console.log('as,djbfkajsdbf');
+    if (loading) {
+      <ActivityIndicator size={'large'} />;
+    }
     GoogleSignin.configure({
       webClientId:
         '956857887247-jttn9l0vhgdgabp27o8634sg2uvmc0d0.apps.googleusercontent.com',
       iosClientId:
         '956857887247-fv38un1ht58puru0atl6vio70dabj7t6.apps.googleusercontent.com',
     });
+
+    const auth = getAuth();
+
+    const user = auth.currentUser;
+    if (user) {
+      navigation.navigate('DrawerNavigation');
+      console.log('User is logged in:', user.email);
+    } else {
+      console.log('User is not logged in.');
+    }
+    setLoading(!loading);
   }, []);
 
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [open, setOpen] = useState(false);
@@ -83,8 +99,6 @@ const LoginScreen = () => {
 
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
-
-  // dropdown for language
 
   colorScheme === 'dark'
     ? DropDownPicker.setTheme('DARK')
@@ -99,12 +113,16 @@ const LoginScreen = () => {
         I18nManager.forceRTL(i18n.language === 'ar');
       })
       .catch(() => {
+        showMessage({
+          message: t(LanguageConstant.error),
+          description: t(LanguageConstant.language_change_error_message),
+          type: 'danger',
+        });
         console.log('something went wrong while applying RTL');
       });
   };
 
   const googleSignIn = async () => {
-    console.log('inside the signin');
     try {
       await GoogleSignin.hasPlayServices({
         showPlayServicesUpdateDialog: true,
@@ -112,17 +130,28 @@ const LoginScreen = () => {
 
       const signInResult = await GoogleSignin.signIn();
       let idToken: any = signInResult.data?.idToken;
+      console.log('🚀 ~ googleSignIn ~ idToken:', idToken);
       if (!idToken) {
         throw new Error('No ID token found');
       }
       const googleCredential = GoogleAuthProvider.credential(
         signInResult?.data?.idToken,
       );
+      console.log('🚀 ~ googleSignIn ~ googleCredential:', googleCredential);
       const useremail = signInResult?.data?.user?.email;
-      Alert.alert('You are Loggedin');
-      navigation.navigate('UserDetailsScreeen', { email: useremail });
-      return signInWithCredential(getAuth(), googleCredential);
+      console.log(signInResult);
+      showMessage({
+        message: t(LanguageConstant.success),
+        description: t(LanguageConstant.logged_in_message),
+        type: 'success',
+      });
+      navigation.navigate('DrawerNavigation', { email: useremail });
     } catch (error) {
+      showMessage({
+        message: t(LanguageConstant.error),
+        description: `${t(LanguageConstant.error_message)} ${error}`,
+        type: 'danger',
+      });
       console.log(error);
     }
   };
@@ -131,8 +160,8 @@ const LoginScreen = () => {
     signInWithEmailAndPassword(getAuth(), values.email, values.password)
       .then(() => {
         showMessage({
-          message: 'success',
-          description: 'Your are logged in',
+          message: t(LanguageConstant.success),
+          description: t(LanguageConstant.logged_in_message),
           type: 'success',
         });
         console.log(values.email);
@@ -140,12 +169,12 @@ const LoginScreen = () => {
       })
       .catch(() => {
         showMessage({
-          message: 'Error!!',
-          description: 'Email or Password has be wrong',
+          message: t(LanguageConstant.error),
+          description: t(LanguageConstant.email_password_error),
           type: 'danger',
         });
 
-        console.log('usernot found');
+        console.log('user not found');
       });
   };
 
@@ -333,7 +362,7 @@ const LoginScreen = () => {
 
                   <TouchableOpacity
                     style={[styles.button, styles.buttonClose]}
-                    onPress={handleSubmit}
+                    onPress={() => handleSubmit()}
                   >
                     <Text style={styles.textStyle}>{'submit'}</Text>
                   </TouchableOpacity>
