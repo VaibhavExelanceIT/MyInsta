@@ -29,11 +29,13 @@ import {
 import { darkTheme } from '../theme/darkTheme';
 import { lightTheme } from '../theme/lightTheme';
 import { DrawerActions } from '@react-navigation/native';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 const Tab = createBottomTabNavigator();
 const BottomTabNavigation = () => {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
+  const colors = useThemeColors();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -48,7 +50,7 @@ const BottomTabNavigation = () => {
           paddingHorizontal: 10,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
-          backgroundColor: theme.background,
+          backgroundColor: colors.background,
         },
       }}
     >
@@ -148,26 +150,19 @@ const BottomTabNavigation = () => {
           tabBarIcon: ({ focused }) =>
             focused ? (
               <>
-                {colorScheme == 'dark' ? (
-                  <NotificationOutline
-                    stroke={'#000000'}
-                    fill={'#FFFFFF'}
-                    height={25}
-                    width={25}
-                  />
-                ) : (
-                  <NotificationOutline
-                    stroke={'#FFFFFF'}
-                    fill={'#000000'}
-                    height={25}
-                    width={25}
-                  />
-                )}
+                <NotificationOutline
+                  stroke={colors.background}
+                  fill={colors.text}
+                  height={25}
+                  width={25}
+                />
               </>
-            ) : colorScheme == 'dark' ? (
-              <NotificationOutline stroke={'#FFFFFF'} height={25} width={25} />
             ) : (
-              <NotificationOutline height={25} width={25} />
+              <NotificationOutline
+                stroke={colors.white}
+                height={25}
+                width={25}
+              />
             ),
         }}
       />

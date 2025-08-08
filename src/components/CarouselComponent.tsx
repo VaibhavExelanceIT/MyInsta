@@ -1,5 +1,17 @@
 import React, { useRef, useState } from 'react';
-import { Dimensions, FlatList, Image, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  Dimensions,
+  FlatList,
+  Image,
+  StyleSheet,
+  View,
+} from 'react-native';
+import {
+  GestureHandlerRootView,
+  TapGestureHandler,
+} from 'react-native-gesture-handler';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 const screenWidth = Dimensions.get('window').width;
 interface ComponentProp {
@@ -8,7 +20,9 @@ interface ComponentProp {
 
 const CarouselComponent: React.FC<ComponentProp> = props => {
   let { ImagePost } = props || {};
+  const colors = useThemeColors();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [heart, setHeart] = useState<boolean>(false);
 
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
     if (viewableItems.length > 0) {
@@ -19,11 +33,17 @@ const CarouselComponent: React.FC<ComponentProp> = props => {
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 100,
   });
+  const handleDoubleTap = () => {
+    console.log('Double tap detected!');
+    setHeart(true);
+    if (heart) {
+      Alert.alert('Liked');
+    }
+  };
   return (
     <View>
       <FlatList
-        style={styles.flatliststyle}
-        // key={currentIndex}
+        style={{ backgroundColor: colors.black }}
         keyExtractor={(_, index) => `${index}`}
         data={ImagePost}
         horizontal={true}
@@ -33,53 +53,45 @@ const CarouselComponent: React.FC<ComponentProp> = props => {
         viewabilityConfig={viewabilityConfig.current}
         onViewableItemsChanged={onViewableItemsChanged.current}
         renderItem={({ item }) => {
-          let url = item;
-          // const ext = item.split('.').pop();
-          {
-            console.log(url);
-          }
+          console.log(item);
           return (
-            <Image
-              resizeMode="contain"
-              source={{
-                uri: url,
-                width: screenWidth,
-              }}
-            />
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <TapGestureHandler
+                onHandlerStateChange={({ nativeEvent }) => {
+                  if (nativeEvent.state === 5) {
+                    // State 5 indicates gesture has ended
+                    handleDoubleTap();
+                  }
+                }}
+                numberOfTaps={2} // Specify that you're looking for a double tap
+              >
+                <Image
+                  resizeMethod="resize"
+                  resizeMode="contain"
+                  source={{
+                    uri: item,
+                    width: screenWidth,
+                    height: 200,
+                  }}
+                />
+              </TapGestureHandler>
+            </GestureHandlerRootView>
           );
-          // return ext === 'jpg' ? (
-          //   <Image
-          //     resizeMode="contain"
-          //     source={{
-          //       uri: url,
-          //       width: screenWidth,
-          //     }}
-          //   />
-          // ) : (
-          //   <View>
-          //     {/* <Video
-          //       style={[styles.videostyle, { width: screenWidth }]}
-          //       source={{ uri: url }}
-          //       controls
-          //       muted={false}
-          //       repeat={true}
-          //       paused={false}
-          //       resizeMode={'contain'}
-          //     /> */}
-          //   </View>
-          // );
         }}
       />
 
       <View style={styles.paginationVIew}>
-        {/* {ImagePost?.map((_, index) => (
+        {ImagePost?.map((_, index) => (
           <View
             style={[
               styles.paginationDotStyle,
-              { backgroundColor: currentIndex === index ? '#222' : '#aaa' },
+              {
+                backgroundColor:
+                  currentIndex === index ? '#222' : colors.paginationbackground,
+              },
             ]}
           />
-        ))} */}
+        ))}
       </View>
     </View>
   );
@@ -88,7 +100,6 @@ const CarouselComponent: React.FC<ComponentProp> = props => {
 export default CarouselComponent;
 
 const styles = StyleSheet.create({
-  flatliststyle: { backgroundColor: '#111111' },
   videostyle: { height: '100%' },
   paginationVIew: {
     flexDirection: 'row',
@@ -101,9 +112,8 @@ const styles = StyleSheet.create({
     height: 5,
     width: 5,
     borderRadius: 10,
-    backgroundColor: '#aaa',
   },
-  arrowBtn: {},
+
   arrowBtnText: {
     fontSize: 35,
   },

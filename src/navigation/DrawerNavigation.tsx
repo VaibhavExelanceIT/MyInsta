@@ -18,28 +18,44 @@ import BottomTabNavigation from './BottomTabNavigation';
 import { showMessage } from 'react-native-flash-message';
 import { LanguageConstant } from '../constants/language_constants';
 import { t } from 'i18next';
+import firestore from '@react-native-firebase/firestore';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 const Drawer = createDrawerNavigator();
 
 const DrawerNavigation = ({ navigation }: any) => {
   const [focused, setFocused] = useState('HomeScreen');
+  const [uri, setUri] = useState<string>();
+  const [userEmail, setEmail] = useState<string>('');
   const dimensions = useWindowDimensions();
+  const colors = useThemeColors();
+
+  const getData = async () => {
+    const users = await firestore().collection('UsersData').get();
+
+    let length = users.docs.length;
+    for (let index = 0; index < length; index++) {
+      const element = users.docs[index].data();
+      setEmail(element.email);
+      setUri(element.userImage);
+    }
+  };
 
   useEffect(() => {
+    getData();
     const unsubscribe = navigation.addListener('state', () => {
       const state = navigation.getState();
-      // console.log('Navigation state:', JSON.stringify(state, null, 2));
+
       const drawerRoute = state?.routes.find(
         (r: { name: string }) => r.name === 'DrawerNavigation',
       );
-      // console.log('drawerRoute', drawerRoute);
+
       const tabState = drawerRoute?.state?.routes.find(
         (r: { name: string }) => r.name === 'MyTab',
       )?.state;
-      // console.log('tabState', tabState);
+
       const currentRoute = tabState?.routes?.[tabState.index]?.name;
 
-      // console.log('Current route:', currentRoute);
       if (
         currentRoute &&
         [
@@ -94,7 +110,7 @@ const DrawerNavigation = ({ navigation }: any) => {
         headerShown: false,
         overlayColor: 'transparent',
         drawerStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.background,
         },
         drawerType: dimensions.width >= 768 ? 'permanent' : 'front',
       }}
@@ -104,7 +120,12 @@ const DrawerNavigation = ({ navigation }: any) => {
             <DrawerContentScrollView {...props}>
               <View style={styles.container}>
                 <View style={styles.imageView}>
-                  {/* <Image source={images.userIcon} style={styles.HeaderImage} /> */}
+                  <Image
+                    src={uri}
+                    resizeMode="center"
+                    style={[styles.HeaderImage]}
+                  />
+                  <Text style={{ color: colors.text }}>{userEmail}</Text>
                 </View>
                 {[
                   { name: 'HomeScreen', label: 'Home' },
@@ -118,7 +139,6 @@ const DrawerNavigation = ({ navigation }: any) => {
                     label={item.label}
                     icon={() => (
                       <Image
-                        // source={images.homeIcon} // Replace with actual image source
                         style={[
                           styles.DrawerImage,
                           {
@@ -131,10 +151,10 @@ const DrawerNavigation = ({ navigation }: any) => {
                       setFocused(item.name);
                       props.navigation.navigate('MyTab', { screen: item.name });
                     }}
-                    style={styles.MarginBottom}
+                    style={[styles.MarginBottom]}
                     focused={focused === item.name}
-                    activeBackgroundColor="black"
-                    activeTintColor="white"
+                    activeBackgroundColor={colors.darwerTintBackground}
+                    activeTintColor={colors.darwerTint}
                   />
                 ))}
               </View>
@@ -151,7 +171,7 @@ const DrawerNavigation = ({ navigation }: any) => {
                     backgroundColor: 'red',
                     padding: 5,
                     borderRadius: 10,
-                    color: '#FFFFFF',
+                    color: colors.white,
                     elevation: 10,
                     fontWeight: '900',
                   }}
@@ -181,8 +201,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   HeaderImage: {
-    height: 40,
-    width: 40,
+    backgroundColor: 'black',
+    borderRadius: 10,
+    height: 100,
+    width: 100,
   },
   DrawerImage: {
     height: 20,
@@ -190,6 +212,7 @@ const styles = StyleSheet.create({
   },
   MarginBottom: {
     marginBottom: 10,
+    borderRadius: 10,
   },
   logoutView: {
     flex: 0.1,

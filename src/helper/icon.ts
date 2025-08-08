@@ -15,6 +15,7 @@ import SearchOutlineDark from '../assets/icons/SearchOutlineDark.svg';
 import ProfileOutlineDark from '../assets/icons/ProfileOutlineDark.svg';
 import Logout from '../assets/icons/LogoutOutline.svg';
 import Message from '../assets/icons/message.svg';
+import SettingMenu from '../assets/icons/SettingMenu.svg';
 
 export {
   HomeFill,
@@ -34,4 +35,5 @@ export {
   ProfileOutlineDark,
   Logout,
   Message,
+  SettingMenu,
 };

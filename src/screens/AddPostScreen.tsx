@@ -8,17 +8,21 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from 'react-native';
 import React, { useState } from 'react';
 
 import { useNavigation } from '@react-navigation/native';
-import { more } from '../helper/images';
+import { instadark, instalight, more } from '../helper/images';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import { showMessage } from 'react-native-flash-message';
 import { useTranslation } from 'react-i18next';
 import { LanguageConstant } from '../constants/language_constants';
+import { ArrayUrl } from '../helper/imagesUrl';
+import { HeartOutline, Message, SettingMenu } from '../helper/icon';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 const AddPostScreen = ({ route }: any) => {
   const [title, SetTitle] = useState<string>();
@@ -39,16 +43,11 @@ const AddPostScreen = ({ route }: any) => {
   const userId = currentUser ? currentUser.uid : null;
 
   console.log('🚀 ~ AddPostScreen ~ userId:', userId);
+  const colors = useThemeColors();
 
   const DateAndTime = `${day}:${month}:${year}:${hours}:${minutes}`;
 
   const submitHandler = () => {
-    // console.log('🚀 ~ AddPostScreen ~ DateAndTime:', DateAndTime);
-    // console.log('🚀 ~ AddPostScreen ~ userId:', userId);
-    // console.log('🚀 ~ AddPostScreen ~ title:', title);
-    // console.log('🚀 ~ AddPostScreen ~ desc:', desc);
-    // console.log('🚀 ~ AddPostScreen ~ uri:', uri);
-
     if (userId !== null) {
       const usersCollection = firestore()
         .collection('UsersData')
@@ -88,19 +87,42 @@ const AddPostScreen = ({ route }: any) => {
       });
     }
   };
+  const colorScheme = useColorScheme();
 
   const imageGallery = () => {
-    setUri([
-      'https://images.pexels.com/photos/33106717/pexels-photo-33106717.jpeg?_gl=1*18doh69*_ga*MTk3NDc0NTgxMi4xNzQ3OTk4NTM2*_ga_8JE65Q40S6*czE3NTQzMDExMjMkbzMkZzEkdDE3NTQzMDEyMzEkajM3JGwwJGgw',
-      'https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?_gl=1*k2m0me*_ga*MTk3NDc0NTgxMi4xNzQ3OTk4NTM2*_ga_8JE65Q40S6*czE3NTQzMDExMjMkbzMkZzEkdDE3NTQzMDE4MzgkajYwJGwwJGgw',
-    ]);
+    setUri(ArrayUrl);
+  };
+
+  const openDrawer = () => {
+    navigation.openDrawer();
   };
 
   return (
-    <View style={styles.mainLayout}>
-      <View style={styles.modalstyle}>
+    <View style={[styles.mainLayout, { backgroundColor: colors.background }]}>
+      <View
+        style={[
+          styles.sortstyle,
+          {
+            backgroundColor: colors.background,
+            borderBottomColor: colors.modalBorderStyle,
+          },
+        ]}
+      >
+        <View style={styles.userIcon}>
+          <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
+            <SettingMenu height={30} width={30} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.logoView}>
+          <Image
+            style={{ alignSelf: 'center' }}
+            source={colorScheme === 'light' ? instadark : instalight}
+          />
+        </View>
+      </View>
+      <View style={{ flex: 1 }}>
         <ScrollView style={styles.scrollview}>
-          <Text style={styles.AddPostScreen}>
+          <Text style={[styles.AddPostScreen, { color: colors.text }]}>
             {t(LanguageConstant.create_post)}
           </Text>
           <View style={styles.postUploadStyle}>
@@ -110,7 +132,12 @@ const AddPostScreen = ({ route }: any) => {
                 horizontal={true}
                 showsVerticalScrollIndicator={false}
                 renderItem={({ item }) => (
-                  <Image style={styles.imgstyle} src={item} alt="image" />
+                  <Image
+                    style={styles.imgstyle}
+                    resizeMode="center"
+                    src={item}
+                    alt="image"
+                  />
                 )}
               />
             ) : (
@@ -124,28 +151,42 @@ const AddPostScreen = ({ route }: any) => {
                   source={more}
                   style={{ height: 60, width: 60 }}
                 ></ImageBackground>
-                <Text>{t(LanguageConstant.add_image)}</Text>
+                <Text style={{ color: colors.text }}>
+                  {t(LanguageConstant.add_image)}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
           <TextInput
             placeholder={t(LanguageConstant.title_placeholder)}
-            style={styles.textInputStyle}
+            style={[styles.textInputStyle, { backgroundColor: colors.text }]}
             value={title}
             onChangeText={e => SetTitle(e)}
             keyboardType="ascii-capable"
+            placeholderTextColor={colors.placeholderTextColor}
           />
           <TextInput
             placeholder={t(LanguageConstant.description_placeHolder)}
-            style={styles.textInputStyle}
+            style={[styles.textInputStyle, { backgroundColor: colors.text }]}
             value={desc}
             onChangeText={e => SetDesc(e)}
-            numberOfLines={3}
+            numberOfLines={50}
             multiline={true}
+            placeholderTextColor={colors.placeholderTextColor}
           />
 
-          <TouchableOpacity style={styles.btnstyle} onPress={submitHandler}>
-            <Text style={styles.textStyle}>{t(LanguageConstant.submit)}</Text>
+          <TouchableOpacity
+            style={[styles.btnstyle, { backgroundColor: colors.text }]}
+            onPress={submitHandler}
+          >
+            <Text
+              style={[
+                styles.textStyle,
+                { backgroundColor: colors.text, color: colors.background },
+              ]}
+            >
+              {t(LanguageConstant.submit)}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -158,32 +199,26 @@ export default AddPostScreen;
 const styles = StyleSheet.create({
   textStyle: {
     textAlign: 'center',
-    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800',
   },
   btnstyle: {
     marginVertical: 10,
-    backgroundColor: '#000000',
     padding: 10,
     borderRadius: 20,
   },
-  modalstyle: {
-    padding: 20,
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-  },
   mainLayout: {
-    padding: 20,
     flex: 1,
-    justifyContent: 'center',
-    backgroundColor: '#000000',
+    justifyContent: 'flex-start',
   },
   scrollview: {
-    margin: 10,
+    margin: 20,
   },
   textInputStyle: {
-    borderBottomWidth: 1,
+    borderWidth: 0.5,
+    borderRadius: 30,
+    paddingLeft: 20,
+    padding: 20,
     marginVertical: 10,
   },
   postUploadStyle: {
@@ -199,9 +234,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   AddPostScreen: {
-    fontSize: 23,
+    fontSize: 30,
     fontWeight: '600',
-    textAlign: 'center',
     marginBottom: 20,
   },
   imgstyle: {
@@ -209,5 +243,31 @@ const styles = StyleSheet.create({
     margin: 10,
     height: 200,
     width: 200,
+  },
+  sortstyle: {
+    flexDirection: 'row',
+    paddingTop: 30,
+    paddingBottom: 10,
+    paddingHorizontal: 10,
+    justifyContent: 'space-between',
+
+    borderBottomWidth: 1,
+
+    elevation: 5,
+  },
+  userIcon: {
+    marginBottom: '2%',
+    alignSelf: 'flex-end',
+  },
+  logoView: {
+    flex: 1,
+    marginHorizontal: 10,
+  },
+  actionbtn: {
+    flexDirection: 'row',
+    padding: 10,
+  },
+  heartstyle: {
+    marginHorizontal: 10,
   },
 });

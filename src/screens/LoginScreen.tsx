@@ -18,19 +18,16 @@ import {
   getAuth,
   firebase,
   GoogleAuthProvider,
-  signInWithCredential,
   signInWithEmailAndPassword,
-  onAuthStateChanged,
 } from '@react-native-firebase/auth';
 import RNRestart from 'react-native-restart';
 
+import { t } from 'i18next';
 import { useNavigation } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
-import { darkTheme } from '../theme/darkTheme';
-import { lightTheme } from '../theme/lightTheme';
 import i18n from '../constants/language/i18next';
 import { LanguageConstant } from '../constants/language_constants';
 import {
@@ -41,7 +38,7 @@ import {
 } from '../helper/images';
 import InputText from '../components/InputText';
 import ButtonComponent from '../components/ButtonComponent';
-import { t } from 'i18next';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 const validationSchema = Yup.object().shape({
   email: Yup.string()
@@ -62,6 +59,8 @@ interface usertype {
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
   const [loading, setLoading] = useState<boolean>(true);
+
+  const colors = useThemeColors();
 
   useEffect(() => {
     if (loading) {
@@ -86,8 +85,6 @@ const LoginScreen = () => {
     setLoading(!loading);
   }, []);
 
-  // const { t } = useTranslation();
-
   const [modalVisible, setModalVisible] = useState(false);
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState<any>();
@@ -98,7 +95,6 @@ const LoginScreen = () => {
   ]);
 
   const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
 
   colorScheme === 'dark'
     ? DropDownPicker.setTheme('DARK')
@@ -196,7 +192,7 @@ const LoginScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.dropdownView}>
         <DropDownPicker
           open={open}
@@ -210,7 +206,7 @@ const LoginScreen = () => {
           placeholder={'English'}
           style={styles.dropdownstyle}
           onChangeValue={() => changeLanguage()}
-          containerStyle={styles.dropdowncontainer}
+          containerStyle={[styles.dropdowncontainer]}
         />
       </View>
 
@@ -261,7 +257,12 @@ const LoginScreen = () => {
                 style={styles.forgetbuttonstyle}
                 onPress={() => setModalVisible(true)}
               >
-                <Text style={styles.forgettextstyle}>
+                <Text
+                  style={[
+                    styles.forgettextstyle,
+                    { color: colors.primaryblue },
+                  ]}
+                >
                   {t(LanguageConstant.forgetPassword)}
                 </Text>
               </TouchableOpacity>
@@ -274,7 +275,13 @@ const LoginScreen = () => {
         </Formik>
 
         <View style={styles.signupview}>
-          <Text style={colorScheme === 'dark' ? styles.darkViewText : {}}>
+          <Text
+            style={
+              colorScheme === 'dark'
+                ? { color: colors.text }
+                : { color: colors.text }
+            }
+          >
             {t(LanguageConstant.doNotHaveAccount)}
           </Text>
           <TouchableOpacity
@@ -282,22 +289,16 @@ const LoginScreen = () => {
               navigation.navigate('SignupScreen');
             }}
           >
-            <Text style={styles.signupstyle}>{t(LanguageConstant.signup)}</Text>
+            <Text style={[styles.signupstyle, { color: colors.primaryblue }]}>
+              {t(LanguageConstant.signup)}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
       <View style={styles.googleView}>
-        <View style={styles.dashstyle} />
-        <Text
-          style={
-            colorScheme === 'light'
-              ? styles.orstyle
-              : [styles.orstyle, { color: '#FFFFFF' }]
-          }
-        >
-          {'OR'}
-        </Text>
-        <View style={styles.dashstyle} />
+        <View style={[styles.dashstyle, { borderColor: colors.dashcolor }]} />
+        <Text style={[styles.orstyle, { color: colors.text }]}>{'OR'}</Text>
+        <View style={[styles.dashstyle, { borderColor: colors.dashcolor }]} />
       </View>
 
       <View style={styles.socialView}>
@@ -310,14 +311,10 @@ const LoginScreen = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.textviewstyle}>
-          <Text style={styles.textStylefrom}>{t(LanguageConstant.from)}</Text>
-          <Text
-            style={
-              colorScheme === 'light'
-                ? styles.textStylefacebook
-                : styles.darkThemeFaceBookStyle
-            }
-          >
+          <Text style={[styles.textStylefrom, { color: colors.fromcolor }]}>
+            {t(LanguageConstant.from)}
+          </Text>
+          <Text style={[styles.textStylefacebook, { color: colors.text }]}>
             {t(LanguageConstant.facebook)}
           </Text>
         </View>
@@ -361,10 +358,15 @@ const LoginScreen = () => {
                   )}
 
                   <TouchableOpacity
-                    style={[styles.button, styles.buttonClose]}
+                    style={[
+                      styles.button,
+                      { backgroundColor: colors.primaryblue },
+                    ]}
                     onPress={() => handleSubmit()}
                   >
-                    <Text style={styles.textStyle}>{'submit'}</Text>
+                    <Text style={[styles.textStyle, { color: colors.text }]}>
+                      {'submit'}
+                    </Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -379,14 +381,8 @@ const LoginScreen = () => {
 export default LoginScreen;
 
 const styles = StyleSheet.create({
-  darkThemeFaceBookStyle: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '400',
-  },
-  darkViewText: { color: '#FFFFFF' },
-  textStylefrom: { fontSize: 14, fontWeight: '600', color: '#AEA9A9' },
-  textStylefacebook: { fontSize: 16, fontWeight: '400', color: '#070000' },
+  textStylefrom: { fontSize: 14, fontWeight: '600' },
+  textStylefacebook: { fontSize: 16, fontWeight: '400' },
   textviewstyle: { margin: 20, alignItems: 'center' },
   sociallogoView: {
     margin: 20,
@@ -405,20 +401,17 @@ const styles = StyleSheet.create({
     height: 0,
     marginTop: 10,
     borderWidth: 0.8,
-    borderColor: '#CCCCCC',
   },
   signupview: { flexDirection: 'row', justifyContent: 'center' },
-  signupstyle: { color: '#1877F2', fontWeight: '700' },
+  signupstyle: { fontWeight: '700' },
   forgettextstyle: {
     fontSize: 13,
-    color: '#1877F2',
     fontWeight: '700',
     marginVertical: 10,
   },
   forgetbuttonstyle: { alignSelf: 'flex-end' },
   dropdownstyle: { borderWidth: 0 },
   googleView: {
-    // flex: 5,
     alignSelf: 'center',
     flexDirection: 'row',
     paddingHorizontal: 50,
@@ -426,17 +419,14 @@ const styles = StyleSheet.create({
   formView: {
     flex: 2,
     paddingHorizontal: 50,
-    // justifyContent: 'space-evenly',÷
   },
   logoView: {
-    // flex: 1,
     alignSelf: 'center',
   },
   dropdowncontainer: {
     flex: 1,
     width: '25%',
     borderWidth: 0,
-    color: '#C5C5C5',
     alignSelf: 'center',
   },
   dropdownView: {
@@ -445,26 +435,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 15,
   },
-  btnstyle: {
-    padding: 10,
-    borderRadius: 10,
-    marginVertical: 20,
-    backgroundColor: '#AEa',
-  },
+
   container: {
     flex: 1,
-    // justifyContent: 'center',
   },
   text: {
     fontSize: 20,
     fontWeight: '500',
   },
   errorText: {
-    // marginTop: 10,
     color: 'red',
     fontSize: 15,
     fontWeight: '800',
-    // marginBottom: 10,
   },
 
   centeredView: {
@@ -498,11 +480,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginVertical: 10,
   },
-  buttonClose: {
-    backgroundColor: '#2196F3',
-  },
   textStyle: {
-    color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
   },

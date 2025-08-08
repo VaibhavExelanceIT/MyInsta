@@ -7,11 +7,12 @@ import Message from '../assets/icons/message.svg';
 import Save from '../assets/icons/Save.svg';
 import More from '../assets/icons/more.svg';
 import CarouselComponent from './CarouselComponent';
+import { colors } from '../hooks/useThemeColors';
 
 interface ComponentProp {
-  likes: string;
+  likes: number;
   title: string;
-  comment: string;
+  comment: number;
   description: string;
   ImagePost: Array<string>;
   date?: string;
@@ -19,16 +20,21 @@ interface ComponentProp {
 
 const PostComponent: React.FC<ComponentProp> = props => {
   let { likes, title, description, ImagePost, date, comment } = props || {};
-
-  // const extension = ImagePost?.map(item => {
-  //   return item.split('.').pop();
-  // });
-
-  // console.log(extension);
-
+  console.log('🚀 ~ PostComponent ~ ImagePost:', ImagePost);
+  // const colors = useThemeColors();
   return (
-    <View style={styles.MainLayoutStyle}>
-      <View style={styles.modalstyle}>
+    <View
+      style={[styles.MainLayoutStyle, { borderColor: colors.modalBorderStyle }]}
+    >
+      <View
+        style={[
+          styles.modalstyle,
+          {
+            borderColor: colors.modalBorderStyle,
+            backgroundColor: colors.white,
+          },
+        ]}
+      >
         <View style={styles.upperpoststyle}>
           <View style={styles.Headerstyle}>
             <View style={styles.titleimagestyle}>
@@ -36,7 +42,6 @@ const PostComponent: React.FC<ComponentProp> = props => {
                 style={styles.profilepicstyle}
                 src="https://images.pexels.com/photos/33106717/pexels-photo-33106717.jpeg?_gl=1*18doh69*_ga*MTk3NDc0NTgxMi4xNzQ3OTk4NTM2*_ga_8JE65Q40S6*czE3NTQzMDExMjMkbzMkZzEkdDE3NTQzMDEyMzEkajM3JGwwJGgw"
               />
-              {/* <Text style={styles.textstyle}>{UserEmail}</Text> */}
             </View>
             <View style={styles.morebtnstyle}>
               <More height={30} width={30} />
@@ -67,7 +72,11 @@ const PostComponent: React.FC<ComponentProp> = props => {
         <Text>{description}</Text>
       </View>
 
-      <Text style={styles.viewcommnetstyle}>View all {comment} comments</Text>
+      <Text
+        style={[styles.viewcommnetstyle, { color: colors.commentTextStyle }]}
+      >
+        View all {comment} comments
+      </Text>
 
       <View style={styles.fotterstyle}>
         <View style={styles.titleimagestyle}>
@@ -76,7 +85,10 @@ const PostComponent: React.FC<ComponentProp> = props => {
             source={require('../asset/icon/Ellipse.png')}
           /> */}
           <TextInput
-            style={styles.commnettextStyle}
+            style={[
+              styles.commnettextStyle,
+              { color: colors.commentTextStyle },
+            ]}
             placeholder="Add a comment..."
             keyboardType="ascii-capable"
           />
@@ -121,7 +133,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     marginTop: 5,
-    color: '#757575',
   },
   fotterstyle: {
     paddingHorizontal: 20,
@@ -131,7 +142,7 @@ const styles = StyleSheet.create({
   },
   viewcommnetstyle: {
     paddingHorizontal: 20,
-    color: '#757575',
+
     fontSize: 12,
     fontWeight: '600',
     paddingBottom: 10,
@@ -144,7 +155,7 @@ const styles = StyleSheet.create({
   },
   morebtnstyle: {
     marginTop: 15,
-    flex: 0.2,
+
     justifyContent: 'space-around',
     flexDirection: 'row',
   },
@@ -164,7 +175,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   commentbtnstyle: {
-    // flex: 1,
     marginHorizontal: 10,
   },
   savebtnstyle: {
@@ -185,7 +195,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
   },
-  flatliststyle: { backgroundColor: '#111111' },
   descriptionstyle: {
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -194,13 +203,10 @@ const styles = StyleSheet.create({
   videostyle: { height: '100%' },
   modalstyle: {
     borderBottomWidth: 1,
-    borderColor: '#D9D9D9',
-    backgroundColor: '#ffffff',
   },
   MainLayoutStyle: {
     flex: 1,
     borderBottomWidth: 1,
-    borderColor: '#D9D9D9',
   },
   Headerstyle: {
     justifyContent: 'space-between',
@@ -208,14 +214,5 @@ const styles = StyleSheet.create({
   },
   PostStyle: {
     height: 200,
-  },
-
-  userIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 30,
-    alignSelf: 'flex-end',
-    justifyContent: 'center',
-    backgroundColor: '#D9D9D9',
   },
 });
