@@ -77,7 +77,6 @@ const SignupScreen = () => {
 
   const navigation = useNavigation<any>();
   const googleSignIn = async () => {
-    console.log('inside the signin');
     try {
       await GoogleSignin.hasPlayServices({
         showPlayServicesUpdateDialog: true,
@@ -93,13 +92,19 @@ const SignupScreen = () => {
       );
 
       const useremail = signInResult?.data?.user?.email;
+      const isUserPresent = await firestore()
+        .collection('UsersData')
+        .where('email', '==', useremail)
+        .get();
 
-      Alert.alert('You are Loggedin');
-      navigation.navigate('UserDetailsScreeen', { email: useremail });
+      if (!isUserPresent.empty) {
+        navigation.navigate('DrawerNavigation', { email: useremail });
+      } else {
+        navigation.navigate('UserDetailsScreeen', { email: useremail });
+      }
+
       return signInWithCredential(getAuth(), googleCredential);
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
@@ -114,45 +119,52 @@ const SignupScreen = () => {
 
   const usersCollection = firestore().collection('UsersData');
 
-  const writefirestore = async (values: userData) => {
+  const writefirestore = (values: userData) => {
     try {
-      await usersCollection
-        .add({
-          DOB: values.DOB,
-          userImage:
-            'https://www.pexels.com/photo/blue-bmw-sedan-near-green-lawn-grass-170811/',
-          email: values.email,
-          gender: values.gender,
-          mobileNo: values.mobileNo,
-          lastName: values.lastName,
-          firstName: values.firstName,
-        })
-        .then(() => {
-          createUserWithEmailAndPassword(
-            getAuth(),
-            values.email,
-            values.password,
-          )
-            .then(() => {
-              navigation.navigate('DrawerNavigation', { email: values.email });
-              console.log('User account created & signed in!');
+      createUserWithEmailAndPassword(getAuth(), values.email, values.password)
+        .then(async () => {
+          await usersCollection
+            .add({
+              DOB: values.DOB,
+              userImage:
+                'https://www.pexels.com/photo/blue-bmw-sedan-near-green-lawn-grass-170811/',
+              email: values.email,
+              gender: values.gender,
+              mobileNo: values.mobileNo,
+              lastName: values.lastName,
+              firstName: values.firstName,
             })
-            .catch(error => {
-              if (error.code === 'auth/email-already-in-use') {
-                console.log('That email address is already in use!');
-              }
-
-              if (error.code === 'auth/invalid-email') {
-                console.log('That email address is invalid!');
-              }
-
-              console.error(error);
+            .then(() => {
+              showMessage({
+                type: 'success',
+                message: 'success',
+                description: 'User Registrated',
+              });
+              navigation.navigate('DrawerNavigation', { email: values.email });
             });
-          console.log(values);
+        })
+        .catch(error => {
+          if (error.code === 'auth/email-already-in-use') {
+            showMessage({
+              type: 'danger',
+              message: 'Error',
+              description: 'That email address is already in use!',
+            });
+            return;
+          }
+
+          if (error.code === 'auth/invalid-email') {
+            showMessage({
+              type: 'danger',
+              message: 'Error',
+              description: 'That email address is invalid!',
+            });
+            return;
+          }
           showMessage({
-            type: 'success',
-            message: 'success',
-            description: 'User Registrated',
+            type: 'danger',
+            message: 'Error',
+            description: 'Something Went Wrong!',
           });
         });
     } catch (error) {
@@ -161,7 +173,6 @@ const SignupScreen = () => {
         message: 'Error',
         description: 'There is some error in the data',
       });
-      console.log(error);
     }
   };
 
@@ -192,7 +203,6 @@ const SignupScreen = () => {
             confirmPassword: '',
           }}
           onSubmit={values => {
-            console.log(values);
             writefirestore(values);
           }}
           validationSchema={validationSchema}
@@ -259,7 +269,7 @@ const SignupScreen = () => {
                 mode="date"
                 onConfirm={date => {
                   hideDatePicker();
-                  console.log(date.toDateString());
+
                   handleChange(setFieldValue('DOB', date.toDateString()));
                 }}
                 onCancel={hideDatePicker}

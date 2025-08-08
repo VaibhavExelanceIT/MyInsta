@@ -1,9 +1,10 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { I18nManager } from 'react-native';
+
 import english from './en.json';
 import hindi from './hi.json';
 import arabic from './ar.json';
-import { I18nManager } from 'react-native';
 
 i18n.use(initReactI18next).init({
   initImmediate: false,
@@ -28,5 +29,3 @@ i18n.use(initReactI18next).init({
   },
 });
 export default i18n;
-
-// lng: I18nManager.isRTL ? 'ar' : 'en',

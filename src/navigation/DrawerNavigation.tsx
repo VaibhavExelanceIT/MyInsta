@@ -2,24 +2,25 @@
 import React, { useState } from 'react';
 
 import {
+  View,
+  Text,
   Image,
   StyleSheet,
-  Text,
   TouchableOpacity,
   useWindowDimensions,
-  View,
 } from 'react-native';
 
 import {
+  DrawerItem,
   createDrawerNavigator,
   DrawerContentScrollView,
-  DrawerItem,
 } from '@react-navigation/drawer';
 
 import BottomTabNavigation from './BottomTabNavigation';
 
-const Drawer = createDrawerNavigator();
-const DrawerNavigation = () => {
+const DrawerNavigation = (route: any) => {
+  const Drawer = createDrawerNavigator();
+  console.log(route);
   let [focused, setFocused] = useState('');
 
   const dimensions = useWindowDimensions();
@@ -135,16 +136,16 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   imageView: {
-    alignSelf: 'center',
     marginBottom: 20,
+    alignSelf: 'center',
   },
   HeaderImage: {
-    height: 40,
     width: 40,
+    height: 40,
   },
   DrawerImage: {
-    height: 20,
     width: 20,
+    height: 20,
   },
   MarginBottom: {
     marginBottom: 10,
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
   },
   logoutImages: {
-    height: 30,
     width: 30,
+    height: 30,
   },
 });

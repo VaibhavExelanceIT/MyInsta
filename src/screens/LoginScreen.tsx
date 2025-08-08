@@ -26,6 +26,7 @@ import { useNavigation } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import firestore from '@react-native-firebase/firestore';
 
 import { darkTheme } from '../theme/darkTheme';
 import { lightTheme } from '../theme/lightTheme';
@@ -61,7 +62,6 @@ const LoginScreen = () => {
   const navigation = useNavigation<any>();
 
   useEffect(() => {
-    console.log('as,djbfkajsdbf');
     GoogleSignin.configure({
       webClientId:
         '956857887247-jttn9l0vhgdgabp27o8634sg2uvmc0d0.apps.googleusercontent.com',
@@ -84,8 +84,6 @@ const LoginScreen = () => {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
 
-  // dropdown for language
-
   colorScheme === 'dark'
     ? DropDownPicker.setTheme('DARK')
     : DropDownPicker.setTheme('LIGHT');
@@ -94,37 +92,44 @@ const LoginScreen = () => {
     i18n
       .changeLanguage(value)
       .then(() => {
-        console.log(value);
         RNRestart.Restart();
         I18nManager.forceRTL(i18n.language === 'ar');
       })
-      .catch(() => {
-        console.log('something went wrong while applying RTL');
-      });
+      .catch(() => {});
   };
 
   const googleSignIn = async () => {
-    console.log('inside the signin');
     try {
       await GoogleSignin.hasPlayServices({
         showPlayServicesUpdateDialog: true,
       });
 
       const signInResult = await GoogleSignin.signIn();
+
       let idToken: any = signInResult.data?.idToken;
+
       if (!idToken) {
         throw new Error('No ID token found');
       }
       const googleCredential = GoogleAuthProvider.credential(
         signInResult?.data?.idToken,
       );
+
       const useremail = signInResult?.data?.user?.email;
-      Alert.alert('You are Loggedin');
-      navigation.navigate('UserDetailsScreeen', { email: useremail });
+
+      const isUserPresent = await firestore()
+        .collection('UsersData')
+        .where('email', '==', useremail)
+        .get();
+
+      if (!isUserPresent.empty) {
+        navigation.navigate('DrawerNavigation', { email: useremail });
+      } else {
+        navigation.navigate('UserDetailsScreeen', { email: useremail });
+      }
+
       return signInWithCredential(getAuth(), googleCredential);
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
 
   const userSignIn = (values: usertype) => {
@@ -135,7 +140,7 @@ const LoginScreen = () => {
           description: 'Your are logged in',
           type: 'success',
         });
-        console.log(values.email);
+
         navigation.navigate('DrawerNavigation', { email: values.email });
       })
       .catch(() => {
@@ -144,8 +149,6 @@ const LoginScreen = () => {
           description: 'Email or Password has be wrong',
           type: 'danger',
         });
-
-        console.log('usernot found');
       });
   };
 
@@ -196,7 +199,6 @@ const LoginScreen = () => {
             password: 'Vai@123456',
           }}
           onSubmit={values => {
-            console.log(values);
             userSignIn(values);
           }}
           validationSchema={validationSchema}
@@ -333,7 +335,7 @@ const LoginScreen = () => {
 
                   <TouchableOpacity
                     style={[styles.button, styles.buttonClose]}
-                    onPress={handleSubmit}
+                    onPress={() => handleSubmit()}
                   >
                     <Text style={styles.textStyle}>{'submit'}</Text>
                   </TouchableOpacity>

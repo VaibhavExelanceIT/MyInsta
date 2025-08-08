@@ -14,11 +14,8 @@ import { t } from 'i18next';
 import { Formik } from 'formik';
 import firestore from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
+import { useNavigation } from '@react-navigation/native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-} from '@react-native-firebase/auth';
 
 import { darkTheme } from '../theme/darkTheme';
 import InputText from '../components/InputText';
@@ -64,9 +61,10 @@ interface userData {
 const UserDetailsScreeen = ({ route }: any) => {
   const email: string = route.params.email;
 
+  const navigation = useNavigation<any>();
+
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
-  console.log(email);
 
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
@@ -81,7 +79,12 @@ const UserDetailsScreeen = ({ route }: any) => {
   const usersCollection = firestore().collection('UsersData');
 
   const writefirestore = async (values: userData) => {
-    try {
+    const isUserPresent = await firestore()
+      .collection('UsersData')
+      .where('email', '==', values.email)
+      .get();
+
+    if (isUserPresent.empty) {
       await usersCollection
         .add({
           DOB: values.DOB,
@@ -92,39 +95,27 @@ const UserDetailsScreeen = ({ route }: any) => {
           firstName: values.firstName,
         })
         .then(() => {
-          createUserWithEmailAndPassword(
-            getAuth(),
-            values.email,
-            values.password,
-          )
-            .then(() => {
-              console.log('User account created & signed in!');
-            })
-            .catch(error => {
-              if (error.code === 'auth/email-already-in-use') {
-                console.log('That email address is already in use!');
-              }
-
-              if (error.code === 'auth/invalid-email') {
-                console.log('That email address is invalid!');
-              }
-
-              console.error(error);
-            });
-          console.log(values);
           showMessage({
             type: 'success',
             message: 'success',
-            description: 'User Data Addedd',
+            description: 'User Registrated',
+          });
+          navigation.navigate('DrawerNavigation', { email: values.email });
+        })
+        .catch(error => {
+          showMessage({
+            type: 'danger',
+            message: 'Error',
+            description: 'There is some error in the data',
           });
         });
-    } catch (error) {
+    } else {
       showMessage({
-        type: 'danger',
-        message: 'Error',
-        description: 'There is some error in the data',
+        type: 'warning',
+        message: 'success',
+        description: 'User already Registrated',
       });
-      console.log(error);
+      navigation.navigate('loginScreen');
     }
   };
 
@@ -158,7 +149,6 @@ const UserDetailsScreeen = ({ route }: any) => {
             confirmPassword: '',
           }}
           onSubmit={values => {
-            console.log(values);
             writefirestore(values);
           }}
           validationSchema={validationSchema}
@@ -225,7 +215,7 @@ const UserDetailsScreeen = ({ route }: any) => {
                 mode="date"
                 onConfirm={date => {
                   handleChange(setFieldValue('DOB', date.toDateString()));
-                  console.log(date.toDateString());
+
                   hideDatePicker();
                 }}
                 onCancel={hideDatePicker}
