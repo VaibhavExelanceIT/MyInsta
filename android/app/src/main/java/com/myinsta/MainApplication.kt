@@ -9,6 +9,7 @@ import com.facebook.react.ReactNativeHost
 import com.facebook.react.ReactPackage
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
+import com.facebook.react.modules.i18nmanager.I18nUtil;
 
 class MainApplication : Application(), ReactApplication {
 
@@ -32,6 +33,9 @@ class MainApplication : Application(), ReactApplication {
     get() = getDefaultReactHost(applicationContext, reactNativeHost)
 
   override fun onCreate() {
+    val sharedI18nUtilInstance = I18nUtil.getInstance()
+sharedI18nUtilInstance.allowRTL(applicationContext, true)
+
     super.onCreate()
     loadReactNative(this)
   }
