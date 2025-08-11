@@ -50,14 +50,8 @@ const DrawerNavigation = (route: any) => {
                 </View>
                 <DrawerItem
                   label={'Home'}
-                  icon={() => (
-                    <Image
-                      // source={images.homeIcon}
-                      style={[styles.DrawerImage, tintColor]}
-                    />
-                  )}
+                  icon={() => <Image style={[styles.DrawerImage, tintColor]} />}
                   onPress={() => {
-                    // props.navigation.navigate('HomeScreen');
                     setFocused('HomeScreen');
                     props.navigation.navigate('MyTab', {
                       screen: 'HomeScreen',
@@ -71,14 +65,8 @@ const DrawerNavigation = (route: any) => {
                 />
                 <DrawerItem
                   label={'Whislist'}
-                  icon={() => (
-                    <Image
-                      // source={images.whislistIcon}
-                      style={[styles.DrawerImage, tintColor]}
-                    />
-                  )}
+                  icon={() => <Image style={[styles.DrawerImage, tintColor]} />}
                   onPress={() => {
-                    // focused = 'WhislistScreen';
                     setFocused('WhislistScreen');
                     props.navigation.navigate('MyTab', {
                       screen: 'WhislistScreen',
@@ -95,7 +83,6 @@ const DrawerNavigation = (route: any) => {
                   label={'Profile'}
                   icon={() => <Image style={[styles.DrawerImage, tintColor]} />}
                   onPress={() => {
-                    // focused = 'ProfileScreen';
                     setFocused('ProfileScreen');
                     props.navigation.navigate('MyTab', {
                       screen: 'ProfileScreen',

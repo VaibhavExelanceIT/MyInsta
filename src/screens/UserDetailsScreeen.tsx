@@ -84,38 +84,37 @@ const UserDetailsScreeen = ({ route }: any) => {
       .where('email', '==', values.email)
       .get();
 
-    if (isUserPresent.empty) {
-      await usersCollection
-        .add({
+    try {
+      if (isUserPresent.empty) {
+        await usersCollection.add({
           DOB: values.DOB,
           email: values.email,
           gender: values.gender,
           mobileNo: values.mobileNo,
           lastName: values.lastName,
           firstName: values.firstName,
-        })
-        .then(() => {
-          showMessage({
-            type: 'success',
-            message: 'success',
-            description: 'User Registrated',
-          });
-          navigation.navigate('DrawerNavigation', { email: values.email });
-        })
-        .catch(error => {
-          showMessage({
-            type: 'danger',
-            message: 'Error',
-            description: 'There is some error in the data',
-          });
         });
-    } else {
+
+        showMessage({
+          type: 'success',
+          message: 'success',
+          description: 'User Registrated',
+        });
+        navigation.navigate('DrawerNavigation', { email: values.email });
+      } else {
+        showMessage({
+          type: 'warning',
+          message: 'success',
+          description: 'User already Registrated',
+        });
+        navigation.navigate('loginScreen');
+      }
+    } catch (error) {
       showMessage({
-        type: 'warning',
-        message: 'success',
-        description: 'User already Registrated',
+        type: 'danger',
+        message: 'Error',
+        description: 'There is some error in the data',
       });
-      navigation.navigate('loginScreen');
     }
   };
 
@@ -133,7 +132,7 @@ const UserDetailsScreeen = ({ route }: any) => {
               : styles.textlightStyle
           }
         >
-          {'User Details'}
+          User Details
         </Text>
         <Formik
           initialValues={{

@@ -88,14 +88,15 @@ const LoginScreen = () => {
     ? DropDownPicker.setTheme('DARK')
     : DropDownPicker.setTheme('LIGHT');
 
-  const changeLanguage = () => {
-    i18n
-      .changeLanguage(value)
-      .then(() => {
-        RNRestart.Restart();
-        I18nManager.forceRTL(i18n.language === 'ar');
-      })
-      .catch(() => {});
+  const changeLanguage = async () => {
+    try {
+      await i18n.changeLanguage(value);
+
+      RNRestart.Restart();
+      I18nManager.forceRTL(i18n.language === 'ar');
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const googleSignIn = async () => {
@@ -129,44 +130,62 @@ const LoginScreen = () => {
       }
 
       return signInWithCredential(getAuth(), googleCredential);
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  const userSignIn = (values: usertype) => {
-    signInWithEmailAndPassword(getAuth(), values.email, values.password)
-      .then(() => {
+  const userSignIn = async (values: usertype) => {
+    console.log('🚀 ~ userSignIn ~ values:', values);
+
+    const isUserPresent = await firestore()
+      .collection('UsersData')
+      .where('email', '==', values.email)
+      .get();
+    console.log('🚀 ~ userSignIn ~ isUserPresent:', isUserPresent);
+    try {
+      await signInWithEmailAndPassword(
+        getAuth(),
+        values.email,
+        values.password,
+      );
+
+      if (!isUserPresent.empty) {
         showMessage({
           message: 'success',
           description: 'Your are logged in',
           type: 'success',
         });
-
         navigation.navigate('DrawerNavigation', { email: values.email });
-      })
-      .catch(() => {
+      } else {
         showMessage({
-          message: 'Error!!',
-          description: 'Email or Password has be wrong',
-          type: 'danger',
+          message: 'success',
+          description: ' Enter the User Details',
+          type: 'warning',
         });
+        navigation.navigate('UserDetailsScreeen', { email: values.email });
+      }
+    } catch (error) {
+      showMessage({
+        message: 'Error!!',
+        description: 'Email or Password has be wrong',
+        type: 'danger',
       });
+    }
   };
 
   const resetPassword = async (email: string) => {
-    await firebase
-      .auth()
-      .sendPasswordResetEmail(email)
-      .then(() => {
-        Alert.alert('Email Send Successfully....');
-      })
-      .catch(error => {
-        if (error.message === 'Firebase: Error (auth/user-not-found).') {
-          Alert.alert('There is no user corresponding to this email address.');
-        } else if (error.Code === 'auth/invalid-email') {
-          Alert.alert(error);
-        }
-        Alert.alert(error.message);
-      });
+    try {
+      await firebase.auth().sendPasswordResetEmail(email);
+      Alert.alert('Email Send Successfully....');
+    } catch (error: any) {
+      if (error.message === 'Firebase: Error (auth/user-not-found).') {
+        Alert.alert('There is no user corresponding to this email address.');
+      } else if (error.Code === 'auth/invalid-email') {
+        Alert.alert(error);
+      }
+      Alert.alert(error.message);
+    }
   };
 
   return (
@@ -268,7 +287,7 @@ const LoginScreen = () => {
               : [styles.orstyle, { color: '#FFFFFF' }]
           }
         >
-          {'OR'}
+          OR
         </Text>
         <View style={styles.dashstyle} />
       </View>
@@ -277,9 +296,6 @@ const LoginScreen = () => {
         <View style={styles.sociallogoView}>
           <TouchableOpacity onPress={() => googleSignIn()}>
             <Image style={styles.sociallogo} source={googlelogo} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => {}}>
-            <Image style={styles.sociallogo} source={microsoftlogo} />
           </TouchableOpacity>
         </View>
         <View style={styles.textviewstyle}>
@@ -337,7 +353,7 @@ const LoginScreen = () => {
                     style={[styles.button, styles.buttonClose]}
                     onPress={() => handleSubmit()}
                   >
-                    <Text style={styles.textStyle}>{'submit'}</Text>
+                    <Text style={styles.textStyle}>submit</Text>
                   </TouchableOpacity>
                 </>
               )}

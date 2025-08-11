@@ -86,7 +86,7 @@ const BottomTabNavigation = () => {
           },
           tabBarActiveTintColor: 'red',
 
-          tabBarIcon: ({}) => <Notification height={25} />,
+          tabBarIcon: ({}) => <Notification height={25} width={25} />,
         }}
       />
       <Tab.Screen
@@ -102,7 +102,7 @@ const BottomTabNavigation = () => {
           },
           tabBarActiveTintColor: 'red',
 
-          tabBarIcon: ({}) => <Profile height={25} />,
+          tabBarIcon: ({}) => <Profile height={25} width={25} />,
         }}
       />
     </Tab.Navigator>

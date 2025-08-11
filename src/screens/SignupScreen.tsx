@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Text,
   View,
-  Alert,
   Image,
   StyleSheet,
   ScrollView,
@@ -30,12 +29,7 @@ import InputText from '../components/InputText';
 import { lightTheme } from '../theme/lightTheme';
 import ButtonComponent from '../components/ButtonComponent';
 import { LanguageConstant } from '../constants/language_constants';
-import {
-  instadark,
-  instalight,
-  googlelogo,
-  microsoftlogo,
-} from '../helper/images';
+import { instadark, instalight, googlelogo } from '../helper/images';
 import RadioButtonComponent from '../components/RadioButtonComponent';
 
 const validationSchema = Yup.object().shape({
@@ -119,54 +113,41 @@ const SignupScreen = () => {
 
   const usersCollection = firestore().collection('UsersData');
 
-  const writefirestore = (values: userData) => {
+  const writefirestore = async (values: userData) => {
+    const isUserPresent = await firestore()
+      .collection('UsersData')
+      .where('email', '==', values.email)
+      .get();
     try {
-      createUserWithEmailAndPassword(getAuth(), values.email, values.password)
-        .then(async () => {
-          await usersCollection
-            .add({
-              DOB: values.DOB,
-              userImage:
-                'https://www.pexels.com/photo/blue-bmw-sedan-near-green-lawn-grass-170811/',
-              email: values.email,
-              gender: values.gender,
-              mobileNo: values.mobileNo,
-              lastName: values.lastName,
-              firstName: values.firstName,
-            })
-            .then(() => {
-              showMessage({
-                type: 'success',
-                message: 'success',
-                description: 'User Registrated',
-              });
-              navigation.navigate('DrawerNavigation', { email: values.email });
-            });
-        })
-        .catch(error => {
-          if (error.code === 'auth/email-already-in-use') {
-            showMessage({
-              type: 'danger',
-              message: 'Error',
-              description: 'That email address is already in use!',
-            });
-            return;
-          }
-
-          if (error.code === 'auth/invalid-email') {
-            showMessage({
-              type: 'danger',
-              message: 'Error',
-              description: 'That email address is invalid!',
-            });
-            return;
-          }
-          showMessage({
-            type: 'danger',
-            message: 'Error',
-            description: 'Something Went Wrong!',
-          });
+      if (isUserPresent.empty) {
+        createUserWithEmailAndPassword(
+          getAuth(),
+          values.email,
+          values.password,
+        );
+        await usersCollection.add({
+          DOB: values.DOB,
+          userImage:
+            'https://www.pexels.com/photo/blue-bmw-sedan-near-green-lawn-grass-170811/',
+          email: values.email,
+          gender: values.gender,
+          mobileNo: values.mobileNo,
+          lastName: values.lastName,
+          firstName: values.firstName,
         });
+
+        showMessage({
+          type: 'success',
+          message: 'success',
+          description: 'User Registrated',
+        });
+      } else {
+        showMessage({
+          type: 'danger',
+          message: 'Error',
+          description: 'User is already Registered',
+        });
+      }
     } catch (error) {
       showMessage({
         type: 'danger',
@@ -324,17 +305,14 @@ const SignupScreen = () => {
                 : [styles.orstyle, { color: '#FFFFFF' }]
             }
           >
-            {'OR'}
+            OR
           </Text>
           <View style={styles.dashstyle} />
         </View>
         <View style={styles.socialView}>
           <View style={styles.sociallogoView}>
-            <TouchableOpacity onPress={() => googleSignIn()}>
+            <TouchableOpacity onPress={googleSignIn}>
               <Image style={styles.sociallogo} source={googlelogo} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <Image style={styles.sociallogo} source={microsoftlogo} />
             </TouchableOpacity>
           </View>
           <View style={styles.textviewstyle}>
