@@ -1,0 +1,23 @@
+{
+    "change_language": "Change Language",
+    "english": "English",
+    "hindi": "Hindi",
+    "urdu" :"arabic / urdu",
+    "home": "Home",
+    "settings": "Settings",
+    "login" :"Login",
+    "forgetPassword":"Forget Password ?",
+     "email" :"Email",
+    "password" : "Password",
+    "doNotHaveAccount" : "Don't have an account? ",
+    "signup": "signup",
+    "from":"from",
+    "facebook":"FACEBOOK",
+    "firstname":"First Name",
+    "lastname" :"Last Name",
+    "gender": "Gender",
+  "mobile_no": "Mobile Number",
+  "DOB": "Date of Birth",
+  "confirm_password": "Confirm Password"
+
+  } 

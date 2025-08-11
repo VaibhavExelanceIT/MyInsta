@@ -1,0 +1,22 @@
+{
+    "change_language": "भाषा बदलें",
+    "english": "अंग्रेज़ी",
+    "hindi": "हिन्दी",
+    "'urdu":"अरबी / उर्दू",
+    "home": "घर",
+    "settings": "सेटिंग्स",
+    "login" :"लॉग इन करें",
+    "forgetPassword":" पासवर्ड भूल गए ?",
+    "email" :"ईमेल",
+    "password" : "पासवर्ड",
+    "doNotHaveAccount" : "क्या आपके पास खाता नहीं है? ",
+    "signup" : "साइन अप करें",
+    "from": "से",
+    "facebook":"फेसबुक",
+    "firstname":"पहला नाम",
+    "lastname":"उपनाम",
+    "gender": "लिंग",
+    "mobile_no": "मोबाइल नंबर",
+    "DOB": "जन्मतिथि",
+    "confirm_password": "पासवर्ड की पुष्टि कीजिये"
+  } 
