@@ -120,7 +120,7 @@ const SignupScreen = () => {
       .get();
     try {
       if (isUserPresent.empty) {
-        createUserWithEmailAndPassword(
+        await createUserWithEmailAndPassword(
           getAuth(),
           values.email,
           values.password,
