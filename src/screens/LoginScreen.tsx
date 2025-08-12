@@ -19,6 +19,7 @@ import {
   firebase,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
+  signInWithCredential,
 } from '@react-native-firebase/auth';
 import RNRestart from 'react-native-restart';
 
@@ -27,6 +28,7 @@ import { useNavigation } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import firestore from '@react-native-firebase/firestore';
 
 import i18n from '../constants/language/i18next';
 import { LanguageConstant } from '../constants/language_constants';
@@ -57,15 +59,10 @@ interface usertype {
 }
 
 const LoginScreen = () => {
-  const navigation = useNavigation<any>();
-  const [loading, setLoading] = useState<boolean>(true);
-
   const colors = useThemeColors();
+  const navigation = useNavigation<any>();
 
   useEffect(() => {
-    if (loading) {
-      <ActivityIndicator size={'large'} />;
-    }
     GoogleSignin.configure({
       webClientId:
         '956857887247-jttn9l0vhgdgabp27o8634sg2uvmc0d0.apps.googleusercontent.com',
@@ -82,7 +79,6 @@ const LoginScreen = () => {
     } else {
       console.log('User is not logged in.');
     }
-    setLoading(!loading);
   }, []);
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -100,22 +96,15 @@ const LoginScreen = () => {
     ? DropDownPicker.setTheme('DARK')
     : DropDownPicker.setTheme('LIGHT');
 
-  const changeLanguage = () => {
-    i18n
-      .changeLanguage(value)
-      .then(() => {
-        console.log(value);
-        RNRestart.Restart();
-        I18nManager.forceRTL(i18n.language === 'ar');
-      })
-      .catch(() => {
-        showMessage({
-          message: t(LanguageConstant.error),
-          description: t(LanguageConstant.language_change_error_message),
-          type: 'danger',
-        });
-        console.log('something went wrong while applying RTL');
-      });
+  const changeLanguage = async () => {
+    try {
+      await i18n.changeLanguage(value);
+
+      RNRestart.Restart();
+      I18nManager.forceRTL(i18n.language === 'ar');
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const googleSignIn = async () => {
@@ -125,23 +114,29 @@ const LoginScreen = () => {
       });
 
       const signInResult = await GoogleSignin.signIn();
+
       let idToken: any = signInResult.data?.idToken;
-      console.log('🚀 ~ googleSignIn ~ idToken:', idToken);
       if (!idToken) {
         throw new Error('No ID token found');
       }
       const googleCredential = GoogleAuthProvider.credential(
         signInResult?.data?.idToken,
       );
-      console.log('🚀 ~ googleSignIn ~ googleCredential:', googleCredential);
+
       const useremail = signInResult?.data?.user?.email;
-      console.log(signInResult);
-      showMessage({
-        message: t(LanguageConstant.success),
-        description: t(LanguageConstant.logged_in_message),
-        type: 'success',
-      });
-      navigation.navigate('DrawerNavigation', { email: useremail });
+
+      const isUserPresent = await firestore()
+        .collection('UsersData')
+        .where('email', '==', useremail)
+        .get();
+
+      if (!isUserPresent.empty) {
+        navigation.navigate('DrawerNavigation', { email: useremail });
+      } else {
+        navigation.navigate('UserDetailsScreeen', { email: useremail });
+      }
+
+      return signInWithCredential(getAuth(), googleCredential);
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
@@ -152,43 +147,57 @@ const LoginScreen = () => {
     }
   };
 
-  const userSignIn = (values: usertype) => {
-    signInWithEmailAndPassword(getAuth(), values.email, values.password)
-      .then(() => {
+  const userSignIn = async (values: usertype) => {
+    console.log('🚀 ~ userSignIn ~ values:', values);
+
+    const isUserPresent = await firestore()
+      .collection('UsersData')
+      .where('email', '==', values.email)
+      .get();
+    console.log('🚀 ~ userSignIn ~ isUserPresent:', isUserPresent);
+    try {
+      await signInWithEmailAndPassword(
+        getAuth(),
+        values.email,
+        values.password,
+      );
+
+      if (!isUserPresent.empty) {
         showMessage({
           message: t(LanguageConstant.success),
           description: t(LanguageConstant.logged_in_message),
           type: 'success',
         });
-        console.log(values.email);
         navigation.navigate('DrawerNavigation', { email: values.email });
-      })
-      .catch(() => {
+      } else {
         showMessage({
-          message: t(LanguageConstant.error),
-          description: t(LanguageConstant.email_password_error),
-          type: 'danger',
+          message: 'success',
+          description: ' Enter the User Details',
+          type: 'warning',
         });
-
-        console.log('user not found');
+        navigation.navigate('UserDetailsScreeen', { email: values.email });
+      }
+    } catch (error) {
+      showMessage({
+        message: 'Error!!',
+        description: 'Email or Password has be wrong',
+        type: 'danger',
       });
+    }
   };
 
   const resetPassword = async (email: string) => {
-    await firebase
-      .auth()
-      .sendPasswordResetEmail(email)
-      .then(() => {
-        Alert.alert('Email Send Successfully....');
-      })
-      .catch(error => {
-        if (error.message === 'Firebase: Error (auth/user-not-found).') {
-          Alert.alert('There is no user corresponding to this email address.');
-        } else if (error.Code === 'auth/invalid-email') {
-          Alert.alert(error);
-        }
-        Alert.alert(error.message);
-      });
+    try {
+      await firebase.auth().sendPasswordResetEmail(email);
+      Alert.alert('Email Send Successfully....');
+    } catch (error: any) {
+      if (error.message === 'Firebase: Error (auth/user-not-found).') {
+        Alert.alert('There is no user corresponding to this email address.');
+      } else if (error.Code === 'auth/invalid-email') {
+        Alert.alert(error);
+      }
+      Alert.alert(error.message);
+    }
   };
 
   return (
@@ -221,7 +230,6 @@ const LoginScreen = () => {
             password: 'Vai@123456',
           }}
           onSubmit={values => {
-            console.log(values);
             userSignIn(values);
           }}
           validationSchema={validationSchema}
@@ -297,7 +305,15 @@ const LoginScreen = () => {
       </View>
       <View style={styles.googleView}>
         <View style={[styles.dashstyle, { borderColor: colors.dashcolor }]} />
-        <Text style={[styles.orstyle, { color: colors.text }]}>{'OR'}</Text>
+        <Text
+          style={
+            colorScheme === 'light'
+              ? styles.orstyle
+              : [styles.orstyle, { color: '#FFFFFF' }]
+          }
+        >
+          OR
+        </Text>
         <View style={[styles.dashstyle, { borderColor: colors.dashcolor }]} />
       </View>
 
@@ -305,9 +321,6 @@ const LoginScreen = () => {
         <View style={styles.sociallogoView}>
           <TouchableOpacity onPress={() => googleSignIn()}>
             <Image style={styles.sociallogo} source={googlelogo} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => {}}>
-            <Image style={styles.sociallogo} source={microsoftlogo} />
           </TouchableOpacity>
         </View>
         <View style={styles.textviewstyle}>
@@ -358,15 +371,10 @@ const LoginScreen = () => {
                   )}
 
                   <TouchableOpacity
-                    style={[
-                      styles.button,
-                      { backgroundColor: colors.primaryblue },
-                    ]}
+                    style={[styles.button]}
                     onPress={() => handleSubmit()}
                   >
-                    <Text style={[styles.textStyle, { color: colors.text }]}>
-                      {'submit'}
-                    </Text>
+                    <Text style={styles.textStyle}>submit</Text>
                   </TouchableOpacity>
                 </>
               )}

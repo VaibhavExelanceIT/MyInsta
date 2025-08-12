@@ -15,11 +15,9 @@ import { t } from 'i18next';
 import { Formik } from 'formik';
 import firestore from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
+import { useNavigation } from '@react-navigation/native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-} from '@react-native-firebase/auth';
+import auth from '@react-native-firebase/auth';
 
 import { darkTheme } from '../theme/darkTheme';
 import InputText from '../components/InputText';
@@ -28,8 +26,6 @@ import { instadark, instalight } from '../helper/images';
 import ButtonComponent from '../components/ButtonComponent';
 import { LanguageConstant } from '../constants/language_constants';
 import RadioButtonComponent from '../components/RadioButtonComponent';
-import { useNavigation } from '@react-navigation/native';
-import auth from '@react-native-firebase/auth';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required('First Name is Required'),
@@ -69,7 +65,6 @@ const UserDetailsScreeen = ({ route }: any) => {
 
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
-  console.log(email);
 
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const navigation = useNavigation<any>();
@@ -82,61 +77,16 @@ const UserDetailsScreeen = ({ route }: any) => {
     setDatePickerVisibility(false);
   };
 
-  const usersCollection = firestore().collection('UsersData');
-
-  // const writefirestore = async (values: userData) => {
-  //   try {
-  //     await usersCollection
-  //       .add({
-  //         DOB: values.DOB,
-  //         email: values.email,
-  //         gender: values.gender,
-  //         mobileNo: values.mobileNo,
-  //         lastName: values.lastName,
-  //         firstName: values.firstName,
-  //       })
-  //       .then(() => {
-  //         createUserWithEmailAndPassword(
-  //           getAuth(),
-  //           values.email,
-  //           values.password,
-  //         )
-  //           .then(() => {
-  //             console.log('User account created & signed in!');
-  //           })
-  //           .catch(error => {
-  //             if (error.code === 'auth/email-already-in-use') {
-  //               console.log('That email address is already in use!');
-  //             }
-
-  //             if (error.code === 'auth/invalid-email') {
-  //               console.log('That email address is invalid!');
-  //             }
-
-  //             console.error(error);
-  //           });
-  //         console.log(values);
-  //         showMessage({
-  //           type: 'success',
-  //           message: 'success',
-  //           description: 'User Data Addedd',
-  //         });
-  //       });
-  //   } catch (error) {
-  //     showMessage({
-  //       type: 'danger',
-  //       message: 'Error',
-  //       description: 'There is some error in the data',
-  //     });
-  //     console.log(error);
-  //   }
-  // };
   const writefirestore = async (values: userData) => {
-    createUserWithEmailAndPassword(getAuth(), values.email, values.password)
-      .then(() => {
+    const isUserPresent = await firestore()
+      .collection('UsersData')
+      .where('email', '==', values.email)
+      .get();
+
+    try {
+      if (isUserPresent.empty) {
         const currentUser = auth().currentUser;
         const userId = currentUser ? currentUser.uid : null;
-        console.log('🚀 ~ AddPostScreen ~ userId:', userId);
 
         if (userId !== null) {
           let userDocumentRef: any;
@@ -175,18 +125,21 @@ const UserDetailsScreeen = ({ route }: any) => {
         } else {
           Alert.alert('There is some Error');
         }
-      })
-      .catch(error => {
-        if (error.code === 'auth/email-already-in-use') {
-          console.log('That email address is already in use!');
-        }
-
-        if (error.code === 'auth/invalid-email') {
-          console.log('That email address is invalid!');
-        }
-
-        console.error(error);
+      } else {
+        showMessage({
+          type: 'warning',
+          message: 'success',
+          description: 'User already Registrated',
+        });
+        navigation.navigate('loginScreen');
+      }
+    } catch (error) {
+      showMessage({
+        type: 'danger',
+        message: 'Error',
+        description: 'There is some error in the data',
       });
+    }
   };
 
   return (
@@ -203,7 +156,7 @@ const UserDetailsScreeen = ({ route }: any) => {
               : styles.textlightStyle
           }
         >
-          {'User Details'}
+          User Details
         </Text>
         <Formik
           initialValues={{
@@ -219,7 +172,6 @@ const UserDetailsScreeen = ({ route }: any) => {
             confirmPassword: '',
           }}
           onSubmit={values => {
-            console.log(values);
             writefirestore(values);
           }}
           validationSchema={validationSchema}
@@ -286,7 +238,7 @@ const UserDetailsScreeen = ({ route }: any) => {
                 mode="date"
                 onConfirm={date => {
                   handleChange(setFieldValue('DOB', date.toDateString()));
-                  console.log(date.toDateString());
+
                   hideDatePicker();
                 }}
                 onCancel={hideDatePicker}

@@ -1,4 +1,11 @@
-import { Image, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  useColorScheme,
+  View,
+} from 'react-native';
 import React from 'react';
 
 import Heart from '../assets/icons/HeartOutline.svg';
@@ -8,6 +15,7 @@ import Save from '../assets/icons/Save.svg';
 import More from '../assets/icons/more.svg';
 import CarouselComponent from './CarouselComponent';
 import { colors } from '../hooks/useThemeColors';
+import { CommnetDark, HeartDark, MessageDark, SaveDark } from '../helper/icon';
 
 interface ComponentProp {
   likes: number;
@@ -21,17 +29,23 @@ interface ComponentProp {
 const PostComponent: React.FC<ComponentProp> = props => {
   let { likes, title, description, ImagePost, date, comment } = props || {};
   console.log('🚀 ~ PostComponent ~ ImagePost:', ImagePost);
-  // const colors = useThemeColors();
+
+  const colorScheme = useColorScheme();
   return (
     <View
-      style={[styles.MainLayoutStyle, { borderColor: colors.modalBorderStyle }]}
+      style={[
+        styles.MainLayoutStyle,
+        {
+          borderColor: colors.modalBorderStyle,
+          backgroundColor: colors.background,
+        },
+      ]}
     >
       <View
         style={[
           styles.modalstyle,
           {
             borderColor: colors.modalBorderStyle,
-            backgroundColor: colors.white,
           },
         ]}
       >
@@ -44,10 +58,10 @@ const PostComponent: React.FC<ComponentProp> = props => {
               />
             </View>
             <View style={styles.morebtnstyle}>
-              <More height={30} width={30} />
+              <More height={30} width={30} stroke={colors.text} />
             </View>
           </View>
-          <Text>{title}</Text>
+          <Text style={{ color: colors.text }}>{title}</Text>
         </View>
         <View style={styles.PostStyle}>
           <CarouselComponent ImagePost={ImagePost} />
@@ -55,22 +69,42 @@ const PostComponent: React.FC<ComponentProp> = props => {
       </View>
       <View style={styles.actionsStyle}>
         <View style={styles.actionbtnStyle}>
-          <Heart />
+          {colorScheme === 'light' ? (
+            <Heart />
+          ) : (
+            <HeartDark height={25} width={25} />
+          )}
           <View style={styles.commentbtnstyle}>
-            <Comment />
+            {colorScheme === 'light' ? (
+              <Comment />
+            ) : (
+              <CommnetDark height={28} width={28} stroke={colors.text} />
+            )}
           </View>
-          <Message />
+          {colorScheme === 'light' ? (
+            <Message />
+          ) : (
+            <MessageDark height={25} width={25} />
+          )}
         </View>
         <View style={styles.savebtnstyle}>
-          <Save />
+          {colorScheme === 'light' ? (
+            <Save />
+          ) : (
+            <SaveDark height={30} width={30} />
+          )}
         </View>
       </View>
 
-      <Text style={styles.likestyle}>{likes} likes</Text>
+      <Text style={[styles.likestyle, { color: colors.text }]}>
+        {likes} likes
+      </Text>
 
-      <View style={styles.descriptionstyle}>
-        <Text>{description}</Text>
-      </View>
+      {description && (
+        <View style={styles.descriptionstyle}>
+          <Text style={{ color: colors.text }}>{description}</Text>
+        </View>
+      )}
 
       <Text
         style={[styles.viewcommnetstyle, { color: colors.commentTextStyle }]}
@@ -109,7 +143,9 @@ const PostComponent: React.FC<ComponentProp> = props => {
           /> */}
         </View>
       </View>
-      <Text style={styles.fotterstyle}>{date?.replaceAll(':', '-')}</Text>
+      <Text style={[styles.fotterstyle, { color: colors.text }]}>
+        {date?.replaceAll(':', '-')}
+      </Text>
     </View>
   );
 };

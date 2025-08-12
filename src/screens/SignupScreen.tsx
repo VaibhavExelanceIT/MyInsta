@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import {
   Text,
   View,
-  Alert,
   Image,
   StyleSheet,
   ScrollView,
   useColorScheme,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 
 import * as Yup from 'yup';
@@ -30,12 +30,7 @@ import InputText from '../components/InputText';
 import { lightTheme } from '../theme/lightTheme';
 import ButtonComponent from '../components/ButtonComponent';
 import { LanguageConstant } from '../constants/language_constants';
-import {
-  instadark,
-  instalight,
-  googlelogo,
-  microsoftlogo,
-} from '../helper/images';
+import { instadark, instalight, googlelogo } from '../helper/images';
 import RadioButtonComponent from '../components/RadioButtonComponent';
 import auth from '@react-native-firebase/auth';
 
@@ -79,7 +74,6 @@ const SignupScreen = () => {
   const navigation = useNavigation<any>();
 
   const googleSignIn = async () => {
-    console.log('inside the signin');
     try {
       await GoogleSignin.hasPlayServices({
         showPlayServicesUpdateDialog: true,
@@ -95,17 +89,19 @@ const SignupScreen = () => {
       );
 
       const useremail = signInResult?.data?.user?.email;
-      showMessage({
-        message: 'success',
-        description: "Fill up the Form's Details.",
-        type: 'warning',
-      });
+      const isUserPresent = await firestore()
+        .collection('UsersData')
+        .where('email', '==', useremail)
+        .get();
 
-      navigation.navigate('UserDetailsScreeen', { email: useremail });
+      if (!isUserPresent.empty) {
+        navigation.navigate('DrawerNavigation', { email: useremail });
+      } else {
+        navigation.navigate('UserDetailsScreeen', { email: useremail });
+      }
+
       return signInWithCredential(getAuth(), googleCredential);
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
@@ -119,12 +115,21 @@ const SignupScreen = () => {
   };
 
   const writefirestore = async (values: userData) => {
-    createUserWithEmailAndPassword(getAuth(), values.email, values.password)
-      .then(() => {
+    const isUserPresent = await firestore()
+      .collection('UsersData')
+      .where('email', '==', values.email)
+      .get();
+    try {
+      if (isUserPresent.empty) {
+        await createUserWithEmailAndPassword(
+          getAuth(),
+          values.email,
+          values.password,
+        );
+
         const currentUser = auth().currentUser;
         const userId = currentUser ? currentUser.uid : null;
         console.log('🚀 ~ AddPostScreen ~ userId:', userId);
-
         if (userId !== null) {
           let userDocumentRef: any;
           userDocumentRef = firestore().collection('UsersData');
@@ -162,18 +167,20 @@ const SignupScreen = () => {
         } else {
           Alert.alert('There is some Error');
         }
-      })
-      .catch(error => {
-        if (error.code === 'auth/email-already-in-use') {
-          console.log('That email address is already in use!');
-        }
-
-        if (error.code === 'auth/invalid-email') {
-          console.log('That email address is invalid!');
-        }
-
-        console.error(error);
+      } else {
+        showMessage({
+          type: 'danger',
+          message: 'Error',
+          description: 'User is already Registered',
+        });
+      }
+    } catch (error) {
+      showMessage({
+        type: 'danger',
+        message: 'Error',
+        description: 'There is some error in the data',
       });
+    }
   };
 
   return (
@@ -203,7 +210,6 @@ const SignupScreen = () => {
             confirmPassword: '',
           }}
           onSubmit={values => {
-            // console.log(values);
             writefirestore(values);
           }}
           validationSchema={validationSchema}
@@ -270,7 +276,7 @@ const SignupScreen = () => {
                 mode="date"
                 onConfirm={date => {
                   hideDatePicker();
-                  console.log(date.toDateString());
+
                   handleChange(setFieldValue('DOB', date.toDateString()));
                 }}
                 onCancel={hideDatePicker}
@@ -325,17 +331,14 @@ const SignupScreen = () => {
                 : [styles.orstyle, { color: '#FFFFFF' }]
             }
           >
-            {'OR'}
+            OR
           </Text>
           <View style={styles.dashstyle} />
         </View>
         <View style={styles.socialView}>
           <View style={styles.sociallogoView}>
-            <TouchableOpacity onPress={() => googleSignIn()}>
+            <TouchableOpacity onPress={googleSignIn}>
               <Image style={styles.sociallogo} source={googlelogo} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <Image style={styles.sociallogo} source={microsoftlogo} />
             </TouchableOpacity>
           </View>
           <View style={styles.textviewstyle}>

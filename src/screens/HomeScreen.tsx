@@ -3,23 +3,33 @@ import {
   Button,
   FlatList,
   Image,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   useColorScheme,
   View,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { Key, useEffect, useState } from 'react';
 
 import firestore from '@react-native-firebase/firestore';
 
-import { HeartOutline, Message, SettingMenu } from '../helper/icon';
+import {
+  HeartDark,
+  HeartOutline,
+  Message,
+  MessageDark,
+  SettingMenu,
+  SettingMenuDark,
+} from '../helper/icon';
 import PostComponent from '../components/PostComponent';
 import { darkTheme } from '../theme/darkTheme';
 import { lightTheme } from '../theme/lightTheme';
 import { instadark, instalight } from '../helper/images';
+import { colors } from '../hooks/useThemeColors';
 
 interface Post {
+  id: string;
   DateAndTime: string;
   Description: string;
   PostURL: Array<string>;
@@ -30,39 +40,51 @@ interface Post {
 
 const HomeScreen = ({ navigation }: any) => {
   const [post, setPost] = useState<Post[]>([]);
-  // const [userid, setUserId] = useState<string[]>([]);
+  const usersData: any[] = [];
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
-  // const id = currentUser?.uid.toString();
-  // id && userid?.push(id);
 
+  const onRefresh = () => {
+    setRefreshing(true);
+    getpost();
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000); // Refresh indicator will be visible for at least 1 second
+  };
   const getData = async (id: string | undefined) => {
     const data = await firestore()
       .collection('UsersData')
       .doc(id)
       .collection('PostData')
       .get();
-    console.log(data.docs);
+    // console.log(data.docs);
 
     data.docs.forEach(item => {
-      console.log(item.data());
+      // console.log(item.data());
       post.includes(item.data() as Post)
         ? console.log('already post list there')
         : setPost(prevState => [...prevState, item.data() as Post]);
-      console.log(post.includes(item.data() as Post));
+      // console.log(post);
+
+      // console.log(post.includes(item.data() as Post));
       console.log(post);
     });
+    setLoading(false);
+    // console.log(loading);
     return data.docs;
   };
 
   const getpost = async () => {
+    setPost([]);
     const userIds = await getAllUsersDataFirestore();
-    const PostData = await Promise.allSettled(
+    // console.log(userIds);
+    await Promise.allSettled(
       userIds.map(async cv => {
-        console.log(cv);
-        return await getData(cv);
+        // console.log(cv);
+        return await getData(cv.id);
       }),
     );
   };
@@ -70,7 +92,7 @@ const HomeScreen = ({ navigation }: any) => {
   const getAllUsersDataFirestore = async () => {
     try {
       const usersCollection = await firestore().collection('UsersData').get();
-      const usersData: any[] = [];
+
       usersCollection.forEach(documentSnapshot => {
         usersData.push({
           id: documentSnapshot.id,
@@ -78,10 +100,6 @@ const HomeScreen = ({ navigation }: any) => {
         });
       });
 
-      // usersData.map(cv => {
-      //   userid.includes(cv.id) ? console.log('already') : userid.push(cv.id);
-      // });
-      // getpost();
       return usersData;
     } catch (error) {
       console.error('Error fetching users data from Firestore:', error);
@@ -89,21 +107,31 @@ const HomeScreen = ({ navigation }: any) => {
     }
   };
   useEffect(() => {
-    getAllUsersDataFirestore();
-
-    setLoading(false);
-  }, []);
+    getpost();
+  }, [colorScheme]);
 
   const openDrawer = () => {
     navigation.openDrawer();
   };
 
   return (
-    <View style={styles.mainLAyout}>
-      <View style={styles.sortstyle}>
+    <View style={[styles.mainLAyout, { backgroundColor: colors.background }]}>
+      <View
+        style={[
+          styles.sortstyle,
+          {
+            backgroundColor: colors.background,
+            borderBottomColor: colors.modalBorderStyle,
+          },
+        ]}
+      >
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
-            <SettingMenu height={30} width={30} />
+            {colorScheme === 'light' ? (
+              <SettingMenu height={30} width={30} />
+            ) : (
+              <SettingMenuDark height={30} width={30} />
+            )}
           </TouchableOpacity>
         </View>
         <View style={styles.logoView}>
@@ -114,15 +142,26 @@ const HomeScreen = ({ navigation }: any) => {
         </View>
         <View style={styles.actionbtn}>
           <View style={styles.heartstyle}>
-            <HeartOutline height={25} width={25} />
+            {colorScheme === 'light' ? (
+              <HeartOutline height={25} width={25} />
+            ) : (
+              <HeartDark height={25} width={25} />
+            )}
           </View>
-          <Message />
+          {colorScheme === 'light' ? (
+            <Message />
+          ) : (
+            <MessageDark height={25} width={25} />
+          )}
         </View>
       </View>
       {loading ? (
         <ActivityIndicator size={'large'} />
       ) : (
         <FlatList
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
           data={post}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
@@ -160,9 +199,9 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     paddingHorizontal: 10,
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+
     borderBottomWidth: 1,
-    borderBottomColor: '#D9D9D9',
+
     elevation: 100,
   },
   userIcon: {

@@ -1,24 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import {
+  View,
+  Text,
   Image,
   StyleSheet,
-  Text,
   TouchableOpacity,
   useWindowDimensions,
-  View,
 } from 'react-native';
 import {
+  DrawerItem,
   createDrawerNavigator,
   DrawerContentScrollView,
-  DrawerItem,
 } from '@react-navigation/drawer';
+import { t } from 'i18next';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
-import BottomTabNavigation from './BottomTabNavigation';
 import { showMessage } from 'react-native-flash-message';
-import { LanguageConstant } from '../constants/language_constants';
-import { t } from 'i18next';
 import firestore from '@react-native-firebase/firestore';
+
+import BottomTabNavigation from './BottomTabNavigation';
+import { LanguageConstant } from '../constants/language_constants';
 import { useThemeColors } from '../hooks/useThemeColors';
 
 const Drawer = createDrawerNavigator();
@@ -111,6 +112,8 @@ const DrawerNavigation = ({ navigation }: any) => {
         overlayColor: 'transparent',
         drawerStyle: {
           backgroundColor: colors.background,
+          borderRightWidth: 1,
+          borderColor: colors.darwerTint,
         },
         drawerType: dimensions.width >= 768 ? 'permanent' : 'front',
       }}
@@ -151,7 +154,10 @@ const DrawerNavigation = ({ navigation }: any) => {
                       setFocused(item.name);
                       props.navigation.navigate('MyTab', { screen: item.name });
                     }}
-                    style={[styles.MarginBottom]}
+                    style={[
+                      styles.MarginBottom,
+                      { borderColor: colors.darwerTint },
+                    ]}
                     focused={focused === item.name}
                     activeBackgroundColor={colors.darwerTintBackground}
                     activeTintColor={colors.darwerTint}
@@ -173,7 +179,7 @@ const DrawerNavigation = ({ navigation }: any) => {
                     borderRadius: 10,
                     color: colors.white,
                     elevation: 10,
-                    fontWeight: '900',
+                    fontWeight: '700',
                   }}
                 >
                   Logout
@@ -197,20 +203,22 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   imageView: {
-    alignSelf: 'center',
     marginBottom: 20,
+    alignSelf: 'center',
   },
   HeaderImage: {
     backgroundColor: 'black',
     borderRadius: 10,
     height: 100,
     width: 100,
+    alignSelf: 'center',
   },
   DrawerImage: {
-    height: 20,
     width: 20,
+    height: 20,
   },
   MarginBottom: {
+    borderBottomWidth: 0.5,
     marginBottom: 10,
     borderRadius: 10,
   },

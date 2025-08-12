@@ -13,20 +13,30 @@ import {
 } from 'react-native';
 import React, { useState } from 'react';
 
+import * as Yup from 'yup';
+import { Formik } from 'formik';
 import { useNavigation } from '@react-navigation/native';
-import { instadark, instalight, more } from '../helper/images';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import { showMessage } from 'react-native-flash-message';
 import { useTranslation } from 'react-i18next';
+
+import { instadark, instalight, more } from '../helper/images';
 import { LanguageConstant } from '../constants/language_constants';
 import { ArrayUrl } from '../helper/imagesUrl';
-import { HeartOutline, Message, SettingMenu } from '../helper/icon';
+import { SettingMenu, SettingMenuDark } from '../helper/icon';
 import { useThemeColors } from '../hooks/useThemeColors';
 
-const AddPostScreen = ({ route }: any) => {
-  const [title, SetTitle] = useState<string>();
-  const [desc, SetDesc] = useState<string>();
+const validationSchema = Yup.object().shape({
+  title: Yup.string().required('Title is Required'),
+});
+
+interface PostType {
+  title: string;
+  description: string;
+}
+
+const AddPostScreen = () => {
   const [uri, setUri] = useState<string[]>([]);
   const navigation = useNavigation<any>();
 
@@ -47,7 +57,7 @@ const AddPostScreen = ({ route }: any) => {
 
   const DateAndTime = `${day}:${month}:${year}:${hours}:${minutes}`;
 
-  const submitHandler = () => {
+  const submitHandler = (value: PostType) => {
     if (userId !== null) {
       const usersCollection = firestore()
         .collection('UsersData')
@@ -56,8 +66,8 @@ const AddPostScreen = ({ route }: any) => {
 
       usersCollection
         .add({
-          Title: title,
-          Description: desc,
+          Title: value.title,
+          Description: value.description,
           PostURL: uri,
           DateAndTime: DateAndTime,
           like: 0,
@@ -110,7 +120,11 @@ const AddPostScreen = ({ route }: any) => {
       >
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
-            <SettingMenu height={30} width={30} />
+            {colorScheme === 'light' ? (
+              <SettingMenu height={30} width={30} />
+            ) : (
+              <SettingMenuDark height={30} width={30} />
+            )}
           </TouchableOpacity>
         </View>
         <View style={styles.logoView}>
@@ -157,37 +171,78 @@ const AddPostScreen = ({ route }: any) => {
               </TouchableOpacity>
             )}
           </View>
-          <TextInput
-            placeholder={t(LanguageConstant.title_placeholder)}
-            style={[styles.textInputStyle, { backgroundColor: colors.text }]}
-            value={title}
-            onChangeText={e => SetTitle(e)}
-            keyboardType="ascii-capable"
-            placeholderTextColor={colors.placeholderTextColor}
-          />
-          <TextInput
-            placeholder={t(LanguageConstant.description_placeHolder)}
-            style={[styles.textInputStyle, { backgroundColor: colors.text }]}
-            value={desc}
-            onChangeText={e => SetDesc(e)}
-            numberOfLines={50}
-            multiline={true}
-            placeholderTextColor={colors.placeholderTextColor}
-          />
+          <Formik
+            initialValues={{
+              title: '',
+              description: '',
+            }}
+            onSubmit={values => {
+              console.log(values);
+              console.log(uri);
 
-          <TouchableOpacity
-            style={[styles.btnstyle, { backgroundColor: colors.text }]}
-            onPress={submitHandler}
+              submitHandler(values);
+            }}
+            validationSchema={validationSchema}
           >
-            <Text
-              style={[
-                styles.textStyle,
-                { backgroundColor: colors.text, color: colors.background },
-              ]}
-            >
-              {t(LanguageConstant.submit)}
-            </Text>
-          </TouchableOpacity>
+            {({
+              values,
+              errors,
+              touched,
+              handleBlur,
+              handleChange,
+              handleSubmit,
+            }) => (
+              <>
+                <TextInput
+                  placeholder={t(LanguageConstant.title_placeholder)}
+                  style={[
+                    styles.textInputStyle,
+                    { backgroundColor: colors.inputTextBackground },
+                  ]}
+                  value={values.title}
+                  onBlur={handleBlur('title')}
+                  onChangeText={handleChange('title')}
+                  keyboardType="ascii-capable"
+                  placeholderTextColor={colors.placeholderTextColor}
+                />
+
+                {errors.title && touched.title && (
+                  <Text style={styles.errorText}>{errors.title}</Text>
+                )}
+
+                <TextInput
+                  placeholder={t(LanguageConstant.description_placeHolder)}
+                  style={[
+                    styles.textInputStyle,
+                    { backgroundColor: colors.inputTextBackground },
+                  ]}
+                  value={values.description}
+                  onBlur={handleBlur('description')}
+                  onChangeText={handleChange('description')}
+                  numberOfLines={50}
+                  multiline={true}
+                  placeholderTextColor={colors.placeholderTextColor}
+                />
+
+                <TouchableOpacity
+                  style={[styles.btnstyle, { backgroundColor: colors.text }]}
+                  onPress={() => handleSubmit()}
+                >
+                  <Text
+                    style={[
+                      styles.textStyle,
+                      {
+                        backgroundColor: colors.text,
+                        color: colors.background,
+                      },
+                    ]}
+                  >
+                    {t(LanguageConstant.submit)}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </Formik>
         </ScrollView>
       </View>
     </View>
@@ -269,5 +324,10 @@ const styles = StyleSheet.create({
   },
   heartstyle: {
     marginHorizontal: 10,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 15,
+    fontWeight: '800',
   },
 });

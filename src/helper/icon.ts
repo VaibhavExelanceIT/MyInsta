@@ -16,6 +16,11 @@ import ProfileOutlineDark from '../assets/icons/ProfileOutlineDark.svg';
 import Logout from '../assets/icons/LogoutOutline.svg';
 import Message from '../assets/icons/message.svg';
 import SettingMenu from '../assets/icons/SettingMenu.svg';
+import SettingMenuDark from '../assets/icons/SettingMenuDark.svg';
+import HeartDark from '../assets/icons/HeartDark.svg';
+import MessageDark from '../assets/icons/MessageDark.svg';
+import CommnetDark from '../assets/icons/CommentDark.svg';
+import SaveDark from '../assets/icons/SaveDark.svg';
 
 export {
   HomeFill,
@@ -36,4 +41,9 @@ export {
   Logout,
   Message,
   SettingMenu,
+  SettingMenuDark,
+  HeartDark,
+  MessageDark,
+  CommnetDark,
+  SaveDark,
 };

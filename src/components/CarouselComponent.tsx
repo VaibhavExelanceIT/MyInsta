@@ -59,11 +59,10 @@ const CarouselComponent: React.FC<ComponentProp> = props => {
               <TapGestureHandler
                 onHandlerStateChange={({ nativeEvent }) => {
                   if (nativeEvent.state === 5) {
-                    // State 5 indicates gesture has ended
                     handleDoubleTap();
                   }
                 }}
-                numberOfTaps={2} // Specify that you're looking for a double tap
+                numberOfTaps={2}
               >
                 <Image
                   resizeMethod="resize"
@@ -87,7 +86,7 @@ const CarouselComponent: React.FC<ComponentProp> = props => {
               styles.paginationDotStyle,
               {
                 backgroundColor:
-                  currentIndex === index ? '#222' : colors.paginationbackground,
+                  currentIndex === index ? colors.dashcolor : colors.text,
               },
             ]}
           />
@@ -111,7 +110,7 @@ const styles = StyleSheet.create({
   paginationDotStyle: {
     height: 5,
     width: 5,
-    borderRadius: 10,
+    borderRadius: 20,
   },
 
   arrowBtnText: {

@@ -12,7 +12,7 @@ export const lightColor = {
   placeholderTextColor: '#000000',
   commentTextStyle: '#757575',
   modalBorderStyle: '#D9D9D9',
-  darwerTint: '#00000',
+  darwerTint: '#000000',
   darwerTintBackground: '#e2e5e9',
 };
 
