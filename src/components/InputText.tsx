@@ -1,32 +1,50 @@
 import React from 'react';
 import {
-  StyleSheet,
-  TextInput,
-  TextInputFocusEvent,
-  useColorScheme,
   View,
+  TextInput,
+  StyleSheet,
+  useColorScheme,
+  TextInputFocusEvent,
 } from 'react-native';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 interface ComponentProp {
-  PlaceHolder: string;
   value: string;
+  PlaceHolder: string;
+  isEditable?: boolean;
   onChange?: (value: string) => void;
   onBlur?: (e: TextInputFocusEvent) => void;
-  isEditable?: boolean;
 }
 
 const InputText: React.FC<ComponentProp> = props => {
   const { PlaceHolder, onChange, value, onBlur, isEditable } = props || {};
   const colorScheme = useColorScheme();
+  const colors = useThemeColors();
   return (
     <View>
       <TextInput
         keyboardAppearance={colorScheme === 'dark' ? 'dark' : 'light'}
         style={
-          colorScheme === 'dark' ? styles.inputDarkTheme : styles.inputText
+          colorScheme === 'dark'
+            ? [
+                styles.inputDarkTheme,
+                {
+                  color: colors.placeholderTextColor,
+                  backgroundColor: colors.inputTextBackground,
+                  borderColor: colors.inputTextBorder,
+                },
+              ]
+            : [
+                styles.inputText,
+                {
+                  color: colors.placeholderTextColor,
+                  backgroundColor: colors.inputTextBackground,
+                  borderColor: colors.inputTextBorder,
+                },
+              ]
         }
         placeholder={PlaceHolder}
-        placeholderTextColor={colorScheme === 'light' ? '#BOBOBO' : '#000000'}
+        placeholderTextColor={colors.placeholderTextColor}
         onChangeText={onChange}
         value={value}
         onBlur={onBlur}
@@ -42,9 +60,6 @@ const styles = StyleSheet.create({
   inputDarkTheme: {
     marginTop: 20,
     marginBottom: 10,
-    backgroundColor: '#E8E6E6',
-    borderColor: '#E0DDDD',
-    color: '#000000',
     borderWidth: 2,
     borderRadius: 6,
     paddingHorizontal: 20,
@@ -52,8 +67,6 @@ const styles = StyleSheet.create({
   inputText: {
     marginTop: 20,
     marginBottom: 10,
-    backgroundColor: '#E8E6E6',
-    borderColor: '#E0DDDD',
     borderWidth: 2,
     borderRadius: 6,
     paddingHorizontal: 20,

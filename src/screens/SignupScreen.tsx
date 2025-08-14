@@ -7,6 +7,7 @@ import {
   ScrollView,
   useColorScheme,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 
 import * as Yup from 'yup';
@@ -31,6 +32,7 @@ import ButtonComponent from '../components/ButtonComponent';
 import { LanguageConstant } from '../constants/language_constants';
 import { instadark, instalight, googlelogo } from '../helper/images';
 import RadioButtonComponent from '../components/RadioButtonComponent';
+import auth from '@react-native-firebase/auth';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required('First Name is Required'),
@@ -70,6 +72,7 @@ const SignupScreen = () => {
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
   const navigation = useNavigation<any>();
+
   const googleSignIn = async () => {
     try {
       await GoogleSignin.hasPlayServices({
@@ -111,8 +114,6 @@ const SignupScreen = () => {
     setDatePickerVisibility(false);
   };
 
-  const usersCollection = firestore().collection('UsersData');
-
   const writefirestore = async (values: userData) => {
     const isUserPresent = await firestore()
       .collection('UsersData')
@@ -125,22 +126,47 @@ const SignupScreen = () => {
           values.email,
           values.password,
         );
-        await usersCollection.add({
-          DOB: values.DOB,
-          userImage:
-            'https://www.pexels.com/photo/blue-bmw-sedan-near-green-lawn-grass-170811/',
-          email: values.email,
-          gender: values.gender,
-          mobileNo: values.mobileNo,
-          lastName: values.lastName,
-          firstName: values.firstName,
-        });
 
-        showMessage({
-          type: 'success',
-          message: 'success',
-          description: 'User Registrated',
-        });
+        const currentUser = auth().currentUser;
+        const userId = currentUser ? currentUser.uid : null;
+        console.log('🚀 ~ AddPostScreen ~ userId:', userId);
+        if (userId !== null) {
+          let userDocumentRef: any;
+          userDocumentRef = firestore().collection('UsersData');
+          const usersCollection = firestore()
+            .collection('UsersData')
+            .doc(userId);
+          usersCollection
+            .set({
+              DOB: values.DOB,
+              userImage:
+                'https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?_gl=1*k2m0me*_ga*MTk3NDc0NTgxMi4xNzQ3OTk4NTM2*_ga_8JE65Q40S6*czE3NTQzMDExMjMkbzMkZzEkdDE3NTQzMDE4MzgkajYwJGwwJGgw',
+              email: values.email,
+              gender: values.gender,
+              mobileNo: values.mobileNo,
+              lastName: values.lastName,
+              firstName: values.firstName,
+            })
+            .then(() => {
+              showMessage({
+                message: 'success',
+                description: 'Your are logged in',
+                type: 'success',
+              });
+              navigation.navigate('DrawerNavigation', { email: values.email });
+              console.log('User account created & signed in!');
+            })
+            .catch(error => {
+              showMessage({
+                type: 'danger',
+                message: 'Error',
+                description: 'There is some error in the data',
+              });
+              console.log(error);
+            });
+        } else {
+          Alert.alert('There is some Error');
+        }
       } else {
         showMessage({
           type: 'danger',

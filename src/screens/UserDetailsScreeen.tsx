@@ -7,6 +7,7 @@ import {
   StyleSheet,
   useColorScheme,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 
 import * as Yup from 'yup';
@@ -16,6 +17,7 @@ import firestore from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
 import { useNavigation } from '@react-navigation/native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import auth from '@react-native-firebase/auth';
 
 import { darkTheme } from '../theme/darkTheme';
 import InputText from '../components/InputText';
@@ -61,12 +63,11 @@ interface userData {
 const UserDetailsScreeen = ({ route }: any) => {
   const email: string = route.params.email;
 
-  const navigation = useNavigation<any>();
-
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
 
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const navigation = useNavigation<any>();
 
   const showDatePicker = () => {
     setDatePickerVisibility(true);
@@ -76,8 +77,6 @@ const UserDetailsScreeen = ({ route }: any) => {
     setDatePickerVisibility(false);
   };
 
-  const usersCollection = firestore().collection('UsersData');
-
   const writefirestore = async (values: userData) => {
     const isUserPresent = await firestore()
       .collection('UsersData')
@@ -86,21 +85,46 @@ const UserDetailsScreeen = ({ route }: any) => {
 
     try {
       if (isUserPresent.empty) {
-        await usersCollection.add({
-          DOB: values.DOB,
-          email: values.email,
-          gender: values.gender,
-          mobileNo: values.mobileNo,
-          lastName: values.lastName,
-          firstName: values.firstName,
-        });
+        const currentUser = auth().currentUser;
+        const userId = currentUser ? currentUser.uid : null;
 
-        showMessage({
-          type: 'success',
-          message: 'success',
-          description: 'User Registrated',
-        });
-        navigation.navigate('DrawerNavigation', { email: values.email });
+        if (userId !== null) {
+          let userDocumentRef: any;
+          userDocumentRef = firestore().collection('UsersData');
+          const usersCollection = firestore()
+            .collection('UsersData')
+            .doc(userId);
+          usersCollection
+            .set({
+              DOB: values.DOB,
+              userImage:
+                'https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg?_gl=1*k2m0me*_ga*MTk3NDc0NTgxMi4xNzQ3OTk4NTM2*_ga_8JE65Q40S6*czE3NTQzMDExMjMkbzMkZzEkdDE3NTQzMDE4MzgkajYwJGwwJGgw',
+              email: values.email,
+              gender: values.gender,
+              mobileNo: values.mobileNo,
+              lastName: values.lastName,
+              firstName: values.firstName,
+            })
+            .then(() => {
+              showMessage({
+                message: 'success',
+                description: 'Your are logged in',
+                type: 'success',
+              });
+              navigation.navigate('DrawerNavigation', { email: values.email });
+              console.log('User account created & signed in!');
+            })
+            .catch(error => {
+              showMessage({
+                type: 'danger',
+                message: 'Error',
+                description: 'There is some error in the data',
+              });
+              console.log(error);
+            });
+        } else {
+          Alert.alert('There is some Error');
+        }
       } else {
         showMessage({
           type: 'warning',

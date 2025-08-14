@@ -1,6 +1,7 @@
 import { StyleSheet, Text, useColorScheme, View } from 'react-native';
 import React from 'react';
 import { RadioButton, useTheme } from 'react-native-paper';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 interface ComponentProp {
   value: string;
@@ -10,31 +11,23 @@ interface ComponentProp {
 const RadioButtonComponent: React.FC<ComponentProp> = props => {
   const { onChange, value } = props || {};
   const theme1 = useTheme();
+  const colors = useThemeColors();
 
-  const colorScheme = useColorScheme();
   return (
     <View>
-      <Text style={colorScheme === 'dark' ? styles.genderTextStyle : {}}>
-        {'Gender'}
-      </Text>
+      <Text style={{ color: colors.text }}>{'Gender'}</Text>
       <RadioButton.Group value={value} onValueChange={onChange}>
         <View style={styles.radiobtnView}>
           <RadioButton value="Male" theme={theme1} />
-          <Text style={colorScheme === 'dark' ? styles.genderTextStyle : {}}>
-            {'Male'}
-          </Text>
+          <Text style={{ color: colors.text }}>{'Male'}</Text>
         </View>
         <View style={styles.radiobtnView}>
           <RadioButton value="Female" theme={theme1} />
-          <Text style={colorScheme === 'dark' ? styles.genderTextStyle : {}}>
-            {'Female'}
-          </Text>
+          <Text style={{ color: colors.text }}>{'Female'}</Text>
         </View>
         <View style={styles.radiobtnView}>
           <RadioButton value="Other" theme={theme1} />
-          <Text style={colorScheme === 'dark' ? styles.genderTextStyle : {}}>
-            {'Other'}
-          </Text>
+          <Text style={{ color: colors.text }}>{'Other'}</Text>
         </View>
       </RadioButton.Group>
     </View>
@@ -44,9 +37,6 @@ const RadioButtonComponent: React.FC<ComponentProp> = props => {
 export default RadioButtonComponent;
 
 const styles = StyleSheet.create({
-  genderTextStyle: {
-    color: '#FFFFFF',
-  },
   radiobtnView: {
     flexDirection: 'row',
     alignItems: 'center',

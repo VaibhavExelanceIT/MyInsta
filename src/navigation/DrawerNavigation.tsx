@@ -1,6 +1,4 @@
-/* eslint-disable react/no-unstable-nested-components */
-import React, { useState } from 'react';
-
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,21 +7,103 @@ import {
   TouchableOpacity,
   useWindowDimensions,
 } from 'react-native';
-
 import {
   DrawerItem,
   createDrawerNavigator,
   DrawerContentScrollView,
 } from '@react-navigation/drawer';
+import { t } from 'i18next';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import auth from '@react-native-firebase/auth';
+import { showMessage } from 'react-native-flash-message';
+import firestore from '@react-native-firebase/firestore';
 
 import BottomTabNavigation from './BottomTabNavigation';
+import { LanguageConstant } from '../constants/language_constants';
+import { useThemeColors } from '../hooks/useThemeColors';
 
-const DrawerNavigation = (route: any) => {
-  const Drawer = createDrawerNavigator();
-  console.log(route);
-  let [focused, setFocused] = useState('');
+const Drawer = createDrawerNavigator();
 
+const DrawerNavigation = ({ navigation }: any) => {
+  const [focused, setFocused] = useState('HomeScreen');
+  const [uri, setUri] = useState<string>();
+  const [userEmail, setEmail] = useState<string>('');
   const dimensions = useWindowDimensions();
+  const colors = useThemeColors();
+
+  const getData = async () => {
+    const users = await firestore().collection('UsersData').get();
+
+    let length = users.docs.length;
+    for (let index = 0; index < length; index++) {
+      const element = users.docs[index].data();
+      setEmail(element.email);
+      setUri(element.userImage);
+    }
+  };
+
+  useEffect(() => {
+    getData();
+    const unsubscribe = navigation.addListener('state', () => {
+      const state = navigation.getState();
+
+      const drawerRoute = state?.routes.find(
+        (r: { name: string }) => r.name === 'DrawerNavigation',
+      );
+
+      const tabState = drawerRoute?.state?.routes.find(
+        (r: { name: string }) => r.name === 'MyTab',
+      )?.state;
+
+      const currentRoute = tabState?.routes?.[tabState.index]?.name;
+
+      if (
+        currentRoute &&
+        [
+          'HomeScreen',
+          'SearchScreen',
+          'AddPostScreen',
+          'NotificationScreen',
+          'ProfileScreen',
+        ].includes(currentRoute)
+      ) {
+        setFocused(currentRoute);
+      }
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  const signOutGoogle = async () => {
+    try {
+      const currentUser = GoogleSignin.getCurrentUser();
+      if (currentUser) {
+        await GoogleSignin.revokeAccess();
+        await GoogleSignin.signOut();
+        showMessage({
+          message: t(LanguageConstant.success),
+          description: t(LanguageConstant.user_signout_message),
+          type: 'success',
+        });
+        navigation.popToTop();
+      } else {
+        await auth().signOut();
+        showMessage({
+          message: t(LanguageConstant.success),
+          description: t(LanguageConstant.user_signout_message),
+          type: 'success',
+        });
+        navigation.popToTop();
+      }
+    } catch (error) {
+      showMessage({
+        message: t(LanguageConstant.error),
+        description: t(LanguageConstant.error_signin_out),
+        type: 'danger',
+      });
+      console.error('Error while signing out:', error);
+    }
+  };
+
   return (
     <Drawer.Navigator
       initialRouteName="MyTab"
@@ -31,79 +111,79 @@ const DrawerNavigation = (route: any) => {
         headerShown: false,
         overlayColor: 'transparent',
         drawerStyle: {
-          backgroundColor: '#c6cbef',
+          backgroundColor: colors.background,
+          borderRightWidth: 1,
+          borderColor: colors.darwerTint,
         },
         drawerType: dimensions.width >= 768 ? 'permanent' : 'front',
-        // drawerPosition: 'right',
       }}
       drawerContent={props => {
-        const tintColor = {
-          tintColor: focused ? 'black' : 'red',
-        };
-
         return (
           <View style={{ flex: 1 }}>
             <DrawerContentScrollView {...props}>
               <View style={styles.container}>
                 <View style={styles.imageView}>
-                  {/* <Image source={images.userIcon} style={styles.HeaderImage} /> */}
+                  <Image
+                    src={uri}
+                    resizeMode="center"
+                    style={[styles.HeaderImage]}
+                  />
+                  <Text style={{ color: colors.text }}>{userEmail}</Text>
                 </View>
-                <DrawerItem
-                  label={'Home'}
-                  icon={() => <Image style={[styles.DrawerImage, tintColor]} />}
-                  onPress={() => {
-                    setFocused('HomeScreen');
-                    props.navigation.navigate('MyTab', {
-                      screen: 'HomeScreen',
-                    });
-                    console.log('=====>', focused);
-                  }}
-                  style={styles.MarginBottom}
-                  focused={focused === 'HomeScreen'}
-                  activeBackgroundColor="orangered"
-                  activeTintColor="white"
-                />
-                <DrawerItem
-                  label={'Whislist'}
-                  icon={() => <Image style={[styles.DrawerImage, tintColor]} />}
-                  onPress={() => {
-                    setFocused('WhislistScreen');
-                    props.navigation.navigate('MyTab', {
-                      screen: 'WhislistScreen',
-                    });
-                    console.log('=====>', focused);
-                  }}
-                  focused={focused === 'WhislistScreen'}
-                  activeBackgroundColor="orangered"
-                  style={styles.MarginBottom}
-                  activeTintColor="white"
-                />
-
-                <DrawerItem
-                  label={'Profile'}
-                  icon={() => <Image style={[styles.DrawerImage, tintColor]} />}
-                  onPress={() => {
-                    setFocused('ProfileScreen');
-                    props.navigation.navigate('MyTab', {
-                      screen: 'ProfileScreen',
-                    });
-                    console.log('=====>', focused);
-                  }}
-                  focused={focused === 'ProfileScreen'}
-                  activeBackgroundColor="orangered"
-                  style={styles.MarginBottom}
-                  activeTintColor="white"
-                />
+                {[
+                  { name: 'HomeScreen', label: 'Home' },
+                  { name: 'SearchScreen', label: 'Search' },
+                  { name: 'AddPostScreen', label: 'Add Post' },
+                  { name: 'NotificationScreen', label: 'Notifications' },
+                  { name: 'ProfileScreen', label: 'Profile' },
+                ].map(item => (
+                  <DrawerItem
+                    key={item.name}
+                    label={item.label}
+                    icon={() => (
+                      <Image
+                        style={[
+                          styles.DrawerImage,
+                          {
+                            tintColor: focused === item.name ? 'black' : 'red',
+                          },
+                        ]}
+                      />
+                    )}
+                    onPress={() => {
+                      setFocused(item.name);
+                      props.navigation.navigate('MyTab', { screen: item.name });
+                    }}
+                    style={[
+                      styles.MarginBottom,
+                      { borderColor: colors.darwerTint },
+                    ]}
+                    focused={focused === item.name}
+                    activeBackgroundColor={colors.darwerTintBackground}
+                    activeTintColor={colors.darwerTint}
+                  />
+                ))}
               </View>
             </DrawerContentScrollView>
-
             <View style={styles.logoutView}>
               <TouchableOpacity
                 onPress={() => {
-                  props.navigation.navigate('LoginScreen');
+                  signOutGoogle();
+                  props.navigation.navigate('loginScreen');
                 }}
               >
-                <Text>Logout</Text>
+                <Text
+                  style={{
+                    backgroundColor: 'red',
+                    padding: 5,
+                    borderRadius: 10,
+                    color: colors.white,
+                    elevation: 10,
+                    fontWeight: '700',
+                  }}
+                >
+                  Logout
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -127,23 +207,24 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   HeaderImage: {
-    width: 40,
-    height: 40,
+    backgroundColor: 'black',
+    borderRadius: 10,
+    height: 100,
+    width: 100,
+    alignSelf: 'center',
   },
   DrawerImage: {
     width: 20,
     height: 20,
   },
   MarginBottom: {
+    borderBottomWidth: 0.5,
     marginBottom: 10,
+    borderRadius: 10,
   },
   logoutView: {
     flex: 0.1,
     margin: 20,
     flexDirection: 'row-reverse',
-  },
-  logoutImages: {
-    width: 30,
-    height: 30,
   },
 });
