@@ -43,11 +43,10 @@ const AddPostScreen = () => {
   const { t } = useTranslation();
 
   const currentDate = new Date();
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth() + 1;
-  const day = currentDate.getDate();
-  const hours = currentDate.getHours();
-  const minutes = currentDate.getMinutes();
+
+  const dateTime =
+    currentDate.toLocaleDateString() + ' ' + currentDate.toLocaleTimeString();
+  console.log('🚀 ~ AddPostScreen ~ dateTime:', dateTime);
 
   const currentUser = auth().currentUser;
   const userId = currentUser ? currentUser.uid : null;
@@ -55,7 +54,7 @@ const AddPostScreen = () => {
   console.log('🚀 ~ AddPostScreen ~ userId:', userId);
   const colors = useThemeColors();
 
-  const DateAndTime = `${day}:${month}:${year}:${hours}:${minutes}`;
+  // const DateAndTime = `${day}:${month}:${year}:${hours}:${minutes}`;
 
   const submitHandler = (value: PostType) => {
     if (userId !== null) {
@@ -69,7 +68,7 @@ const AddPostScreen = () => {
           Title: value.title,
           Description: value.description,
           PostURL: uri,
-          DateAndTime: DateAndTime,
+          DateAndTime: dateTime,
           like: 0,
           comment: 0,
         })

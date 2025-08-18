@@ -52,7 +52,7 @@ const HomeScreen = ({ navigation }: any) => {
     getpost();
     setTimeout(() => {
       setRefreshing(false);
-    }, 1000); // Refresh indicator will be visible for at least 1 second
+    }, 1000);
   };
   const getData = async (id: string | undefined) => {
     const data = await firestore()
@@ -60,20 +60,16 @@ const HomeScreen = ({ navigation }: any) => {
       .doc(id)
       .collection('PostData')
       .get();
-    // console.log(data.docs);
 
     data.docs.forEach(item => {
-      // console.log(item.data());
       post.includes(item.data() as Post)
         ? console.log('already post list there')
         : setPost(prevState => [...prevState, item.data() as Post]);
-      // console.log(post);
 
-      // console.log(post.includes(item.data() as Post));
       console.log(post);
     });
     setLoading(false);
-    // console.log(loading);
+
     return data.docs;
   };
 
@@ -170,7 +166,7 @@ const HomeScreen = ({ navigation }: any) => {
               likes={item.like}
               description={item.Description}
               title={item.Title}
-              ImagePost={item.PostURL}
+              imagePost={item.PostURL}
               date={item.DateAndTime}
             />
           )}
@@ -190,7 +186,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   mainLAyout: {
-    backgroundColor: '#FFFFFF',
     flex: 8,
   },
   sortstyle: {

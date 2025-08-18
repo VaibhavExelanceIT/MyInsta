@@ -1,11 +1,4 @@
-import {
-  Image,
-  StyleSheet,
-  Text,
-  TextInput,
-  useColorScheme,
-  View,
-} from 'react-native';
+import { Image, StyleSheet, Text, useColorScheme, View } from 'react-native';
 import React from 'react';
 
 import Heart from '../assets/icons/HeartOutline.svg';
@@ -16,19 +9,22 @@ import More from '../assets/icons/more.svg';
 import CarouselComponent from './CarouselComponent';
 import { colors } from '../hooks/useThemeColors';
 import { CommnetDark, HeartDark, MessageDark, SaveDark } from '../helper/icon';
+import moment from 'moment';
 
 interface ComponentProp {
   likes: number;
   title: string;
   comment: number;
   description: string;
-  ImagePost: Array<string>;
-  date?: string;
+  imagePost: Array<string>;
+  date: string;
 }
 
 const PostComponent: React.FC<ComponentProp> = props => {
-  let { likes, title, description, ImagePost, date, comment } = props || {};
-  console.log('🚀 ~ PostComponent ~ ImagePost:', ImagePost);
+  let { likes, title, description, imagePost, date, comment } = props || {};
+
+  const pastDate = moment(date, 'MM/DD/YYYY hh:mm:ss a');
+  const postData = pastDate.fromNow();
 
   const colorScheme = useColorScheme();
   return (
@@ -64,7 +60,7 @@ const PostComponent: React.FC<ComponentProp> = props => {
           <Text style={{ color: colors.text }}>{title}</Text>
         </View>
         <View style={styles.PostStyle}>
-          <CarouselComponent ImagePost={ImagePost} />
+          <CarouselComponent imagePost={imagePost} />
         </View>
       </View>
       <View style={styles.actionsStyle}>
@@ -105,46 +101,9 @@ const PostComponent: React.FC<ComponentProp> = props => {
           <Text style={{ color: colors.text }}>{description}</Text>
         </View>
       )}
-
-      <Text
-        style={[styles.viewcommnetstyle, { color: colors.commentTextStyle }]}
-      >
-        View all {comment} comments
-      </Text>
-
-      <View style={styles.fotterstyle}>
-        <View style={styles.titleimagestyle}>
-          {/* <Image
-            style={styles.fotterImage}
-            source={require('../asset/icon/Ellipse.png')}
-          /> */}
-          <TextInput
-            style={[
-              styles.commnettextStyle,
-              { color: colors.commentTextStyle },
-            ]}
-            placeholder="Add a comment..."
-            keyboardType="ascii-capable"
-          />
-        </View>
-
-        <View style={styles.morebtnstyle}>
-          {/* <Image
-            style={styles.emojistyle}
-            source={require('../asset/icon/heartEmoji.png')}
-          />
-          <Image
-            style={styles.emojistyle}
-            source={require('../asset/icon/hurrayEmoji.png')}
-          />
-          <Image
-            style={styles.emojistyle}
-            source={require('../asset/icon/addnew.png')}
-          /> */}
-        </View>
-      </View>
+      {/* <Text>{postData}</Text> */}
       <Text style={[styles.fotterstyle, { color: colors.text }]}>
-        {date?.replaceAll(':', '-')}
+        {postData}
       </Text>
     </View>
   );

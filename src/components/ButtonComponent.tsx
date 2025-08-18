@@ -1,22 +1,38 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextStyle,
+  TouchableOpacity,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { useThemeColors } from '../hooks/useThemeColors';
 
 interface ComponentProp {
   title: string;
   onclick: () => void;
+  imageStyle?: StyleProp<ViewStyle> | undefined;
+  textStyle?: StyleProp<TextStyle> | undefined;
 }
 
 const ButtonComponent: React.FC<ComponentProp> = props => {
-  const { title, onclick } = props || {};
+  const { title, onclick, imageStyle, textStyle } = props || {};
   const colors = useThemeColors();
   return (
     <View>
       <TouchableOpacity
-        style={[styles.btnstyle, { backgroundColor: colors.primaryblue }]}
+        style={[
+          styles.btnstyle,
+          { backgroundColor: colors.primaryblue },
+          imageStyle,
+        ]}
         onPress={onclick}
       >
-        <Text style={[styles.txtstyle, { color: colors.white }]}>{title}</Text>
+        <Text style={[styles.txtstyle, { color: colors.white }, textStyle]}>
+          {title}
+        </Text>
       </TouchableOpacity>
     </View>
   );

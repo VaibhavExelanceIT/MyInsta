@@ -14,6 +14,7 @@ export const lightColor = {
   modalBorderStyle: '#D9D9D9',
   darwerTint: '#000000',
   darwerTintBackground: '#e2e5e9',
+  profileBackground: '#f9f9f9',
 };
 
 export const darkColor = {
@@ -32,4 +33,5 @@ export const darkColor = {
   modalBorderStyle: '#D9D9D9',
   darwerTint: '#FFFFFF',
   darwerTintBackground: '#2d2e31',
+  profileBackground: '#000000',
 };
