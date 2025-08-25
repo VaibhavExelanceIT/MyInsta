@@ -1,39 +1,39 @@
 import React, { useRef, useState } from 'react';
 import {
-  Alert,
   View,
-  Image,
-  Modal,
   FlatList,
-  Dimensions,
   StyleSheet,
+  ImageResizeMode,
   TouchableOpacity,
 } from 'react-native';
-import {
-  GestureHandlerRootView,
-  TapGestureHandler,
-} from 'react-native-gesture-handler';
 
-import { useThemeColors } from '../hooks/useThemeColors';
-import PostCarouselComponent from './PostCarouselComponent';
-import { CrossLight } from '../helper/icon';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-const screenWidth = Dimensions.get('window').width - 10;
-interface ComponentProp {
+import { ColorProps } from '../constants/color';
+import { screenWidth, useThemeColors } from '../hooks/useThemeColors';
+import RenderImageComponent from './RenderImageComponent';
+import PostCarouselComponent from './PostModalComponent';
+
+interface CarouselProp {
   imagePost: Array<string>;
+  reSizeMethod: 'auto' | 'resize' | 'scale' | 'none' | undefined;
+  reSizeMode: ImageResizeMode | undefined;
+  height: number;
 }
 
-const CarouselComponent: React.FC<ComponentProp> = props => {
-  let { imagePost } = props || {};
-  const colors = useThemeColors();
+const CarouselComponent: React.FC<CarouselProp> = ({
+  imagePost,
+  reSizeMethod,
+  reSizeMode,
+  height,
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [heart, setHeart] = useState<boolean>(false);
+  const [isVisible, setIsVisible] = useState(false);
 
-  const [modal, isModalOpen] = useState(false);
-
+  const colors = useThemeColors();
+  const styles = carouselComponentStyle(colors);
   const onImageClick = () => {
-    console.log(imagePost);
-    isModalOpen(!modal);
+    setIsVisible(true);
   };
 
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
@@ -45,21 +45,12 @@ const CarouselComponent: React.FC<ComponentProp> = props => {
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 100,
   });
-  const handleDoubleTap = () => {
-    console.log('Double tap detected!');
-    setHeart(true);
-    if (heart) {
-      Alert.alert('Liked');
-    }
-  };
-  const ImagePress = () => {
-    return <PostCarouselComponent ImagePost={imagePost} />;
-  };
+
   return (
     <View>
       <FlatList
-        style={{ backgroundColor: colors.black }}
-        keyExtractor={(_, index) => `${index}`}
+        style={styles.flatListStyle}
+        keyExtractor={i => `${i}`}
         data={imagePost}
         horizontal={true}
         scrollEnabled={true}
@@ -68,123 +59,65 @@ const CarouselComponent: React.FC<ComponentProp> = props => {
         viewabilityConfig={viewabilityConfig.current}
         onViewableItemsChanged={onViewableItemsChanged.current}
         renderItem={({ item }) => {
-          console.log(item);
           return (
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <TapGestureHandler
-                onHandlerStateChange={({ nativeEvent }) => {
-                  if (nativeEvent.state === 5) {
-                    handleDoubleTap();
-                  }
-                }}
-                numberOfTaps={2}
-              >
-                <TouchableOpacity onPress={onImageClick}>
-                  <Image
-                    resizeMethod="resize"
-                    resizeMode="contain"
-                    source={{
-                      uri: item,
-                      width: screenWidth,
-                      height: 200,
-                    }}
-                  />
-                </TouchableOpacity>
-              </TapGestureHandler>
+            <GestureHandlerRootView style={styles.gestureStyle}>
+              <TouchableOpacity onPress={onImageClick}>
+                <RenderImageComponent
+                  imageUri={item}
+                  width={screenWidth}
+                  reSizeMethod={reSizeMethod}
+                  reSizeMode={reSizeMode}
+                  height={height}
+                />
+              </TouchableOpacity>
             </GestureHandlerRootView>
           );
         }}
       />
-      <Modal
-        transparent={false}
-        animationType="slide"
-        visible={modal}
-        onRequestClose={() => {
-          isModalOpen(!modal);
-        }}
-      >
-        <View style={styles.centeredView}>
-          <View
-            style={[
-              styles.modalView,
-              { backgroundColor: '#000000', shadowColor: colors.text },
-            ]}
-          >
-            <TouchableOpacity
-              onPress={onImageClick}
-              style={{ flexDirection: 'row-reverse', marginBottom: 10 }}
-            >
-              <CrossLight height={30} width={30} />
-            </TouchableOpacity>
-            <View style={styles.ImageCarousel}>
-              <PostCarouselComponent ImagePost={imagePost} />
-            </View>
-          </View>
-        </View>
-      </Modal>
-      <View style={styles.paginationVIew}>
+      <View style={styles.paginationView}>
         {imagePost?.map((_, index) => (
           <View
             style={[
               styles.paginationDotStyle,
               {
                 backgroundColor:
-                  currentIndex === index ? colors.dashcolor : colors.text,
+                  currentIndex === index
+                    ? colors.primaryblue
+                    : colors.dashcolor,
               },
             ]}
           />
         ))}
       </View>
+      {isVisible && (
+        <PostCarouselComponent
+          imagePost={imagePost}
+          isOpen={isVisible}
+          setIsImageClicked={setIsVisible}
+        />
+      )}
     </View>
   );
 };
 
 export default CarouselComponent;
 
-const styles = StyleSheet.create({
-  videostyle: { height: '100%' },
-  paginationVIew: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '10%',
-    alignSelf: 'center',
-    marginVertical: 10,
-  },
-  paginationDotStyle: {
-    height: 5,
-    width: 5,
-    borderRadius: 20,
-  },
+const carouselComponentStyle = (colors: ColorProps) =>
+  StyleSheet.create({
+    flatListStyle: { backgroundColor: colors.black },
 
-  arrowBtnText: {
-    fontSize: 35,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  centeredView: {
-    flex: 1,
-    height: '100%',
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalView: {
-    padding: 5,
-    elevation: 5,
-    height: '100%',
-    width: '100%',
-    shadowRadius: 4,
-    shadowOpacity: 0.25,
+    gestureStyle: { flex: 1 },
 
-    shadowOffset: {
-      width: 0,
-      height: 2,
+    paginationView: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      width: '10%',
+      alignSelf: 'center',
+      marginVertical: 10,
     },
-  },
-  ImageCarousel: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-});
+    paginationDotStyle: {
+      height: 5,
+      width: 5,
+      borderRadius: 20,
+    },
+  });

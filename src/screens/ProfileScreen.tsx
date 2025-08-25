@@ -1,85 +1,106 @@
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
+  Text,
+  View,
   FlatList,
   StyleSheet,
-  TouchableOpacity,
   useColorScheme,
-  View,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 
-import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
-
-import { colors } from '../hooks/useThemeColors';
+import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
+import { showMessage } from 'react-native-flash-message';
+
 import { SettingMenu, SettingMenuDark } from '../helper/icon';
 import ProfileTopComponent from '../components/ProfileTopComponent';
-import ProfileBottomComponent from '../components/ProfileBottomComponent';
+import ProfilePostItem from '../components/ProfilePostItem';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { ColorProps } from '../constants/color';
 
 interface Post {
   id: string;
-  DateAndTime: string;
-  Description: string;
-  PostURL: Array<string>;
-  Title: string;
-  comment: number;
   like: number;
+  title: string;
+  comment: number;
   following: number;
   followers: number;
+  dateAndTime: string;
+  description: string;
+  postURL: Array<string>;
 }
 interface User {
   id: string;
   DOB: string;
   email: string;
-  firstName: string;
-  lastName: string;
   gender: string;
+  lastName: string;
   mobileNo: string;
   imageUrl: string;
-  followers: number;
-  following: number;
+  firstName: string;
+  followers: Array<string>;
+  following: Array<string>;
 }
 
 const ProfileScreen = () => {
+  const navigation = useNavigation<any>();
+  const [isLoading, setIsLoading] = useState(true);
   const [post, setPost] = useState<Post[]>([]);
   const [usersData, setUserData] = useState<User>();
-
-  const [loading, setLoading] = useState(true);
-
-  const navigation = useNavigation<any>();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const colorScheme = useColorScheme();
   const currentUser = auth().currentUser;
+  const colors = useThemeColors();
+  const styles = profileScreenStyle(colors);
 
-  const getData = async (id: string | undefined) => {
-    const data = await firestore()
-      .collection('UsersData')
-      .doc(id)
-      .collection('PostData')
-      .get();
+  const getPostData = async (id: string) => {
+    try {
+      const data = await firestore()
+        .collection('UsersData')
+        .doc(id)
+        .collection('PostData')
+        .get();
 
-    data.docs.forEach(item => {
-      post.includes(item.data() as Post)
-        ? console.log('already post list there')
-        : setPost(prevState => [...prevState, item.data() as Post]);
-    });
+      data.docs.forEach(item => {
+        setPost(prevState => [...prevState, item.data() as Post]);
+      });
 
-    setLoading(false);
+      setIsLoading(false);
 
-    return data.docs;
+      return data.docs;
+    } catch (error) {
+      showMessage({
+        message: 'Error ',
+        description: `There is some Error ${error}`,
+        type: 'danger',
+      });
+    }
   };
+  const onRefresh = async () => {
+    setIsRefreshing(true);
+    userData();
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 1000);
+  };
+
+  const userData = async () => {
+    return await getAllUsersDataFirestore();
+  };
+  useEffect(() => {
+    userData();
+  }, []);
 
   useEffect(() => {
     setPost([]);
-    console.log(usersData);
-    getData(usersData?.id);
+    const getData = async (id: string) => {
+      usersData?.id ? await getPostData(id) : '';
+    };
+    usersData?.id ? getData(usersData?.id) : '';
   }, [usersData]);
-
-  const getpost = async () => {
-    setPost([]);
-    await getAllUsersDataFirestore();
-    console.log('k.asdfglasbdfgkjabskldfgabklsjb');
-  };
 
   const getAllUsersDataFirestore = async () => {
     try {
@@ -87,66 +108,34 @@ const ProfileScreen = () => {
         .collection('UsersData')
         .where('email', '==', currentUser?.email)
         .get();
-      console.log(
-        '🚀 ~ getAllUsersDataFirestore ~ usersCollection:',
-        usersCollection.docs[0].id,
-      );
-      console.log(
-        '🚀 ~ getAllUsersDataFirestore ~ usersCollection:',
-        usersCollection.docs[0].data().firstName,
-      );
-      const documentSnapshot = usersCollection.docs[0];
 
-      console.log(
-        '🚀 ~ getAllUsersDataFirestore ~ documentSnapshot:',
-        documentSnapshot.id,
-        '\n' + documentSnapshot.data().firstName,
-        documentSnapshot.data().DOB,
-        documentSnapshot.data().email,
-        documentSnapshot.data().lastName,
-        documentSnapshot.data().gender,
-        documentSnapshot.data().mobileNo,
-        documentSnapshot.data().userImage,
-        documentSnapshot.data().Followers,
-        documentSnapshot.data().Following,
-      );
-      setUserData({
-        id: documentSnapshot.id,
-        firstName: documentSnapshot.data().firstName,
-        DOB: documentSnapshot.data().DOB,
-        email: documentSnapshot.data().email,
-        lastName: documentSnapshot.data().lastName,
-        gender: documentSnapshot.data().gender,
-        mobileNo: documentSnapshot.data().mobileNo,
-        imageUrl: documentSnapshot.data().userImage,
-        followers: documentSnapshot.data().Followers,
-        following: documentSnapshot.data().Following,
-      });
+      const documentSnapshot = usersCollection.docs[0].data();
+      const data: User = {
+        DOB: documentSnapshot.DOB,
+        email: documentSnapshot.email,
+        id: usersCollection.docs[0].id,
+        gender: documentSnapshot.gender,
+        mobileNo: documentSnapshot.mobileNo,
+        lastName: documentSnapshot.lastName,
+        imageUrl: documentSnapshot.userImage,
+        followers: documentSnapshot.follower,
+        following: documentSnapshot.following,
+        firstName: documentSnapshot.firstName,
+      };
+      setUserData(data);
 
       return usersData;
     } catch (error) {
       return [];
     }
   };
-  useEffect(() => {
-    getpost();
-  }, []);
 
   const openDrawer = () => {
     navigation.openDrawer();
   };
   return (
-    <View
-      style={[styles.mainLAyout, { backgroundColor: colors.profileBackground }]}
-    >
-      <View
-        style={[
-          styles.sortstyle,
-          {
-            borderBottomColor: colors.modalBorderStyle,
-          },
-        ]}
-      >
+    <View style={styles.mainLayout}>
+      <View style={styles.sortStyle}>
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
             {colorScheme === 'light' ? (
@@ -157,10 +146,10 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
-      {loading ? (
+      {isLoading ? (
         <ActivityIndicator
-          style={{ flex: 1, justifyContent: 'center' }}
-          color={'#ff2820'}
+          style={styles.loaderStyle}
+          color={colors.activityIndicatorStyle}
           size={'large'}
         />
       ) : (
@@ -168,35 +157,40 @@ const ProfileScreen = () => {
           {!!usersData && (
             <View style={{ flex: 0.5 }}>
               <ProfileTopComponent
-                follower={usersData.followers}
-                following={usersData.following}
                 totalPost={post.length}
-                userName={usersData.firstName + ' ' + usersData.lastName}
                 ProfilePhoto={usersData.imageUrl}
+                follower={usersData.followers.length}
+                following={usersData.following.length}
+                userName={usersData.firstName + ' ' + usersData.lastName}
               />
             </View>
           )}
         </>
       )}
 
-      {loading ? (
+      {isLoading ? (
         <ActivityIndicator
-          style={{ flex: 1, justifyContent: 'center' }}
-          color={'#ff2820'}
+          style={styles.loaderStyle}
+          color={colors.activityIndicatorStyle}
           size={'large'}
         />
-      ) : (
-        <View style={{ flex: 1.2 }}>
+      ) : post.length > 0 ? (
+        <View style={styles.postStyle}>
           <FlatList
-            showsVerticalScrollIndicator={false}
-            horizontal={false}
-            numColumns={3}
+            refreshControl={
+              <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+            }
             data={post}
-            renderItem={({ item }) => (
-              <ProfileBottomComponent image={item.PostURL} />
-            )}
+            numColumns={3}
+            horizontal={false}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => <ProfilePostItem image={item.postURL} />}
             keyExtractor={item => item.id}
           />
+        </View>
+      ) : (
+        <View style={styles.postStyle}>
+          <Text style={styles.textStyle}>No Post</Text>
         </View>
       )}
     </View>
@@ -205,35 +199,31 @@ const ProfileScreen = () => {
 
 export default ProfileScreen;
 
-const styles = StyleSheet.create({
-  mainLAyout: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  sortstyle: {
-    flexDirection: 'row-reverse',
-    paddingTop: 30,
-    // paddingBottom: 10,
-    paddingHorizontal: 10,
-    justifyContent: 'space-between',
-
-    // borderBottom/Width: 1,
-
-    //    elevation: 1,
-  },
-  userIcon: {
-    marginBottom: '2%',
-    alignSelf: 'flex-end',
-  },
-  logoView: {
-    flex: 1,
-    marginHorizontal: 10,
-  },
-  actionbtn: {
-    flexDirection: 'row',
-    padding: 10,
-  },
-  heartstyle: {
-    marginHorizontal: 10,
-  },
-});
+const profileScreenStyle = (colors: ColorProps) =>
+  StyleSheet.create({
+    postStyle: { flex: 1.2 },
+    loaderStyle: { flex: 1, justifyContent: 'center' },
+    textStyle: {
+      flex: 1,
+      fontSize: 20,
+      fontWeight: '400',
+      textAlign: 'center',
+      textAlignVertical: 'center',
+    },
+    mainLayout: {
+      flex: 1,
+      justifyContent: 'space-between',
+      backgroundColor: colors.profileBackground,
+    },
+    sortStyle: {
+      paddingTop: 30,
+      paddingHorizontal: 10,
+      flexDirection: 'row-reverse',
+      justifyContent: 'space-between',
+      borderBottomColor: colors.modalBorderStyle,
+    },
+    userIcon: {
+      marginBottom: '2%',
+      alignSelf: 'flex-end',
+    },
+  });

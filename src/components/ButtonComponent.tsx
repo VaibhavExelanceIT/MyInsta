@@ -1,52 +1,37 @@
 import React from 'react';
 import {
-  StyleProp,
-  StyleSheet,
   Text,
-  TextStyle,
-  TouchableOpacity,
   View,
+  StyleProp,
+  TextStyle,
   ViewStyle,
+  StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
-import { useThemeColors } from '../hooks/useThemeColors';
 
-interface ComponentProp {
+interface ButtonProp {
   title: string;
-  onclick: () => void;
-  imageStyle?: StyleProp<ViewStyle> | undefined;
-  textStyle?: StyleProp<TextStyle> | undefined;
+  onClick: () => void;
+  btnStyle: StyleProp<ViewStyle>;
+  textStyle: StyleProp<TextStyle>;
 }
 
-const ButtonComponent: React.FC<ComponentProp> = props => {
-  const { title, onclick, imageStyle, textStyle } = props || {};
-  const colors = useThemeColors();
+const ButtonComponent: React.FC<ButtonProp> = ({
+  title,
+  onClick,
+  btnStyle,
+  textStyle,
+}) => {
   return (
-    <View>
-      <TouchableOpacity
-        style={[
-          styles.btnstyle,
-          { backgroundColor: colors.primaryblue },
-          imageStyle,
-        ]}
-        onPress={onclick}
-      >
-        <Text style={[styles.txtstyle, { color: colors.white }, textStyle]}>
-          {title}
-        </Text>
+    <View style={styles.containerStyle}>
+      <TouchableOpacity style={btnStyle} onPress={onClick}>
+        <Text style={textStyle}>{title}</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-export default ButtonComponent;
-
 const styles = StyleSheet.create({
-  btnstyle: {
-    marginVertical: 10,
-    padding: 10,
-    borderRadius: 6,
-  },
-  txtstyle: {
-    textAlign: 'center',
-  },
+  containerStyle: { flex: 1 },
 });
+export default ButtonComponent;

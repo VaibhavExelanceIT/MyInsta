@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   useWindowDimensions,
 } from 'react-native';
+
 import {
   DrawerItem,
   createDrawerNavigator,
@@ -20,29 +21,34 @@ import firestore from '@react-native-firebase/firestore';
 
 import BottomTabNavigation from './BottomTabNavigation';
 import { LanguageConstant } from '../constants/language_constants';
+import { ColorProps } from '../constants/color';
 import { useThemeColors } from '../hooks/useThemeColors';
 
 const Drawer = createDrawerNavigator();
 
 const DrawerNavigation = ({ navigation }: any) => {
-  const [focused, setFocused] = useState('HomeScreen');
   const [uri, setUri] = useState<string>();
   const [userEmail, setEmail] = useState<string>('');
+  const [focused, setFocused] = useState('HomeScreen');
   const dimensions = useWindowDimensions();
+  const currentUser = auth().currentUser;
+
   const colors = useThemeColors();
+  const styles = drawerNavigationStyle(colors);
 
   const getData = async () => {
-    const users = await firestore().collection('UsersData').get();
+    const users = await firestore()
+      .collection('UsersData')
+      .where('email', '==', userEmail)
+      .get();
 
-    let length = users.docs.length;
-    for (let index = 0; index < length; index++) {
-      const element = users.docs[index].data();
-      setEmail(element.email);
-      setUri(element.userImage);
-    }
+    setUri(users.docs[0].data().userImage);
   };
 
   useEffect(() => {
+    if (currentUser?.email) {
+      setEmail(currentUser.email);
+    }
     getData();
     const unsubscribe = navigation.addListener('state', () => {
       const state = navigation.getState();
@@ -62,9 +68,9 @@ const DrawerNavigation = ({ navigation }: any) => {
         [
           'HomeScreen',
           'SearchScreen',
+          'ProfileScreen',
           'AddPostScreen',
           'NotificationScreen',
-          'ProfileScreen',
         ].includes(currentRoute)
       ) {
         setFocused(currentRoute);
@@ -100,7 +106,6 @@ const DrawerNavigation = ({ navigation }: any) => {
         description: t(LanguageConstant.error_signin_out),
         type: 'danger',
       });
-      console.error('Error while signing out:', error);
     }
   };
 
@@ -126,9 +131,9 @@ const DrawerNavigation = ({ navigation }: any) => {
                   <Image
                     src={uri}
                     resizeMode="center"
-                    style={[styles.HeaderImage]}
+                    style={[styles.headerImage]}
                   />
-                  <Text style={{ color: colors.text }}>{userEmail}</Text>
+                  <Text style={styles.userEmailStyle}>{userEmail}</Text>
                 </View>
                 {[
                   { name: 'HomeScreen', label: 'Home' },
@@ -143,9 +148,12 @@ const DrawerNavigation = ({ navigation }: any) => {
                     icon={() => (
                       <Image
                         style={[
-                          styles.DrawerImage,
+                          styles.drawerImage,
                           {
-                            tintColor: focused === item.name ? 'black' : 'red',
+                            tintColor:
+                              focused === item.name
+                                ? colors.black
+                                : colors.activityIndicatorStyle,
                           },
                         ]}
                       />
@@ -154,10 +162,7 @@ const DrawerNavigation = ({ navigation }: any) => {
                       setFocused(item.name);
                       props.navigation.navigate('MyTab', { screen: item.name });
                     }}
-                    style={[
-                      styles.MarginBottom,
-                      { borderColor: colors.darwerTint },
-                    ]}
+                    style={styles.bottomStyle}
                     focused={focused === item.name}
                     activeBackgroundColor={colors.darwerTintBackground}
                     activeTintColor={colors.darwerTint}
@@ -172,18 +177,7 @@ const DrawerNavigation = ({ navigation }: any) => {
                   props.navigation.navigate('loginScreen');
                 }}
               >
-                <Text
-                  style={{
-                    backgroundColor: 'red',
-                    padding: 5,
-                    borderRadius: 10,
-                    color: colors.white,
-                    elevation: 10,
-                    fontWeight: '700',
-                  }}
-                >
-                  Logout
-                </Text>
+                <Text style={styles.textStyle}>{'Logout'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -197,34 +191,45 @@ const DrawerNavigation = ({ navigation }: any) => {
 
 export default DrawerNavigation;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 2,
-    justifyContent: 'flex-end',
-  },
-  imageView: {
-    marginBottom: 20,
-    alignSelf: 'center',
-  },
-  HeaderImage: {
-    backgroundColor: 'black',
-    borderRadius: 10,
-    height: 100,
-    width: 100,
-    alignSelf: 'center',
-  },
-  DrawerImage: {
-    width: 20,
-    height: 20,
-  },
-  MarginBottom: {
-    borderBottomWidth: 0.5,
-    marginBottom: 10,
-    borderRadius: 10,
-  },
-  logoutView: {
-    flex: 0.1,
-    margin: 20,
-    flexDirection: 'row-reverse',
-  },
-});
+const drawerNavigationStyle = (colors: ColorProps) =>
+  StyleSheet.create({
+    textStyle: {
+      padding: 5,
+      elevation: 10,
+      fontWeight: '700',
+      borderRadius: 10,
+      color: colors.white,
+      backgroundColor: 'red',
+    },
+    container: {
+      flex: 2,
+      justifyContent: 'flex-end',
+    },
+    imageView: {
+      marginBottom: 20,
+      alignSelf: 'center',
+    },
+    headerImage: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      alignSelf: 'center',
+      backgroundColor: 'black',
+    },
+    drawerImage: {
+      width: 20,
+      height: 20,
+    },
+    bottomStyle: {
+      borderColor: colors.darwerTint,
+      marginBottom: 10,
+      borderRadius: 10,
+      borderBottomWidth: 0.5,
+    },
+    logoutView: {
+      flex: 0.1,
+      margin: 20,
+      flexDirection: 'row-reverse',
+    },
+    userEmailStyle: { color: colors.text },
+  });

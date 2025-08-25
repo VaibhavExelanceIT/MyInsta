@@ -6,69 +6,57 @@ import {
   useColorScheme,
   TextInputFocusEvent,
 } from 'react-native';
-import { useThemeColors } from '../hooks/useThemeColors';
 
-interface ComponentProp {
+import { useThemeColors } from '../hooks/useThemeColors';
+import { ColorProps } from '../constants/color';
+
+interface TextboxProp {
   value: string;
-  PlaceHolder: string;
+  placeholder: string;
   isEditable?: boolean;
   onChange?: (value: string) => void;
   onBlur?: (e: TextInputFocusEvent) => void;
 }
 
-const InputText: React.FC<ComponentProp> = props => {
-  const { PlaceHolder, onChange, value, onBlur, isEditable } = props || {};
+const InputText: React.FC<TextboxProp> = ({
+  placeholder,
+  onChange,
+  value,
+  onBlur,
+  isEditable,
+}) => {
   const colorScheme = useColorScheme();
   const colors = useThemeColors();
+  const styles = inputTextStyle(colors);
+
   return (
     <View>
       <TextInput
-        keyboardAppearance={colorScheme === 'dark' ? 'dark' : 'light'}
-        style={
-          colorScheme === 'dark'
-            ? [
-                styles.inputDarkTheme,
-                {
-                  color: colors.placeholderTextColor,
-                  backgroundColor: colors.inputTextBackground,
-                  borderColor: colors.inputTextBorder,
-                },
-              ]
-            : [
-                styles.inputText,
-                {
-                  color: colors.placeholderTextColor,
-                  backgroundColor: colors.inputTextBackground,
-                  borderColor: colors.inputTextBorder,
-                },
-              ]
-        }
-        placeholder={PlaceHolder}
-        placeholderTextColor={colors.placeholderTextColor}
-        onChangeText={onChange}
         value={value}
         onBlur={onBlur}
         editable={isEditable}
+        onChangeText={onChange}
+        placeholder={placeholder}
+        placeholderTextColor={colors.placeholderTextColor}
+        keyboardAppearance={colorScheme === 'dark' ? 'dark' : 'light'}
+        style={styles.inputText}
       />
     </View>
   );
 };
 
-export default InputText;
+const inputTextStyle = (colors: ColorProps) =>
+  StyleSheet.create({
+    inputText: {
+      marginTop: 20,
+      borderWidth: 2,
+      borderRadius: 6,
+      marginBottom: 10,
+      paddingHorizontal: 20,
+      color: colors.placeholderTextColor,
+      borderColor: colors.inputTextBorder,
+      backgroundColor: colors.inputTextBackground,
+    },
+  });
 
-const styles = StyleSheet.create({
-  inputDarkTheme: {
-    marginTop: 20,
-    marginBottom: 10,
-    borderWidth: 2,
-    borderRadius: 6,
-    paddingHorizontal: 20,
-  },
-  inputText: {
-    marginTop: 20,
-    marginBottom: 10,
-    borderWidth: 2,
-    borderRadius: 6,
-    paddingHorizontal: 20,
-  },
-});
+export default InputText;

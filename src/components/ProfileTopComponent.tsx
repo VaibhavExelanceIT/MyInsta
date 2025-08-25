@@ -1,10 +1,12 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
 import React from 'react';
 
-import { colors } from '../hooks/useThemeColors';
 import ButtonComponent from './ButtonComponent';
+import ProfileTextComponent from './ProfileTextComponent';
+import { ColorProps } from '../constants/color';
+import { useThemeColors } from '../hooks/useThemeColors';
 
-interface ComponentProp {
+interface ProfileTopProp {
   follower: number;
   following: number;
   totalPost: number;
@@ -12,62 +14,32 @@ interface ComponentProp {
   ProfilePhoto: string;
 }
 
-const ProfileTopComponent: React.FC<ComponentProp> = props => {
-  const { follower, following, totalPost, userName, ProfilePhoto } =
-    props || {};
+const ProfileTopComponent: React.FC<ProfileTopProp> = ({
+  follower,
+  following,
+  totalPost,
+  userName,
+  ProfilePhoto,
+}) => {
+  const colors = useThemeColors();
+  const styles = profileTopComponentStyle(colors);
   return (
-    <View
-      style={[styles.container, { backgroundColor: colors.profileBackground }]}
-    >
+    <View style={styles.container}>
       <View style={styles.mainLayout}>
-        <Image
-          src={ProfilePhoto}
-          style={[styles.imageStyle, { borderColor: colors.inputTextBorder }]}
-        />
-
-        <View style={styles.textStyle}>
-          <Text style={[styles.textcolor, { color: colors.text }]}>
-            {totalPost}
-          </Text>
-          <Text style={[styles.TextView, { color: colors.text }]}>
-            {'Posts'}
-          </Text>
-        </View>
-        <View style={styles.textStyle}>
-          <Text style={[styles.textcolor, { color: colors.text }]}>
-            {follower}
-          </Text>
-          <Text style={[styles.TextView, { color: colors.text }]}>
-            {'Followers'}
-          </Text>
-        </View>
-        <View style={styles.textStyle}>
-          <Text style={[styles.textcolor, { color: colors.text }]}>
-            {following}
-          </Text>
-          <Text style={[styles.TextView, { color: colors.text }]}>
-            {'Following'}
-          </Text>
-        </View>
+        <Image src={ProfilePhoto} style={styles.imageStyle} />
+        <ProfileTextComponent textData={totalPost} textTitle="Post" />
+        <ProfileTextComponent textData={follower} textTitle="Follower" />
+        <ProfileTextComponent textData={following} textTitle="Following" />
       </View>
-      <View
-        style={[styles.TextView, { alignSelf: 'flex-start', marginLeft: 30 }]}
-      >
-        <Text style={[styles.textcolor, { color: colors.text }]}>
-          {userName}
-        </Text>
+      <View style={styles.textView}>
+        <Text style={styles.textColor}>{userName}</Text>
       </View>
       <View style={styles.btnView}>
         <ButtonComponent
+          onClick={() => {}}
           title="Edit Profile"
-          onclick={() => {}}
-          imageStyle={{
-            backgroundColor: colors.background,
-            borderWidth: 1,
-            borderRadius: 10,
-            borderColor: colors.inputTextBorder,
-          }}
-          textStyle={{ color: colors.text }}
+          btnStyle={styles.btnStyle}
+          textStyle={styles.textStyle}
         />
       </View>
     </View>
@@ -76,31 +48,47 @@ const ProfileTopComponent: React.FC<ComponentProp> = props => {
 
 export default ProfileTopComponent;
 
-const styles = StyleSheet.create({
-  btnView: { alignSelf: 'stretch', marginHorizontal: 20 },
-  container: {
-    flex: 1,
-  },
-  mainLayout: {
-    marginTop: 20,
-    marginBottom: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  imageStyle: {
-    height: 100,
-    width: 100,
-    borderRadius: 50,
-    borderWidth: 5,
-    marginLeft: 20,
-  },
-  textStyle: {
-    flex: 1,
-    alignSelf: 'center',
-    alignItems: 'center',
-  },
-  TextView: { alignSelf: 'center' },
-  textcolor: {
-    fontWeight: '600',
-  },
-});
+const profileTopComponentStyle = (colors: ColorProps) =>
+  StyleSheet.create({
+    btnView: {
+      height: 50,
+      marginVertical: 10,
+      marginHorizontal: 20,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: colors.profileBackground,
+    },
+    mainLayout: {
+      marginTop: 20,
+      marginBottom: 10,
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+    },
+    imageStyle: {
+      height: 100,
+      width: 100,
+      borderWidth: 5,
+      marginLeft: 20,
+      borderRadius: 50,
+      borderColor: colors.inputTextBorder,
+    },
+    textStyle: {
+      flex: 1,
+      alignSelf: 'center',
+      alignItems: 'center',
+      textAlignVertical: 'center',
+    },
+    textView: { alignSelf: 'flex-start', marginLeft: 30 },
+    textColor: {
+      fontWeight: '600',
+      color: colors.text,
+    },
+    btnStyle: {
+      flex: 1,
+      borderWidth: 1,
+      borderRadius: 10,
+      backgroundColor: colors.background,
+      borderColor: colors.inputTextBorder,
+    },
+  });
