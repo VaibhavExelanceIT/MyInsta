@@ -21,6 +21,11 @@ import HeartDark from '../assets/icons/HeartDark.svg';
 import MessageDark from '../assets/icons/MessageDark.svg';
 import CommnetDark from '../assets/icons/CommentDark.svg';
 import SaveDark from '../assets/icons/SaveDark.svg';
+import CrossDark from '../assets/icons/CrossDark.svg';
+import CrossLight from '../assets/icons/CrossLight.svg';
+import Save from '../assets/icons/Save.svg';
+import Comment from '../assets/icons/comment.svg';
+import More from '../assets/icons/more.svg';
 
 export {
   HomeFill,
@@ -46,4 +51,9 @@ export {
   MessageDark,
   CommnetDark,
   SaveDark,
+  CrossDark,
+  CrossLight,
+  Save,
+  Comment,
+  More,
 };

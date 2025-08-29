@@ -3,16 +3,17 @@ import {
   Text,
   View,
   Image,
+  Alert,
   StyleSheet,
   ScrollView,
   useColorScheme,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 
 import * as Yup from 'yup';
 import { t } from 'i18next';
 import { Formik } from 'formik';
+import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
@@ -25,14 +26,13 @@ import {
   createUserWithEmailAndPassword,
 } from '@react-native-firebase/auth';
 
-import { darkTheme } from '../theme/darkTheme';
 import InputText from '../components/InputText';
-import { lightTheme } from '../theme/lightTheme';
 import ButtonComponent from '../components/ButtonComponent';
 import { LanguageConstant } from '../constants/language_constants';
 import { instadark, instalight, googlelogo } from '../helper/images';
 import RadioButtonComponent from '../components/RadioButtonComponent';
-import auth from '@react-native-firebase/auth';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { ColorProps } from '../constants/color';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required('First Name is Required'),
@@ -65,13 +65,17 @@ interface userData {
   mobileNo: string;
   firstName: string;
   userImage?: string;
+  follower: Array<string>;
   confirmPassword: string;
+  following: Array<string>;
 }
 
 const SignupScreen = () => {
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-
+  const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
   const navigation = useNavigation<any>();
+  const colorScheme = useColorScheme();
+  const colors = useThemeColors();
+  const styles = signupScreenStyle(colors);
 
   const googleSignIn = async () => {
     try {
@@ -88,33 +92,33 @@ const SignupScreen = () => {
         signInResult?.data?.idToken,
       );
 
-      const useremail = signInResult?.data?.user?.email;
+      const userEmail = signInResult?.data?.user?.email;
       const isUserPresent = await firestore()
         .collection('UsersData')
-        .where('email', '==', useremail)
+        .where('email', '==', userEmail)
         .get();
 
       if (!isUserPresent.empty) {
-        navigation.navigate('DrawerNavigation', { email: useremail });
+        navigation.navigate('DrawerNavigation', { email: userEmail });
       } else {
-        navigation.navigate('UserDetailsScreeen', { email: useremail });
+        navigation.navigate('UserDetailsScreeen', { email: userEmail });
       }
 
       return signInWithCredential(getAuth(), googleCredential);
-    } catch (error) {}
+    } catch (error) {
+      Alert.alert('There is some' + error);
+    }
   };
-  const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
 
   const showDatePicker = () => {
-    setDatePickerVisibility(true);
+    setIsDatePickerVisibility(true);
   };
 
   const hideDatePicker = () => {
-    setDatePickerVisibility(false);
+    setIsDatePickerVisibility(false);
   };
 
-  const writefirestore = async (values: userData) => {
+  const writeFirestore = async (values: userData) => {
     const isUserPresent = await firestore()
       .collection('UsersData')
       .where('email', '==', values.email)
@@ -129,13 +133,12 @@ const SignupScreen = () => {
 
         const currentUser = auth().currentUser;
         const userId = currentUser ? currentUser.uid : null;
-        console.log('🚀 ~ AddPostScreen ~ userId:', userId);
+
         if (userId !== null) {
-          let userDocumentRef: any;
-          userDocumentRef = firestore().collection('UsersData');
           const usersCollection = firestore()
             .collection('UsersData')
             .doc(userId);
+
           usersCollection
             .set({
               DOB: values.DOB,
@@ -146,6 +149,8 @@ const SignupScreen = () => {
               mobileNo: values.mobileNo,
               lastName: values.lastName,
               firstName: values.firstName,
+              follower: [],
+              following: [],
             })
             .then(() => {
               showMessage({
@@ -154,15 +159,13 @@ const SignupScreen = () => {
                 type: 'success',
               });
               navigation.navigate('DrawerNavigation', { email: values.email });
-              console.log('User account created & signed in!');
             })
-            .catch(error => {
+            .catch(() => {
               showMessage({
                 type: 'danger',
                 message: 'Error',
                 description: 'There is some error in the data',
               });
-              console.log(error);
             });
         } else {
           Alert.alert('There is some Error');
@@ -184,20 +187,12 @@ const SignupScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.logoView}>
           <Image source={colorScheme === 'light' ? instadark : instalight} />
         </View>
-        <Text
-          style={
-            colorScheme === 'dark'
-              ? styles.textDarkStyle
-              : styles.textlightStyle
-          }
-        >
-          {'SignUp Form'}
-        </Text>
+        <Text style={styles.textDarkStyle}>{'SignUp Form'}</Text>
         <Formik
           initialValues={{
             DOB: '',
@@ -207,10 +202,12 @@ const SignupScreen = () => {
             password: '',
             mobileNo: '',
             firstName: '',
+            follower: [],
+            following: [],
             confirmPassword: '',
           }}
           onSubmit={values => {
-            writefirestore(values);
+            writeFirestore(values);
           }}
           validationSchema={validationSchema}
         >
@@ -228,7 +225,7 @@ const SignupScreen = () => {
                 value={values.firstName}
                 onBlur={handleBlur('firstName')}
                 onChange={handleChange('firstName')}
-                PlaceHolder={t(LanguageConstant.firstname)}
+                placeholder={t(LanguageConstant.firstname)}
               />
               {errors.firstName && touched.firstName && (
                 <Text style={styles.errorText}>{errors.firstName}</Text>
@@ -238,7 +235,7 @@ const SignupScreen = () => {
                 value={values.lastName}
                 onBlur={handleBlur('lastName')}
                 onChange={handleChange('lastName')}
-                PlaceHolder={t(LanguageConstant.lastname)}
+                placeholder={t(LanguageConstant.lastname)}
               />
               {errors.lastName && touched.lastName && (
                 <Text style={styles.errorText}>{errors.lastName}</Text>
@@ -255,7 +252,7 @@ const SignupScreen = () => {
                 value={values.mobileNo}
                 onBlur={handleBlur('mobileNo')}
                 onChange={handleChange('mobileNo')}
-                PlaceHolder={t(LanguageConstant.mobile_no)}
+                placeholder={t(LanguageConstant.mobile_no)}
               />
               {errors.mobileNo && touched.mobileNo && (
                 <Text style={styles.errorText}>{errors.mobileNo}</Text>
@@ -267,7 +264,7 @@ const SignupScreen = () => {
                   onBlur={handleBlur('DOB')}
                   value={values.DOB.toString()}
                   onChange={handleChange('DOB')}
-                  PlaceHolder={t(LanguageConstant.DOB)}
+                  placeholder={t(LanguageConstant.DOB)}
                 />
               </TouchableOpacity>
 
@@ -290,7 +287,7 @@ const SignupScreen = () => {
                 value={values.email}
                 onBlur={handleBlur('email')}
                 onChange={handleChange('email')}
-                PlaceHolder={t(LanguageConstant.email)}
+                placeholder={t(LanguageConstant.email)}
               />
               {errors.email && touched.email && (
                 <Text style={styles.errorText}>{errors.email}</Text>
@@ -299,7 +296,7 @@ const SignupScreen = () => {
                 value={values.password}
                 onBlur={handleBlur('password')}
                 onChange={handleChange('password')}
-                PlaceHolder={t(LanguageConstant.password)}
+                placeholder={t(LanguageConstant.password)}
               />
               {errors.password && touched.password && (
                 <Text style={styles.errorText}>{errors.password}</Text>
@@ -309,47 +306,35 @@ const SignupScreen = () => {
                 value={values.confirmPassword}
                 onBlur={handleBlur('confirmPassword')}
                 onChange={handleChange('confirmPassword')}
-                PlaceHolder={t(LanguageConstant.confirm_password)}
+                placeholder={t(LanguageConstant.confirm_password)}
               />
               {errors.confirmPassword && touched.confirmPassword && (
                 <Text style={styles.errorText}>{errors.confirmPassword}</Text>
               )}
 
               <ButtonComponent
-                onclick={handleSubmit}
+                btnStyle={styles.btnStyle}
+                textStyle={styles.textStyle}
+                onClick={handleSubmit}
                 title={t(LanguageConstant.login)}
               />
             </>
           )}
         </Formik>
         <View style={styles.googleView}>
-          <View style={styles.dashstyle} />
-          <Text
-            style={
-              colorScheme === 'light'
-                ? styles.orstyle
-                : [styles.orstyle, { color: '#FFFFFF' }]
-            }
-          >
-            OR
-          </Text>
-          <View style={styles.dashstyle} />
+          <View style={styles.dashStyle} />
+          <Text style={styles.orStyle}>OR</Text>
+          <View style={styles.dashStyle} />
         </View>
         <View style={styles.socialView}>
-          <View style={styles.sociallogoView}>
+          <View style={styles.socialLogoView}>
             <TouchableOpacity onPress={googleSignIn}>
-              <Image style={styles.sociallogo} source={googlelogo} />
+              <Image style={styles.socialLogo} source={googlelogo} />
             </TouchableOpacity>
           </View>
-          <View style={styles.textviewstyle}>
-            <Text style={styles.textStylefrom}>{t(LanguageConstant.from)}</Text>
-            <Text
-              style={
-                colorScheme === 'light'
-                  ? styles.textStylefacebook
-                  : styles.darkThemeFaceBookStyle
-              }
-            >
+          <View style={styles.textViewStyle}>
+            <Text style={styles.textStyleFrom}>{t(LanguageConstant.from)}</Text>
+            <Text style={styles.textStyleFacebook}>
               {t(LanguageConstant.facebook)}
             </Text>
           </View>
@@ -361,76 +346,82 @@ const SignupScreen = () => {
 
 export default SignupScreen;
 
-const styles = StyleSheet.create({
-  textDarkStyle: {
-    fontSize: 30,
-    color: '#FFFFFF',
-    fontWeight: '600',
-    textAlign: 'center',
-    textDecorationColor: '#FFFFFF',
-    textDecorationLine: 'underline',
-  },
-  textlightStyle: {
-    fontSize: 30,
-    fontWeight: '600',
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-    height: '80%',
-    justifyContent: 'center',
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  logoView: {
-    marginBottom: 10,
-    alignSelf: 'center',
-  },
-  orstyle: { flex: 0.6, textAlign: 'center' },
+const signupScreenStyle = (colors: ColorProps) =>
+  StyleSheet.create({
+    btnStyle: {
+      padding: 10,
+      borderRadius: 6,
+      marginVertical: 10,
+      backgroundColor: colors.primaryblue,
+    },
 
-  dashstyle: {
-    flex: 1,
-    height: 0,
-    marginTop: 10,
-    borderWidth: 0.8,
-    borderColor: '#CCCCCC',
-  },
-  googleView: {
-    alignSelf: 'center',
-    flexDirection: 'row',
-    paddingHorizontal: 50,
-  },
-  socialView: {
-    flex: 2,
-    justifyContent: 'space-between',
-  },
-  sociallogoView: {
-    margin: 20,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  sociallogo: { height: 30, width: 30, marginHorizontal: 10 },
-  textviewstyle: { margin: 20, alignItems: 'center' },
-  textStylefrom: { fontSize: 14, fontWeight: '600', color: '#AEA9A9' },
-  textStylefacebook: { fontSize: 16, fontWeight: '400', color: '#070000' },
-  darkThemeFaceBookStyle: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '400',
-  },
-  genderTextStyle: {
-    color: '#FFFFFF',
-  },
-  radiobtnView: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  textStyle: {
-    color: '#FFFFFF',
-  },
-});
+    textDarkStyle: {
+      fontSize: 30,
+      fontWeight: '600',
+      textAlign: 'center',
+      color: colors.white,
+      textDecorationLine: 'underline',
+      textDecorationColor: colors.white,
+    },
+
+    container: {
+      flex: 1,
+      padding: 20,
+      height: '80%',
+      justifyContent: 'center',
+      backgroundColor: colors.background,
+    },
+    errorText: {
+      color: 'red',
+      fontSize: 15,
+      fontWeight: '800',
+    },
+    logoView: {
+      marginBottom: 10,
+      alignSelf: 'center',
+    },
+    orStyle: { flex: 0.6, textAlign: 'center', color: colors.white },
+
+    dashStyle: {
+      flex: 1,
+      height: 0,
+      marginTop: 10,
+      borderWidth: 0.8,
+      borderColor: colors.dashcolor,
+    },
+    googleView: {
+      alignSelf: 'center',
+      flexDirection: 'row',
+      paddingHorizontal: 50,
+    },
+    socialView: {
+      flex: 2,
+      justifyContent: 'space-between',
+    },
+    socialLogoView: {
+      margin: 20,
+      flexDirection: 'row',
+      justifyContent: 'center',
+    },
+    socialLogo: { height: 30, width: 30, marginHorizontal: 10 },
+    textViewStyle: { margin: 20, alignItems: 'center' },
+    textStyleFrom: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.fromcolor,
+    },
+    textStyleFacebook: {
+      fontSize: 16,
+      fontWeight: '400',
+      color: colors.text,
+    },
+    // darkThemeFaceBookStyle: {
+    //   fontSize: 16,
+    //   color: colors.white,
+    //   fontWeight: '400',
+    // },
+
+    textStyle: {
+      color: colors.white,
+    },
+  });

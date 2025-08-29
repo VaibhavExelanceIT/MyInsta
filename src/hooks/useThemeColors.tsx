@@ -1,11 +1,15 @@
-// src/hooks/useThemeColors.js
+// / hooks/CTeeehlmoorssu.js;
 import { useContext } from 'react';
+import { ColorProps, darkColor, lightColor } from '../constants/color';
 import { ThemeContext } from '../context/ThemeContext';
-import { darkColor, lightColor } from '../constants/color';
+import { Dimensions } from 'react-native';
 
-export const useThemeColors = () => {
+export const useThemeColors = (): ColorProps => {
   const { isDarkMode } = useContext(ThemeContext);
-  return isDarkMode ? darkColor : lightColor;
+
+  const isDark = isDarkMode || false;
+
+  return isDark ? darkColor : lightColor;
 };
 
-export const colors = useThemeColors();
+export const screenWidth = Dimensions.get('window').width - 10;

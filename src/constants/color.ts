@@ -1,3 +1,23 @@
+export interface ColorProps {
+  background: string;
+  text: string;
+  primaryblue: string;
+  fromcolor: string;
+  dashcolor: string;
+  white: string;
+  paginationbackground: string;
+  black: string;
+  inputTextBackground: string;
+  inputTextBorder: string;
+  placeholderTextColor: string;
+  commentTextStyle: string;
+  modalBorderStyle: string;
+  darwerTint: string;
+  darwerTintBackground: string;
+  profileBackground: string;
+  activityIndicatorStyle: string;
+}
+
 export const lightColor = {
   background: '#FFFFFF',
   text: '#000000',
@@ -14,6 +34,8 @@ export const lightColor = {
   modalBorderStyle: '#D9D9D9',
   darwerTint: '#000000',
   darwerTintBackground: '#e2e5e9',
+  profileBackground: '#f9f9f9',
+  activityIndicatorStyle: '#ff2820',
 };
 
 export const darkColor = {
@@ -32,4 +54,6 @@ export const darkColor = {
   modalBorderStyle: '#D9D9D9',
   darwerTint: '#FFFFFF',
   darwerTintBackground: '#2d2e31',
+  profileBackground: '#000000',
+  activityIndicatorStyle: '#ff2820',
 };

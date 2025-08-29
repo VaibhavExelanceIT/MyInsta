@@ -7,9 +7,8 @@ import {
   Alert,
   StyleSheet,
   I18nManager,
-  useColorScheme,
   TouchableOpacity,
-  ActivityIndicator,
+  useColorScheme,
 } from 'react-native';
 
 import * as Yup from 'yup';
@@ -18,8 +17,8 @@ import {
   getAuth,
   firebase,
   GoogleAuthProvider,
-  signInWithEmailAndPassword,
   signInWithCredential,
+  signInWithEmailAndPassword,
 } from '@react-native-firebase/auth';
 import RNRestart from 'react-native-restart';
 
@@ -32,15 +31,12 @@ import firestore from '@react-native-firebase/firestore';
 
 import i18n from '../constants/language/i18next';
 import { LanguageConstant } from '../constants/language_constants';
-import {
-  instadark,
-  instalight,
-  googlelogo,
-  microsoftlogo,
-} from '../helper/images';
+import { instadark, instalight, googlelogo } from '../helper/images';
 import InputText from '../components/InputText';
 import ButtonComponent from '../components/ButtonComponent';
+
 import { useThemeColors } from '../hooks/useThemeColors';
+import { ColorProps } from '../constants/color';
 
 const validationSchema = Yup.object().shape({
   email: Yup.string()
@@ -53,14 +49,17 @@ const validationSchema = Yup.object().shape({
     .matches(/\w*[a-z]\w*/, t(LanguageConstant.password_must_small))
     .matches(/\w*[A-Z]\w*/, t(LanguageConstant.password_must_capital)),
 });
-interface usertype {
+interface UserType {
   email: string;
   password: string;
 }
 
 const LoginScreen = () => {
-  const colors = useThemeColors();
   const navigation = useNavigation<any>();
+  const colors = useThemeColors();
+  const colorScheme = useColorScheme();
+
+  const styles = loginScreenStyle(colors);
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -75,14 +74,11 @@ const LoginScreen = () => {
     const user = auth.currentUser;
     if (user) {
       navigation.navigate('DrawerNavigation');
-      console.log('User is logged in:', user.email);
-    } else {
-      console.log('User is not logged in.');
     }
   }, []);
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [value, setValue] = useState<any>();
   const [items, setItems] = useState([
     { label: t(LanguageConstant.english), value: 'en' },
@@ -90,21 +86,26 @@ const LoginScreen = () => {
     { label: t(LanguageConstant.urdu), value: 'ar' },
   ]);
 
-  const colorScheme = useColorScheme();
-
   colorScheme === 'dark'
     ? DropDownPicker.setTheme('DARK')
     : DropDownPicker.setTheme('LIGHT');
 
-  const changeLanguage = async () => {
-    try {
-      await i18n.changeLanguage(value);
+  const changeLanguage = () => {
+    i18n
+      .changeLanguage(value)
+      .then(() => {
+        const isRTL = value === 'ar';
 
-      RNRestart.Restart();
-      I18nManager.forceRTL(i18n.language === 'ar');
-    } catch (error) {
-      console.log(error);
-    }
+        if (I18nManager.isRTL !== isRTL) {
+          I18nManager.forceRTL(isRTL);
+          setTimeout(() => {
+            RNRestart.Restart();
+          }, 100);
+        }
+      })
+      .catch(error => {
+        console.error('Error changing language:', error);
+      });
   };
 
   const googleSignIn = async () => {
@@ -123,17 +124,17 @@ const LoginScreen = () => {
         signInResult?.data?.idToken,
       );
 
-      const useremail = signInResult?.data?.user?.email;
+      const userEmail = signInResult?.data?.user?.email;
 
       const isUserPresent = await firestore()
         .collection('UsersData')
-        .where('email', '==', useremail)
+        .where('email', '==', userEmail)
         .get();
 
       if (!isUserPresent.empty) {
-        navigation.navigate('DrawerNavigation', { email: useremail });
+        navigation.navigate('DrawerNavigation', { email: userEmail });
       } else {
-        navigation.navigate('UserDetailsScreeen', { email: useremail });
+        navigation.navigate('UserDetailsScreeen', { email: userEmail });
       }
 
       return signInWithCredential(getAuth(), googleCredential);
@@ -143,18 +144,15 @@ const LoginScreen = () => {
         description: `${t(LanguageConstant.error_message)} ${error}`,
         type: 'danger',
       });
-      console.log(error);
     }
   };
 
-  const userSignIn = async (values: usertype) => {
-    console.log('🚀 ~ userSignIn ~ values:', values);
-
+  const userSignIn = async (values: UserType) => {
     const isUserPresent = await firestore()
       .collection('UsersData')
       .where('email', '==', values.email)
       .get();
-    console.log('🚀 ~ userSignIn ~ isUserPresent:', isUserPresent);
+
     try {
       await signInWithEmailAndPassword(
         getAuth(),
@@ -201,21 +199,21 @@ const LoginScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.dropdownView}>
+    <View style={styles.container}>
+      <View style={styles.dropDownView}>
         <DropDownPicker
-          open={open}
+          open={isOpen}
           value={value}
           items={items}
-          setOpen={setOpen}
+          setOpen={setIsOpen}
           setValue={setValue}
           setItems={setItems}
           showBadgeDot={true}
           itemSeparator={true}
           placeholder={'English'}
-          style={styles.dropdownstyle}
+          style={styles.dropDownStyle}
           onChangeValue={() => changeLanguage()}
-          containerStyle={[styles.dropdowncontainer]}
+          containerStyle={[styles.dropDownContainer]}
         />
       </View>
 
@@ -247,7 +245,7 @@ const LoginScreen = () => {
                 value={values.email}
                 onBlur={handleBlur('email')}
                 onChange={handleChange('email')}
-                PlaceHolder={t(LanguageConstant.email)}
+                placeholder={t(LanguageConstant.email)}
               />
               {errors.email && touched.email && (
                 <Text style={styles.errorText}>{errors.email}</Text>
@@ -256,40 +254,31 @@ const LoginScreen = () => {
                 value={values.password}
                 onBlur={handleBlur('password')}
                 onChange={handleChange('password')}
-                PlaceHolder={t(LanguageConstant.password)}
+                placeholder={t(LanguageConstant.password)}
               />
               {errors.password && touched.password && (
                 <Text style={styles.errorText}>{errors.password}</Text>
               )}
               <TouchableOpacity
-                style={styles.forgetbuttonstyle}
-                onPress={() => setModalVisible(true)}
+                style={styles.forgetButtonStyle}
+                onPress={() => setIsModalVisible(true)}
               >
-                <Text
-                  style={[
-                    styles.forgettextstyle,
-                    { color: colors.primaryblue },
-                  ]}
-                >
+                <Text style={styles.forgetTextStyle}>
                   {t(LanguageConstant.forgetPassword)}
                 </Text>
               </TouchableOpacity>
               <ButtonComponent
                 title={t(LanguageConstant.login)}
-                onclick={handleSubmit}
+                onClick={handleSubmit}
+                btnStyle={styles.btnStyle}
+                textStyle={styles.textStyle}
               />
             </>
           )}
         </Formik>
 
-        <View style={styles.signupview}>
-          <Text
-            style={
-              colorScheme === 'dark'
-                ? { color: colors.text }
-                : { color: colors.text }
-            }
-          >
+        <View style={styles.signUpView}>
+          <Text style={styles.text}>
             {t(LanguageConstant.doNotHaveAccount)}
           </Text>
           <TouchableOpacity
@@ -297,37 +286,25 @@ const LoginScreen = () => {
               navigation.navigate('SignupScreen');
             }}
           >
-            <Text style={[styles.signupstyle, { color: colors.primaryblue }]}>
-              {t(LanguageConstant.signup)}
-            </Text>
+            <Text style={styles.signUpStyle}>{t(LanguageConstant.signup)}</Text>
           </TouchableOpacity>
         </View>
       </View>
       <View style={styles.googleView}>
-        <View style={[styles.dashstyle, { borderColor: colors.dashcolor }]} />
-        <Text
-          style={
-            colorScheme === 'light'
-              ? styles.orstyle
-              : [styles.orstyle, { color: '#FFFFFF' }]
-          }
-        >
-          OR
-        </Text>
-        <View style={[styles.dashstyle, { borderColor: colors.dashcolor }]} />
+        <View style={styles.dashStyle} />
+        <Text style={styles.orStyle}>OR</Text>
+        <View style={styles.dashStyle} />
       </View>
 
       <View style={styles.socialView}>
-        <View style={styles.sociallogoView}>
+        <View style={styles.socialLogoView}>
           <TouchableOpacity onPress={() => googleSignIn()}>
-            <Image style={styles.sociallogo} source={googlelogo} />
+            <Image style={styles.socialLogo} source={googlelogo} />
           </TouchableOpacity>
         </View>
-        <View style={styles.textviewstyle}>
-          <Text style={[styles.textStylefrom, { color: colors.fromcolor }]}>
-            {t(LanguageConstant.from)}
-          </Text>
-          <Text style={[styles.textStylefacebook, { color: colors.text }]}>
+        <View style={styles.textViewStyle}>
+          <Text style={styles.textStyleFrom}>{t(LanguageConstant.from)}</Text>
+          <Text style={styles.textStyleFacebook}>
             {t(LanguageConstant.facebook)}
           </Text>
         </View>
@@ -335,9 +312,9 @@ const LoginScreen = () => {
       <Modal
         transparent={true}
         animationType="slide"
-        visible={modalVisible}
+        visible={isModalVisible}
         onRequestClose={() => {
-          setModalVisible(!modalVisible);
+          setIsModalVisible(false);
         }}
       >
         <View style={styles.centeredView}>
@@ -361,7 +338,7 @@ const LoginScreen = () => {
               }) => (
                 <>
                   <InputText
-                    PlaceHolder={t(LanguageConstant.email)}
+                    placeholder={t(LanguageConstant.email)}
                     value={values.email}
                     onChange={handleChange('email')}
                     onBlur={handleBlur('email')}
@@ -388,108 +365,118 @@ const LoginScreen = () => {
 
 export default LoginScreen;
 
-const styles = StyleSheet.create({
-  textStylefrom: { fontSize: 14, fontWeight: '600' },
-  textStylefacebook: { fontSize: 16, fontWeight: '400' },
-  textviewstyle: { margin: 20, alignItems: 'center' },
-  sociallogoView: {
-    margin: 20,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  socialView: {
-    flex: 2,
-    justifyContent: 'space-between',
-  },
-  sociallogo: { height: 30, width: 30, marginHorizontal: 10 },
-  orstyle: { flex: 0.6, textAlign: 'center' },
-
-  dashstyle: {
-    flex: 1,
-    height: 0,
-    marginTop: 10,
-    borderWidth: 0.8,
-  },
-  signupview: { flexDirection: 'row', justifyContent: 'center' },
-  signupstyle: { fontWeight: '700' },
-  forgettextstyle: {
-    fontSize: 13,
-    fontWeight: '700',
-    marginVertical: 10,
-  },
-  forgetbuttonstyle: { alignSelf: 'flex-end' },
-  dropdownstyle: { borderWidth: 0 },
-  googleView: {
-    alignSelf: 'center',
-    flexDirection: 'row',
-    paddingHorizontal: 50,
-  },
-  formView: {
-    flex: 2,
-    paddingHorizontal: 50,
-  },
-  logoView: {
-    alignSelf: 'center',
-  },
-  dropdowncontainer: {
-    flex: 1,
-    width: '25%',
-    borderWidth: 0,
-    alignSelf: 'center',
-  },
-  dropdownView: {
-    flex: 1,
-    padding: 20,
-    alignItems: 'center',
-    paddingHorizontal: 15,
-  },
-
-  container: {
-    flex: 1,
-  },
-  text: {
-    fontSize: 20,
-    fontWeight: '500',
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-
-  centeredView: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalView: {
-    padding: 30,
-    elevation: 5,
-    width: '90%',
-    shadowRadius: 4,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    backgroundColor: 'white',
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const loginScreenStyle = (colors: ColorProps) =>
+  StyleSheet.create({
+    textStyleFrom: { fontSize: 14, fontWeight: '600', color: colors.fromcolor },
+    textStyleFacebook: { fontSize: 16, fontWeight: '400', color: colors.text },
+    textViewStyle: { margin: 20, alignItems: 'center' },
+    socialLogoView: {
+      margin: 20,
+      flexDirection: 'row',
+      justifyContent: 'center',
     },
-  },
-  title: {
-    padding: 10,
-    borderWidth: 1,
-    borderRadius: 10,
-    marginVertical: 10,
-  },
-  button: {
-    padding: 10,
-    elevation: 2,
-    borderRadius: 20,
-    marginVertical: 10,
-  },
-  textStyle: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-});
+    socialView: {
+      flex: 2,
+      justifyContent: 'space-between',
+    },
+    socialLogo: { height: 30, width: 30, marginHorizontal: 10 },
+    orStyle: { flex: 0.6, textAlign: 'center', color: colors.text },
+
+    dashStyle: {
+      flex: 1,
+      height: 0,
+      marginTop: 10,
+      borderWidth: 0.8,
+      borderColor: colors.dashcolor,
+    },
+    signUpView: { flexDirection: 'row', justifyContent: 'center' },
+    signUpStyle: { fontWeight: '700', color: colors.primaryblue },
+    forgetTextStyle: {
+      color: colors.primaryblue,
+      fontSize: 13,
+      fontWeight: '700',
+      marginVertical: 10,
+    },
+    forgetButtonStyle: { alignSelf: 'flex-end' },
+    dropDownStyle: { borderWidth: 0 },
+    googleView: {
+      alignSelf: 'center',
+      flexDirection: 'row',
+      paddingHorizontal: 50,
+    },
+    formView: {
+      flex: 2,
+      paddingHorizontal: 50,
+    },
+    logoView: {
+      alignSelf: 'center',
+    },
+    dropDownContainer: {
+      flex: 1,
+      width: '25%',
+      borderWidth: 0,
+      alignSelf: 'center',
+    },
+    dropDownView: {
+      flex: 1,
+      padding: 20,
+      alignItems: 'center',
+      paddingHorizontal: 15,
+    },
+
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    text: {
+      color: colors.text,
+    },
+    errorText: {
+      color: 'red',
+      fontSize: 15,
+      fontWeight: '800',
+    },
+
+    centeredView: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modalView: {
+      padding: 30,
+      elevation: 5,
+      width: '90%',
+      shadowRadius: 4,
+      borderRadius: 20,
+      shadowOpacity: 0.25,
+      shadowColor: colors.black,
+      backgroundColor: colors.white,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+    },
+    title: {
+      padding: 10,
+      borderWidth: 1,
+      borderRadius: 10,
+      marginVertical: 10,
+    },
+    button: {
+      padding: 10,
+      elevation: 2,
+      borderRadius: 20,
+      marginVertical: 10,
+    },
+    textStyle: {
+      fontWeight: '500',
+      textAlign: 'center',
+      color: colors.background,
+    },
+    btnStyle: {
+      padding: 10,
+      borderRadius: 6,
+      marginVertical: 10,
+      backgroundColor: colors.primaryblue,
+    },
+  });

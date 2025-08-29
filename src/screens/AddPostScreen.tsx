@@ -1,31 +1,32 @@
+import React, { useState } from 'react';
 import {
-  FlatList,
+  View,
+  Text,
   Image,
-  ImageBackground,
-  Platform,
+  FlatList,
+  TextInput,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   TouchableOpacity,
+  ImageBackground,
   useColorScheme,
-  View,
 } from 'react-native';
-import React, { useState } from 'react';
 
 import * as Yup from 'yup';
 import { Formik } from 'formik';
+import { useTranslation } from 'react-i18next';
+import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth';
 import { showMessage } from 'react-native-flash-message';
-import { useTranslation } from 'react-i18next';
 
+import { ArrayUrl } from '../helper/imagesUrl';
+
+import { SettingMenu, SettingMenuDark } from '../helper/icon';
 import { instadark, instalight, more } from '../helper/images';
 import { LanguageConstant } from '../constants/language_constants';
-import { ArrayUrl } from '../helper/imagesUrl';
-import { SettingMenu, SettingMenuDark } from '../helper/icon';
 import { useThemeColors } from '../hooks/useThemeColors';
+import { ColorProps } from '../constants/color';
 
 const validationSchema = Yup.object().shape({
   title: Yup.string().required('Title is Required'),
@@ -39,23 +40,19 @@ interface PostType {
 const AddPostScreen = () => {
   const [uri, setUri] = useState<string[]>([]);
   const navigation = useNavigation<any>();
-
+  const colorScheme = useColorScheme();
   const { t } = useTranslation();
 
+  const colors = useThemeColors();
+  const styles = addPostScreenScreen(colors);
+
   const currentDate = new Date();
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth() + 1;
-  const day = currentDate.getDate();
-  const hours = currentDate.getHours();
-  const minutes = currentDate.getMinutes();
+
+  const dateTime =
+    currentDate.toLocaleDateString() + ' ' + currentDate.toLocaleTimeString();
 
   const currentUser = auth().currentUser;
   const userId = currentUser ? currentUser.uid : null;
-
-  console.log('🚀 ~ AddPostScreen ~ userId:', userId);
-  const colors = useThemeColors();
-
-  const DateAndTime = `${day}:${month}:${year}:${hours}:${minutes}`;
 
   const submitHandler = (value: PostType) => {
     if (userId !== null) {
@@ -66,10 +63,10 @@ const AddPostScreen = () => {
 
       usersCollection
         .add({
-          Title: value.title,
-          Description: value.description,
-          PostURL: uri,
-          DateAndTime: DateAndTime,
+          title: value.title,
+          description: value.description,
+          postURL: uri,
+          dateAndTime: dateTime,
           like: 0,
           comment: 0,
         })
@@ -87,7 +84,6 @@ const AddPostScreen = () => {
             message: t(LanguageConstant.error),
             description: `${t(LanguageConstant.error_message)} ${error}`,
           });
-          console.log(error);
         });
     } else {
       showMessage({
@@ -97,7 +93,6 @@ const AddPostScreen = () => {
       });
     }
   };
-  const colorScheme = useColorScheme();
 
   const imageGallery = () => {
     setUri(ArrayUrl);
@@ -108,16 +103,8 @@ const AddPostScreen = () => {
   };
 
   return (
-    <View style={[styles.mainLayout, { backgroundColor: colors.background }]}>
-      <View
-        style={[
-          styles.sortstyle,
-          {
-            backgroundColor: colors.background,
-            borderBottomColor: colors.modalBorderStyle,
-          },
-        ]}
-      >
+    <View style={styles.mainLayout}>
+      <View style={styles.sortStyle}>
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
             {colorScheme === 'light' ? (
@@ -129,14 +116,14 @@ const AddPostScreen = () => {
         </View>
         <View style={styles.logoView}>
           <Image
-            style={{ alignSelf: 'center' }}
+            style={styles.imageStyle}
             source={colorScheme === 'light' ? instadark : instalight}
           />
         </View>
       </View>
-      <View style={{ flex: 1 }}>
-        <ScrollView style={styles.scrollview}>
-          <Text style={[styles.AddPostScreen, { color: colors.text }]}>
+      <View style={styles.viewStyle}>
+        <ScrollView style={styles.scrollView}>
+          <Text style={styles.addPostScreen}>
             {t(LanguageConstant.create_post)}
           </Text>
           <View style={styles.postUploadStyle}>
@@ -147,7 +134,7 @@ const AddPostScreen = () => {
                 showsVerticalScrollIndicator={false}
                 renderItem={({ item }) => (
                   <Image
-                    style={styles.imgstyle}
+                    style={styles.imgStyle}
                     resizeMode="center"
                     src={item}
                     alt="image"
@@ -155,17 +142,12 @@ const AddPostScreen = () => {
                 )}
               />
             ) : (
-              <TouchableOpacity
-                style={styles.imagepost}
-                onPress={() => {
-                  imageGallery();
-                }}
-              >
+              <TouchableOpacity style={styles.imagePost} onPress={imageGallery}>
                 <ImageBackground
                   source={more}
-                  style={{ height: 60, width: 60 }}
-                ></ImageBackground>
-                <Text style={{ color: colors.text }}>
+                  style={styles.imageBackgroundStyle}
+                />
+                <Text style={styles.textStyle}>
                   {t(LanguageConstant.add_image)}
                 </Text>
               </TouchableOpacity>
@@ -177,9 +159,6 @@ const AddPostScreen = () => {
               description: '',
             }}
             onSubmit={values => {
-              console.log(values);
-              console.log(uri);
-
               submitHandler(values);
             }}
             validationSchema={validationSchema}
@@ -195,10 +174,7 @@ const AddPostScreen = () => {
               <>
                 <TextInput
                   placeholder={t(LanguageConstant.title_placeholder)}
-                  style={[
-                    styles.textInputStyle,
-                    { backgroundColor: colors.inputTextBackground },
-                  ]}
+                  style={styles.textInputStyle}
                   value={values.title}
                   onBlur={handleBlur('title')}
                   onChangeText={handleChange('title')}
@@ -212,10 +188,7 @@ const AddPostScreen = () => {
 
                 <TextInput
                   placeholder={t(LanguageConstant.description_placeHolder)}
-                  style={[
-                    styles.textInputStyle,
-                    { backgroundColor: colors.inputTextBackground },
-                  ]}
+                  style={styles.textInputStyle}
                   value={values.description}
                   onBlur={handleBlur('description')}
                   onChangeText={handleChange('description')}
@@ -225,18 +198,10 @@ const AddPostScreen = () => {
                 />
 
                 <TouchableOpacity
-                  style={[styles.btnstyle, { backgroundColor: colors.text }]}
+                  style={styles.btnStyle}
                   onPress={() => handleSubmit()}
                 >
-                  <Text
-                    style={[
-                      styles.textStyle,
-                      {
-                        backgroundColor: colors.text,
-                        color: colors.background,
-                      },
-                    ]}
-                  >
+                  <Text style={styles.textStyle}>
                     {t(LanguageConstant.submit)}
                   </Text>
                 </TouchableOpacity>
@@ -251,83 +216,90 @@ const AddPostScreen = () => {
 
 export default AddPostScreen;
 
-const styles = StyleSheet.create({
-  textStyle: {
-    textAlign: 'center',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  btnstyle: {
-    marginVertical: 10,
-    padding: 10,
-    borderRadius: 20,
-  },
-  mainLayout: {
-    flex: 1,
-    justifyContent: 'flex-start',
-  },
-  scrollview: {
-    margin: 20,
-  },
-  textInputStyle: {
-    borderWidth: 0.5,
-    borderRadius: 30,
-    paddingLeft: 20,
-    padding: 20,
-    marginVertical: 10,
-  },
-  postUploadStyle: {
-    justifyContent: 'space-between',
-    flexDirection: 'row',
-  },
-  imagepost: {
-    marginVertical: 20,
-    marginHorizontal: 10,
-    height: 50,
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  AddPostScreen: {
-    fontSize: 30,
-    fontWeight: '600',
-    marginBottom: 20,
-  },
-  imgstyle: {
-    padding: 10,
-    margin: 10,
-    height: 200,
-    width: 200,
-  },
-  sortstyle: {
-    flexDirection: 'row',
-    paddingTop: 30,
-    paddingBottom: 10,
-    paddingHorizontal: 10,
-    justifyContent: 'space-between',
+const addPostScreenScreen = (colors: ColorProps) =>
+  StyleSheet.create({
+    viewStyle: { flex: 1 },
+    imageStyle: {
+      alignSelf: 'center',
+    },
+    imageBackgroundStyle: { height: 60, width: 60 },
+    textStyle: {
+      backgroundColor: colors.text,
+      color: colors.background,
+      textAlign: 'center',
+      fontSize: 15,
+      fontWeight: '800',
+    },
+    btnStyle: {
+      backgroundColor: colors.text,
+      marginVertical: 10,
+      padding: 10,
+      borderRadius: 20,
+    },
+    mainLayout: {
+      backgroundColor: colors.background,
+      flex: 1,
+      justifyContent: 'flex-start',
+    },
+    scrollView: {
+      margin: 20,
+    },
+    textInputStyle: {
+      backgroundColor: colors.inputTextBackground,
+      borderWidth: 0.5,
+      borderRadius: 30,
+      paddingLeft: 20,
+      padding: 20,
+      marginVertical: 10,
+    },
+    postUploadStyle: {
+      justifyContent: 'space-between',
+      flexDirection: 'row',
+    },
+    imagePost: {
+      marginVertical: 20,
+      marginHorizontal: 10,
+      height: 50,
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    addPostScreen: {
+      fontSize: 30,
+      fontWeight: '600',
+      marginBottom: 20,
+      color: colors.text,
+    },
+    imgStyle: {
+      padding: 10,
+      margin: 10,
+      height: 200,
+      width: 200,
+    },
+    sortStyle: {
+      flexDirection: 'row',
+      paddingTop: 30,
+      paddingBottom: 10,
+      paddingHorizontal: 10,
+      justifyContent: 'space-between',
+      backgroundColor: colors.background,
+      borderBottomColor: colors.modalBorderStyle,
 
-    borderBottomWidth: 1,
+      borderBottomWidth: 1,
 
-    elevation: 5,
-  },
-  userIcon: {
-    marginBottom: '2%',
-    alignSelf: 'flex-end',
-  },
-  logoView: {
-    flex: 1,
-    marginHorizontal: 10,
-  },
-  actionbtn: {
-    flexDirection: 'row',
-    padding: 10,
-  },
-  heartstyle: {
-    marginHorizontal: 10,
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-});
+      elevation: 5,
+    },
+    userIcon: {
+      marginBottom: '2%',
+      alignSelf: 'flex-end',
+    },
+    logoView: {
+      flex: 1,
+      marginHorizontal: 10,
+    },
+    errorText: {
+      color: 'red',
+      fontSize: 15,
+      fontWeight: '800',
+    },
+  });

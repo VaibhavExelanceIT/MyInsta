@@ -5,9 +5,9 @@ import {
   Image,
   ScrollView,
   StyleSheet,
-  useColorScheme,
   TouchableOpacity,
   Alert,
+  useColorScheme,
 } from 'react-native';
 
 import * as Yup from 'yup';
@@ -26,6 +26,8 @@ import { instadark, instalight } from '../helper/images';
 import ButtonComponent from '../components/ButtonComponent';
 import { LanguageConstant } from '../constants/language_constants';
 import RadioButtonComponent from '../components/RadioButtonComponent';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { ColorProps } from '../constants/color';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required('First Name is Required'),
@@ -59,25 +61,28 @@ interface userData {
   firstName: string;
   userImage?: string;
   confirmPassword: string;
+  follower: Array<string>;
+  following: Array<string>;
 }
 const UserDetailsScreeen = ({ route }: any) => {
-  const email: string = route.params.email;
+  const navigation = useNavigation<any>();
 
+  const email: string = route.params.email;
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
 
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const navigation = useNavigation<any>();
-
+  const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
+  const colors = useThemeColors();
+  const styles = userDetailsScreeenStyle(colors);
   const showDatePicker = () => {
-    setDatePickerVisibility(true);
+    setIsDatePickerVisibility(true);
   };
 
   const hideDatePicker = () => {
-    setDatePickerVisibility(false);
+    setIsDatePickerVisibility(false);
   };
 
-  const writefirestore = async (values: userData) => {
+  const writeFirestore = async (values: userData) => {
     const isUserPresent = await firestore()
       .collection('UsersData')
       .where('email', '==', values.email)
@@ -89,11 +94,10 @@ const UserDetailsScreeen = ({ route }: any) => {
         const userId = currentUser ? currentUser.uid : null;
 
         if (userId !== null) {
-          let userDocumentRef: any;
-          userDocumentRef = firestore().collection('UsersData');
           const usersCollection = firestore()
             .collection('UsersData')
             .doc(userId);
+
           usersCollection
             .set({
               DOB: values.DOB,
@@ -104,6 +108,8 @@ const UserDetailsScreeen = ({ route }: any) => {
               mobileNo: values.mobileNo,
               lastName: values.lastName,
               firstName: values.firstName,
+              follower: [],
+              following: [],
             })
             .then(() => {
               showMessage({
@@ -112,15 +118,13 @@ const UserDetailsScreeen = ({ route }: any) => {
                 type: 'success',
               });
               navigation.navigate('DrawerNavigation', { email: values.email });
-              console.log('User account created & signed in!');
             })
-            .catch(error => {
+            .catch(() => {
               showMessage({
                 type: 'danger',
                 message: 'Error',
                 description: 'There is some error in the data',
               });
-              console.log(error);
             });
         } else {
           Alert.alert('There is some Error');
@@ -143,21 +147,13 @@ const UserDetailsScreeen = ({ route }: any) => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.logoView}>
           <Image source={colorScheme === 'light' ? instadark : instalight} />
         </View>
 
-        <Text
-          style={
-            colorScheme === 'dark'
-              ? styles.textDarkStyle
-              : styles.textlightStyle
-          }
-        >
-          User Details
-        </Text>
+        <Text style={styles.textDarkStyle}>{'User Details'}</Text>
         <Formik
           initialValues={{
             userImage:
@@ -170,9 +166,11 @@ const UserDetailsScreeen = ({ route }: any) => {
             mobileNo: '',
             firstName: '',
             confirmPassword: '',
+            following: [],
+            follower: [],
           }}
           onSubmit={values => {
-            writefirestore(values);
+            writeFirestore(values);
           }}
           validationSchema={validationSchema}
         >
@@ -187,7 +185,7 @@ const UserDetailsScreeen = ({ route }: any) => {
           }) => (
             <>
               <InputText
-                PlaceHolder={t(LanguageConstant.firstname)}
+                placeholder={t(LanguageConstant.firstname)}
                 value={values.firstName}
                 onChange={handleChange('firstName')}
                 onBlur={handleBlur('firstName')}
@@ -197,7 +195,7 @@ const UserDetailsScreeen = ({ route }: any) => {
               )}
 
               <InputText
-                PlaceHolder={t(LanguageConstant.lastname)}
+                placeholder={t(LanguageConstant.lastname)}
                 value={values.lastName}
                 onChange={handleChange('lastName')}
                 onBlur={handleBlur('lastName')}
@@ -217,7 +215,7 @@ const UserDetailsScreeen = ({ route }: any) => {
                 value={values.mobileNo}
                 onBlur={handleBlur('mobileNo')}
                 onChange={handleChange('mobileNo')}
-                PlaceHolder={t(LanguageConstant.mobile_no)}
+                placeholder={t(LanguageConstant.mobile_no)}
               />
               {errors.mobileNo && touched.mobileNo && (
                 <Text style={styles.errorText}>{errors.mobileNo}</Text>
@@ -229,7 +227,7 @@ const UserDetailsScreeen = ({ route }: any) => {
                   onBlur={handleBlur('DOB')}
                   value={values.DOB.toString()}
                   onChange={handleChange('DOB')}
-                  PlaceHolder={t(LanguageConstant.DOB)}
+                  placeholder={t(LanguageConstant.DOB)}
                 />
               </TouchableOpacity>
 
@@ -253,7 +251,7 @@ const UserDetailsScreeen = ({ route }: any) => {
                 value={values.email}
                 onBlur={handleBlur('email')}
                 onChange={handleChange('email')}
-                PlaceHolder={t(LanguageConstant.email)}
+                placeholder={t(LanguageConstant.email)}
               />
               {errors.email && touched.email && (
                 <Text style={styles.errorText}>{errors.email}</Text>
@@ -262,7 +260,7 @@ const UserDetailsScreeen = ({ route }: any) => {
                 value={values.password}
                 onBlur={handleBlur('password')}
                 onChange={handleChange('password')}
-                PlaceHolder={t(LanguageConstant.password)}
+                placeholder={t(LanguageConstant.password)}
               />
               {errors.password && touched.password && (
                 <Text style={styles.errorText}>{errors.password}</Text>
@@ -272,7 +270,7 @@ const UserDetailsScreeen = ({ route }: any) => {
                 value={values.confirmPassword}
                 onBlur={handleBlur('confirmPassword')}
                 onChange={handleChange('confirmPassword')}
-                PlaceHolder={t(LanguageConstant.confirm_password)}
+                placeholder={t(LanguageConstant.confirm_password)}
               />
               {errors.confirmPassword && touched.confirmPassword && (
                 <Text style={styles.errorText}>{errors.confirmPassword}</Text>
@@ -280,7 +278,9 @@ const UserDetailsScreeen = ({ route }: any) => {
 
               <ButtonComponent
                 title={t(LanguageConstant.login)}
-                onclick={handleSubmit}
+                onClick={handleSubmit}
+                btnStyle={styles.btnStyle}
+                textStyle={styles.textStyle}
               />
             </>
           )}
@@ -292,63 +292,42 @@ const UserDetailsScreeen = ({ route }: any) => {
 
 export default UserDetailsScreeen;
 
-const styles = StyleSheet.create({
-  radiobtnView: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  genderTextStyle: {
-    color: '#FFFFFF',
-  },
-  textStyle: {
-    color: '#FFFFFF',
-  },
-  textDarkStyle: {
-    fontSize: 30,
-    color: '#FFFFFF',
-    fontWeight: '600',
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-    textDecorationColor: '#FFFFFF',
-  },
-  textlightStyle: {
-    fontSize: 30,
-    fontWeight: '600',
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-    height: '80%',
-    justifyContent: 'center',
-  },
-  logoView: {
-    marginBottom: 10,
-    alignSelf: 'center',
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  centeredView: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalView: {
-    width: '90%',
-    padding: 30,
-    elevation: 5,
-    shadowRadius: 4,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
+const userDetailsScreeenStyle = (colors: ColorProps) =>
+  StyleSheet.create({
+    textStyle: {
+      fontWeight: 'bold',
+      textAlign: 'center',
     },
-    shadowOpacity: 0.25,
-    backgroundColor: 'white',
-  },
-});
+    btnStyle: {
+      padding: 10,
+      borderRadius: 6,
+      marginVertical: 10,
+      backgroundColor: colors.primaryblue,
+    },
+
+    textDarkStyle: {
+      fontSize: 30,
+      color: colors.white,
+      fontWeight: '600',
+      textAlign: 'center',
+      textDecorationLine: 'underline',
+      textDecorationColor: colors.white,
+    },
+
+    container: {
+      backgroundColor: colors.background,
+      flex: 1,
+      padding: 20,
+      height: '80%',
+      justifyContent: 'center',
+    },
+    logoView: {
+      marginBottom: 10,
+      alignSelf: 'center',
+    },
+    errorText: {
+      color: 'red',
+      fontSize: 15,
+      fontWeight: '800',
+    },
+  });

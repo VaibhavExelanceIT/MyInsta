@@ -1,89 +1,79 @@
 import {
-  ActivityIndicator,
-  Button,
-  FlatList,
-  Image,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useColorScheme,
   View,
+  Image,
+  FlatList,
+  StyleSheet,
+  RefreshControl,
+  useColorScheme,
+  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
-import React, { Key, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import firestore from '@react-native-firebase/firestore';
 
 import {
-  HeartDark,
-  HeartOutline,
   Message,
+  HeartDark,
   MessageDark,
   SettingMenu,
+  HeartOutline,
   SettingMenuDark,
 } from '../helper/icon';
 import PostComponent from '../components/PostComponent';
-import { darkTheme } from '../theme/darkTheme';
-import { lightTheme } from '../theme/lightTheme';
 import { instadark, instalight } from '../helper/images';
-import { colors } from '../hooks/useThemeColors';
+
+import { showMessage } from 'react-native-flash-message';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { ColorProps } from '../constants/color';
 
 interface Post {
   id: string;
-  DateAndTime: string;
-  Description: string;
-  PostURL: Array<string>;
-  Title: string;
-  comment: number;
   like: number;
+  title: string;
+  comment: number;
+  userimage: string;
+  dateAndTime: string;
+  description: string;
+  postURL: Array<string>;
 }
 
 const HomeScreen = ({ navigation }: any) => {
-  const [post, setPost] = useState<Post[]>([]);
   const usersData: any[] = [];
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
+  const [isloading, setIsLoading] = useState(true);
+  const [post, setPost] = useState<Post[]>([]);
+  const [isrefreshing, setIsRefreshing] = useState(false);
   const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
+  const colors = useThemeColors();
+  const styles = homeScreenStyle(colors);
 
   const onRefresh = () => {
-    setRefreshing(true);
-    getpost();
+    setIsRefreshing(true);
+    getPost();
     setTimeout(() => {
-      setRefreshing(false);
-    }, 1000); // Refresh indicator will be visible for at least 1 second
+      setIsRefreshing(false);
+    }, 1000);
   };
-  const getData = async (id: string | undefined) => {
+  const getData = async (id: string) => {
     const data = await firestore()
       .collection('UsersData')
       .doc(id)
       .collection('PostData')
       .get();
-    // console.log(data.docs);
 
     data.docs.forEach(item => {
-      // console.log(item.data());
-      post.includes(item.data() as Post)
-        ? console.log('already post list there')
-        : setPost(prevState => [...prevState, item.data() as Post]);
-      // console.log(post);
-
-      // console.log(post.includes(item.data() as Post));
-      console.log(post);
+      setPost(prevState => [...prevState, item.data() as Post]);
     });
-    setLoading(false);
-    // console.log(loading);
+    setIsLoading(false);
     return data.docs;
   };
 
-  const getpost = async () => {
+  const getPost = async () => {
     setPost([]);
     const userIds = await getAllUsersDataFirestore();
-    // console.log(userIds);
     await Promise.allSettled(
       userIds.map(async cv => {
-        // console.log(cv);
         return await getData(cv.id);
       }),
     );
@@ -92,22 +82,24 @@ const HomeScreen = ({ navigation }: any) => {
   const getAllUsersDataFirestore = async () => {
     try {
       const usersCollection = await firestore().collection('UsersData').get();
-
       usersCollection.forEach(documentSnapshot => {
         usersData.push({
           id: documentSnapshot.id,
           ...documentSnapshot.data(),
         });
       });
-
       return usersData;
     } catch (error) {
-      console.error('Error fetching users data from Firestore:', error);
-      return [];
+      showMessage({
+        message: 'Error!!',
+        description: 'There is some Error',
+        type: 'danger',
+      });
+      return [error];
     }
   };
   useEffect(() => {
-    getpost();
+    getPost();
   }, [colorScheme]);
 
   const openDrawer = () => {
@@ -115,16 +107,8 @@ const HomeScreen = ({ navigation }: any) => {
   };
 
   return (
-    <View style={[styles.mainLAyout, { backgroundColor: colors.background }]}>
-      <View
-        style={[
-          styles.sortstyle,
-          {
-            backgroundColor: colors.background,
-            borderBottomColor: colors.modalBorderStyle,
-          },
-        ]}
-      >
+    <View style={styles.mainLayout}>
+      <View style={styles.sortStyle}>
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
             {colorScheme === 'light' ? (
@@ -136,12 +120,12 @@ const HomeScreen = ({ navigation }: any) => {
         </View>
         <View style={styles.logoView}>
           <Image
-            style={{ alignSelf: 'flex-end' }}
+            style={styles.imageStyle}
             source={colorScheme === 'light' ? instadark : instalight}
           />
         </View>
-        <View style={styles.actionbtn}>
-          <View style={styles.heartstyle}>
+        <View style={styles.actionBtn}>
+          <View style={styles.heartStyle}>
             {colorScheme === 'light' ? (
               <HeartOutline height={25} width={25} />
             ) : (
@@ -155,23 +139,24 @@ const HomeScreen = ({ navigation }: any) => {
           )}
         </View>
       </View>
-      {loading ? (
+      {isloading ? (
         <ActivityIndicator size={'large'} />
       ) : (
         <FlatList
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={isrefreshing} onRefresh={onRefresh} />
           }
           data={post}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <PostComponent
-              comment={item.comment}
               likes={item.like}
-              description={item.Description}
-              title={item.Title}
-              ImagePost={item.PostURL}
-              date={item.DateAndTime}
+              title={item.title}
+              comment={item.comment}
+              date={item.dateAndTime}
+              imagePost={item.postURL}
+              description={item.description}
+              imageUrl="https://images.pexels.com/photos/33106717/pexels-photo-33106717.jpeg?_gl=1*18doh69*_ga*MTk3NDc0NTgxMi4xNzQ3OTk4NTM2*_ga_8JE65Q40S6*czE3NTQzMDExMjMkbzMkZzEkdDE3NTQzMDEyMzEkajM3JGwwJGgw"
             />
           )}
         />
@@ -182,46 +167,48 @@ const HomeScreen = ({ navigation }: any) => {
 
 export default HomeScreen;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  mainLAyout: {
-    backgroundColor: '#FFFFFF',
-    flex: 8,
-  },
-  sortstyle: {
-    flexDirection: 'row',
-    paddingTop: 30,
-    paddingBottom: 10,
-    paddingHorizontal: 10,
-    justifyContent: 'space-between',
-
-    borderBottomWidth: 1,
-
-    elevation: 100,
-  },
-  userIcon: {
-    marginBottom: '2%',
-    alignSelf: 'flex-end',
-  },
-  userIcontext: {
-    fontSize: 27,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  actionbtn: {
-    flexDirection: 'row',
-    padding: 10,
-  },
-  heartstyle: {
-    marginHorizontal: 10,
-  },
-  logoView: {
-    flex: 1,
-    marginHorizontal: 10,
-  },
-});
+const homeScreenStyle = (colors: ColorProps) =>
+  StyleSheet.create({
+    imageStyle: { alignSelf: 'flex-end' },
+    container: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    mainLayout: {
+      flex: 8,
+      backgroundColor: colors.background,
+    },
+    sortStyle: {
+      paddingTop: 30,
+      elevation: 100,
+      paddingBottom: 10,
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      paddingHorizontal: 10,
+      justifyContent: 'space-between',
+      backgroundColor: colors.background,
+      borderBottomColor: colors.modalBorderStyle,
+    },
+    userIcon: {
+      marginBottom: '2%',
+      alignSelf: 'flex-end',
+    },
+    userIconText: {
+      fontSize: 27,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    actionBtn: {
+      padding: 10,
+      flexDirection: 'row',
+    },
+    heartStyle: {
+      marginHorizontal: 10,
+    },
+    logoView: {
+      flex: 1,
+      marginHorizontal: 10,
+    },
+  });

@@ -1,40 +1,36 @@
 import React from 'react';
-import { Easing, StyleSheet, useColorScheme } from 'react-native';
+import { Easing, useColorScheme } from 'react-native';
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { DrawerActions } from '@react-navigation/native';
 
 import {
+  HomeScreen,
   SearchScreen,
   AddPostScreen,
-  NotificationScreen,
-  HomeScreen,
   ProfileScreen,
+  NotificationScreen,
 } from '../helper/screens';
-
 import {
-  HomeFill,
-  SearchOutline,
-  AddOutline,
-  NotificationOutline,
-  ProfileOutline,
-  HomeOutline,
-  SearchFill,
   AddDark,
+  HomeFill,
+  SearchFill,
+  AddOutline,
+  HomeOutline,
   HomeFillDark,
+  SearchOutline,
   SearchFillDark,
+  ProfileOutline,
   HomeOutlineDark,
   SearchOutlineDark,
   ProfileOutlineDark,
+  NotificationOutline,
 } from '../helper/icon';
-import { darkTheme } from '../theme/darkTheme';
-import { lightTheme } from '../theme/lightTheme';
-import { DrawerActions } from '@react-navigation/native';
 import { useThemeColors } from '../hooks/useThemeColors';
 
 const Tab = createBottomTabNavigator();
 const BottomTabNavigation = () => {
   const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
   const colors = useThemeColors();
   return (
     <Tab.Navigator
@@ -67,7 +63,7 @@ const BottomTabNavigation = () => {
           },
 
           headerShown: false,
-
+          tabBarActiveTintColor: colors.activityIndicatorStyle,
           tabBarIcon: ({ focused }) =>
             focused ? (
               <>{colorScheme == 'dark' ? <HomeFillDark /> : <HomeFill />}</>
@@ -96,7 +92,7 @@ const BottomTabNavigation = () => {
             },
           },
 
-          tabBarActiveTintColor: 'red',
+          tabBarActiveTintColor: colors.activityIndicatorStyle,
 
           tabBarIcon: ({ focused }) =>
             focused ? (
@@ -124,13 +120,19 @@ const BottomTabNavigation = () => {
             },
           },
 
-          tabBarActiveTintColor: 'red',
+          tabBarActiveTintColor: colors.activityIndicatorStyle,
 
           tabBarIcon: ({ focused }) =>
             focused ? (
-              <>{colorScheme == 'dark' ? <AddDark /> : <AddOutline />}</>
+              colorScheme == 'dark' ? (
+                <AddDark />
+              ) : (
+                <AddOutline />
+              )
+            ) : colorScheme == 'dark' ? (
+              <AddDark />
             ) : (
-              <>{colorScheme == 'dark' ? <AddDark /> : <AddOutline />}</>
+              <AddOutline />
             ),
         }}
       />
@@ -145,23 +147,23 @@ const BottomTabNavigation = () => {
               easing: Easing.inOut(Easing.ease),
             },
           },
-          tabBarActiveTintColor: 'red',
+          tabBarActiveTintColor: colors.activityIndicatorStyle,
 
           tabBarIcon: ({ focused }) =>
             focused ? (
               <>
                 <NotificationOutline
-                  stroke={colors.background}
-                  fill={colors.text}
-                  height={25}
                   width={25}
+                  height={25}
+                  fill={colors.text}
+                  stroke={colors.background}
                 />
               </>
             ) : (
               <NotificationOutline
-                stroke={colors.white}
                 height={25}
                 width={25}
+                stroke={colors.white}
               />
             ),
         }}
@@ -177,7 +179,7 @@ const BottomTabNavigation = () => {
               easing: Easing.inOut(Easing.ease),
             },
           },
-          tabBarActiveTintColor: 'red',
+          tabBarActiveTintColor: colors.activityIndicatorStyle,
 
           tabBarIcon: ({ focused }) =>
             focused ? (
@@ -204,6 +206,3 @@ const BottomTabNavigation = () => {
 };
 
 export default BottomTabNavigation;
-const styles = StyleSheet.create({
-  ImageStyle: { height: 30, width: 30 },
-});

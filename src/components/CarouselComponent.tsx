@@ -1,28 +1,40 @@
 import React, { useRef, useState } from 'react';
 import {
-  Alert,
-  Dimensions,
-  FlatList,
-  Image,
-  StyleSheet,
   View,
+  FlatList,
+  StyleSheet,
+  ImageResizeMode,
+  TouchableOpacity,
 } from 'react-native';
-import {
-  GestureHandlerRootView,
-  TapGestureHandler,
-} from 'react-native-gesture-handler';
-import { useThemeColors } from '../hooks/useThemeColors';
 
-const screenWidth = Dimensions.get('window').width;
-interface ComponentProp {
-  ImagePost: Array<string>;
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+import { ColorProps } from '../constants/color';
+import { screenWidth, useThemeColors } from '../hooks/useThemeColors';
+import RenderImageComponent from './RenderImageComponent';
+import PostCarouselComponent from './PostModalComponent';
+
+interface CarouselProp {
+  imagePost: Array<string>;
+  reSizeMethod: 'auto' | 'resize' | 'scale' | 'none' | undefined;
+  reSizeMode: ImageResizeMode | undefined;
+  height: number;
 }
 
-const CarouselComponent: React.FC<ComponentProp> = props => {
-  let { ImagePost } = props || {};
-  const colors = useThemeColors();
+const CarouselComponent: React.FC<CarouselProp> = ({
+  imagePost,
+  reSizeMethod,
+  reSizeMode,
+  height,
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [heart, setHeart] = useState<boolean>(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  const colors = useThemeColors();
+  const styles = carouselComponentStyle(colors);
+  const onImageClick = () => {
+    setIsVisible(true);
+  };
 
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
     if (viewableItems.length > 0) {
@@ -33,19 +45,13 @@ const CarouselComponent: React.FC<ComponentProp> = props => {
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 100,
   });
-  const handleDoubleTap = () => {
-    console.log('Double tap detected!');
-    setHeart(true);
-    if (heart) {
-      Alert.alert('Liked');
-    }
-  };
+
   return (
     <View>
       <FlatList
-        style={{ backgroundColor: colors.black }}
-        keyExtractor={(_, index) => `${index}`}
-        data={ImagePost}
+        style={styles.flatListStyle}
+        keyExtractor={i => `${i}`}
+        data={imagePost}
         horizontal={true}
         scrollEnabled={true}
         pagingEnabled={true}
@@ -53,71 +59,65 @@ const CarouselComponent: React.FC<ComponentProp> = props => {
         viewabilityConfig={viewabilityConfig.current}
         onViewableItemsChanged={onViewableItemsChanged.current}
         renderItem={({ item }) => {
-          console.log(item);
           return (
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <TapGestureHandler
-                onHandlerStateChange={({ nativeEvent }) => {
-                  if (nativeEvent.state === 5) {
-                    handleDoubleTap();
-                  }
-                }}
-                numberOfTaps={2}
-              >
-                <Image
-                  resizeMethod="resize"
-                  resizeMode="contain"
-                  source={{
-                    uri: item,
-                    width: screenWidth,
-                    height: 200,
-                  }}
+            <GestureHandlerRootView style={styles.gestureStyle}>
+              <TouchableOpacity onPress={onImageClick}>
+                <RenderImageComponent
+                  imageUri={item}
+                  width={screenWidth}
+                  reSizeMethod={reSizeMethod}
+                  reSizeMode={reSizeMode}
+                  height={height}
                 />
-              </TapGestureHandler>
+              </TouchableOpacity>
             </GestureHandlerRootView>
           );
         }}
       />
-
-      <View style={styles.paginationVIew}>
-        {ImagePost?.map((_, index) => (
+      <View style={styles.paginationView}>
+        {imagePost?.map((_, index) => (
           <View
             style={[
               styles.paginationDotStyle,
               {
                 backgroundColor:
-                  currentIndex === index ? colors.dashcolor : colors.text,
+                  currentIndex === index
+                    ? colors.primaryblue
+                    : colors.dashcolor,
               },
             ]}
           />
         ))}
       </View>
+      {isVisible && (
+        <PostCarouselComponent
+          imagePost={imagePost}
+          isOpen={isVisible}
+          setIsImageClicked={setIsVisible}
+        />
+      )}
     </View>
   );
 };
 
 export default CarouselComponent;
 
-const styles = StyleSheet.create({
-  videostyle: { height: '100%' },
-  paginationVIew: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '10%',
-    alignSelf: 'center',
-    marginVertical: 10,
-  },
-  paginationDotStyle: {
-    height: 5,
-    width: 5,
-    borderRadius: 20,
-  },
+const carouselComponentStyle = (colors: ColorProps) =>
+  StyleSheet.create({
+    flatListStyle: { backgroundColor: colors.black },
 
-  arrowBtnText: {
-    fontSize: 35,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-});
+    gestureStyle: { flex: 1 },
+
+    paginationView: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      width: '10%',
+      alignSelf: 'center',
+      marginVertical: 10,
+    },
+    paginationDotStyle: {
+      height: 5,
+      width: 5,
+      borderRadius: 20,
+    },
+  });

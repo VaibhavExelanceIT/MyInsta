@@ -1,33 +1,36 @@
-import { StyleSheet, Text, useColorScheme, View } from 'react-native';
 import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+
 import { RadioButton, useTheme } from 'react-native-paper';
+import { ColorProps } from '../constants/color';
 import { useThemeColors } from '../hooks/useThemeColors';
 
-interface ComponentProp {
+interface RadioButtonProp {
   value: string;
   onChange: (value: string) => void;
 }
-
-const RadioButtonComponent: React.FC<ComponentProp> = props => {
-  const { onChange, value } = props || {};
-  const theme1 = useTheme();
+const RadioButtonComponent: React.FC<RadioButtonProp> = ({
+  value,
+  onChange,
+}) => {
+  const theme = useTheme();
   const colors = useThemeColors();
-
+  const styles = radioButtonComponentStyle(colors);
   return (
     <View>
-      <Text style={{ color: colors.text }}>{'Gender'}</Text>
+      <Text style={styles.textView}>{'Gender'}</Text>
       <RadioButton.Group value={value} onValueChange={onChange}>
-        <View style={styles.radiobtnView}>
-          <RadioButton value="Male" theme={theme1} />
-          <Text style={{ color: colors.text }}>{'Male'}</Text>
+        <View style={styles.radioBtnView}>
+          <RadioButton value="Male" theme={theme} />
+          <Text style={styles.textView}>{'Male'}</Text>
         </View>
-        <View style={styles.radiobtnView}>
-          <RadioButton value="Female" theme={theme1} />
-          <Text style={{ color: colors.text }}>{'Female'}</Text>
+        <View style={styles.radioBtnView}>
+          <RadioButton value="Female" theme={theme} />
+          <Text style={styles.textView}>{'Female'}</Text>
         </View>
-        <View style={styles.radiobtnView}>
-          <RadioButton value="Other" theme={theme1} />
-          <Text style={{ color: colors.text }}>{'Other'}</Text>
+        <View style={styles.radioBtnView}>
+          <RadioButton value="Other" theme={theme} />
+          <Text style={styles.textView}>{'Other'}</Text>
         </View>
       </RadioButton.Group>
     </View>
@@ -36,9 +39,13 @@ const RadioButtonComponent: React.FC<ComponentProp> = props => {
 
 export default RadioButtonComponent;
 
-const styles = StyleSheet.create({
-  radiobtnView: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-});
+const radioButtonComponentStyle = (colors: ColorProps) =>
+  StyleSheet.create({
+    radioBtnView: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    textView: {
+      color: colors.text,
+    },
+  });
