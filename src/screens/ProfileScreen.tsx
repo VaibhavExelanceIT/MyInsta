@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  ScrollView,
 } from 'react-native';
 
 import auth from '@react-native-firebase/auth';
@@ -15,11 +16,20 @@ import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
 
-import { SettingMenu, SettingMenuDark } from '../helper/icon';
+import {
+  GridPost,
+  GridPostWhite,
+  SettingMenu,
+  SettingMenuDark,
+  Shape,
+  ShapeWhite,
+} from '../helper/icon';
 import ProfileTopComponent from '../components/ProfileTopComponent';
 import ProfilePostItem from '../components/ProfilePostItem';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { ColorProps } from '../constants/color';
+import { LanguageConstant } from '../constants/language_constants';
+import { t } from 'i18next';
 
 interface Post {
   id: string;
@@ -51,8 +61,13 @@ const ProfileScreen = () => {
   const [post, setPost] = useState<Post[]>([]);
   const [usersData, setUserData] = useState<User>();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSelected, setIsSelected] = useState<Number>(1);
+
   const colorScheme = useColorScheme();
   const currentUser = auth().currentUser;
+
+  const userId = currentUser ? currentUser.uid : '';
+
   const colors = useThemeColors();
   const styles = profileScreenStyle(colors);
 
@@ -146,53 +161,101 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
-      {isLoading ? (
-        <ActivityIndicator
-          style={styles.loaderStyle}
-          color={colors.activityIndicatorStyle}
-          size={'large'}
-        />
-      ) : (
-        <>
-          {!!usersData && (
-            <View style={{ flex: 0.5 }}>
-              <ProfileTopComponent
-                totalPost={post.length}
-                ProfilePhoto={usersData.imageUrl}
-                follower={usersData.followers.length}
-                following={usersData.following.length}
-                userName={usersData.firstName + ' ' + usersData.lastName}
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
+        scrollEnabled
+        nestedScrollEnabled={true}
+        showsVerticalScrollIndicator={false}
+      >
+        {!!usersData && (
+          <View style={{ flex: 0.5 }}>
+            <ProfileTopComponent
+              totalPost={post.length}
+              profilePhoto={usersData.imageUrl}
+              follower={usersData.followers.length}
+              following={usersData.following.length}
+              userName={usersData.firstName + ' ' + usersData.lastName}
+              currentUserId={userId}
+            />
+          </View>
+        )}
+        <View
+          style={{
+            borderTopWidth: 0.5,
+            borderTopColor: colors.dashcolor,
+            padding: 10,
+            flex: 1,
+            flexDirection: 'row',
+            borderBottomWidth: 1,
+
+            justifyContent: 'space-around',
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => {
+              setIsSelected(1);
+            }}
+          >
+            {colorScheme == 'light' ? (
+              <GridPost height={23} width={23} />
+            ) : (
+              <GridPostWhite height={23} width={23} />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => {
+              setIsSelected(2);
+            }}
+          >
+            {colorScheme == 'light' ? (
+              <Shape height={23} width={23} />
+            ) : (
+              <ShapeWhite height={23} width={23} />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {isLoading ? (
+          <ActivityIndicator
+            style={styles.loaderStyle}
+            color={colors.activityIndicatorStyle}
+            size={'large'}
+          />
+        ) : post.length > 0 ? (
+          isSelected == 1 ? (
+            <View style={styles.postStyle}>
+              <FlatList
+                scrollEnabled
+                data={post}
+                numColumns={3}
+                horizontal={false}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <ProfilePostItem image={item.postURL} />
+                )}
+                keyExtractor={item => item.id}
               />
             </View>
-          )}
-        </>
-      )}
-
-      {isLoading ? (
-        <ActivityIndicator
-          style={styles.loaderStyle}
-          color={colors.activityIndicatorStyle}
-          size={'large'}
-        />
-      ) : post.length > 0 ? (
-        <View style={styles.postStyle}>
-          <FlatList
-            refreshControl={
-              <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-            }
-            data={post}
-            numColumns={3}
-            horizontal={false}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => <ProfilePostItem image={item.postURL} />}
-            keyExtractor={item => item.id}
-          />
-        </View>
-      ) : (
-        <View style={styles.postStyle}>
-          <Text style={styles.textStyle}>No Post</Text>
-        </View>
-      )}
+          ) : (
+            isSelected == 2 && (
+              <View style={styles.postStyle}>
+                <Text style={styles.textStyle}>
+                  {t(LanguageConstant.noPostTxt)}
+                </Text>
+              </View>
+            )
+          )
+        ) : (
+          <View style={styles.postStyle}>
+            <Text style={styles.textStyle}>
+              {t(LanguageConstant.noPostTxt)}
+            </Text>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 };
@@ -201,14 +264,15 @@ export default ProfileScreen;
 
 const profileScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
-    postStyle: { flex: 1.2 },
+    postStyle: { flex: 1.2, padding: 1 },
     loaderStyle: { flex: 1, justifyContent: 'center' },
     textStyle: {
       flex: 1,
       fontSize: 20,
       fontWeight: '400',
       textAlign: 'center',
-      textAlignVertical: 'center',
+
+      color: colors.text,
     },
     mainLayout: {
       flex: 1,
@@ -218,7 +282,7 @@ const profileScreenStyle = (colors: ColorProps) =>
     sortStyle: {
       paddingTop: 30,
       paddingHorizontal: 10,
-      flexDirection: 'row-reverse',
+      flexDirection: 'row',
       justifyContent: 'space-between',
       borderBottomColor: colors.modalBorderStyle,
     },

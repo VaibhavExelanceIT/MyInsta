@@ -17,6 +17,8 @@ import { useThemeColors } from '../hooks/useThemeColors';
 import { ColorProps } from '../constants/color';
 import { Comment, Save } from '../helper/icon';
 import ImagesComponent from './ImagesComponent';
+import { LanguageConstant } from '../constants/language_constants';
+import { t } from 'i18next';
 
 interface PostProp {
   date: string;
@@ -89,7 +91,9 @@ const PostComponent: React.FC<PostProp> = ({
         </View>
       </View>
 
-      <Text style={styles.likeStyle}>{likes} likes</Text>
+      <Text style={styles.likeStyle}>
+        {likes + ' ' + t(LanguageConstant.likes)}
+      </Text>
 
       {description && (
         <View style={styles.descriptionStyle}>

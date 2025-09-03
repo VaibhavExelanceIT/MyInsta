@@ -3,7 +3,6 @@ import {
   Text,
   View,
   Image,
-  Alert,
   StyleSheet,
   ScrollView,
   useColorScheme,
@@ -35,25 +34,27 @@ import { useThemeColors } from '../hooks/useThemeColors';
 import { ColorProps } from '../constants/color';
 
 const validationSchema = Yup.object().shape({
-  firstName: Yup.string().required('First Name is Required'),
-  lastName: Yup.string().required('Last Name is Required'),
-  gender: Yup.string().required('Gender is Required'),
-  mobileNo: Yup.string().required('Mobile No is Required').max(10).min(10),
-  DOB: Yup.string().required('dob is Required'),
+  firstName: Yup.string().required(t(LanguageConstant.firstNameRequiredError)),
+  lastName: Yup.string().required(t(LanguageConstant.lastNameRequiredError)),
+  gender: Yup.string().required(t(LanguageConstant.genderRequiredError)),
+  mobileNo: Yup.string()
+    .required(t(LanguageConstant.mobileNoRequiredError))
+    .max(10)
+    .min(10),
+  DOB: Yup.string().required(t(LanguageConstant.dobRequired)),
   email: Yup.string()
-    .required('Email is required')
-    .email("well that's not an email"),
+    .required(t(LanguageConstant.email_required))
+    .email(t(LanguageConstant.email_error)),
   password: Yup.string()
-    .label('Password')
-    .required('Password is required')
-    .matches(/\d/, 'Password must have a number')
-    .matches(/\w*[a-z]\w*/, 'Password must have a small letter')
-    .matches(/\w*[A-Z]\w*/, 'Password must have a capital letter')
-    .min(8, ({ min }) => `Password must be at least ${min} characters`),
+    .label(t(LanguageConstant.password))
+    .required(t(LanguageConstant.password_required))
+    .matches(/\d/, t(LanguageConstant.password_must_number))
+    .matches(/\w*[a-z]\w*/, t(LanguageConstant.password_must_small))
+    .matches(/\w*[A-Z]\w*/, t(LanguageConstant.password_must_capital)),
 
   confirmPassword: Yup.string()
-    .required('Confirm Password is required')
-    .oneOf([Yup.ref('password')], 'Passwords must match'),
+    .required(t(LanguageConstant.confirmPasswordRequired))
+    .oneOf([Yup.ref('password')], t(LanguageConstant.confirmPasswordMatch)),
 });
 
 interface userData {
@@ -68,6 +69,8 @@ interface userData {
   follower: Array<string>;
   confirmPassword: string;
   following: Array<string>;
+  requestSent: Array<string>;
+  requestCome: Array<string>;
 }
 
 const SignupScreen = () => {
@@ -86,7 +89,7 @@ const SignupScreen = () => {
       const signInResult = await GoogleSignin.signIn();
       let idToken: any = signInResult.data?.idToken;
       if (!idToken) {
-        throw new Error('No ID token found');
+        throw new Error('');
       }
       const googleCredential = GoogleAuthProvider.credential(
         signInResult?.data?.idToken,
@@ -106,7 +109,11 @@ const SignupScreen = () => {
 
       return signInWithCredential(getAuth(), googleCredential);
     } catch (error) {
-      Alert.alert('There is some' + error);
+      showMessage({
+        message: t(LanguageConstant.error),
+        description: `${t(LanguageConstant.error_message)} ${error}`,
+        type: 'danger',
+      });
     }
   };
 
@@ -151,37 +158,45 @@ const SignupScreen = () => {
               firstName: values.firstName,
               follower: [],
               following: [],
+              requestSent: [],
+              requestCome: [],
             })
             .then(() => {
               showMessage({
-                message: 'success',
-                description: 'Your are logged in',
+                message: t(LanguageConstant.success),
+                description: `${t(LanguageConstant.logged_in_message)}`,
                 type: 'success',
               });
               navigation.navigate('DrawerNavigation', { email: values.email });
             })
-            .catch(() => {
+            .catch(error => {
               showMessage({
+                message: t(LanguageConstant.error),
+                description: `${t(
+                  LanguageConstant.dataErrorMessage,
+                )}  ${error}`,
                 type: 'danger',
-                message: 'Error',
-                description: 'There is some error in the data',
               });
             });
         } else {
-          Alert.alert('There is some Error');
+          showMessage({
+            message: t(LanguageConstant.error),
+            description: `${t(LanguageConstant.dataErrorMessage)}`,
+            type: 'danger',
+          });
         }
       } else {
         showMessage({
+          message: t(LanguageConstant.error),
+          description: `${t(LanguageConstant.dataErrorMessage)}`,
           type: 'danger',
-          message: 'Error',
-          description: 'User is already Registered',
         });
       }
     } catch (error) {
       showMessage({
+        message: t(LanguageConstant.error),
+        description: `${t(LanguageConstant.dataErrorMessage)}  ${error}`,
         type: 'danger',
-        message: 'Error',
-        description: 'There is some error in the data',
       });
     }
   };
@@ -192,7 +207,9 @@ const SignupScreen = () => {
         <View style={styles.logoView}>
           <Image source={colorScheme === 'light' ? instadark : instalight} />
         </View>
-        <Text style={styles.textDarkStyle}>{'SignUp Form'}</Text>
+        <Text style={styles.textDarkStyle}>
+          {t(LanguageConstant.signupForm)}
+        </Text>
         <Formik
           initialValues={{
             DOB: '',
@@ -204,6 +221,8 @@ const SignupScreen = () => {
             firstName: '',
             follower: [],
             following: [],
+            requestSent: [],
+            requestCome: [],
             confirmPassword: '',
           }}
           onSubmit={values => {
@@ -316,14 +335,14 @@ const SignupScreen = () => {
                 btnStyle={styles.btnStyle}
                 textStyle={styles.textStyle}
                 onClick={handleSubmit}
-                title={t(LanguageConstant.login)}
+                title={t(LanguageConstant.signup)}
               />
             </>
           )}
         </Formik>
         <View style={styles.googleView}>
           <View style={styles.dashStyle} />
-          <Text style={styles.orStyle}>OR</Text>
+          <Text style={styles.orStyle}>{t(LanguageConstant.or)}</Text>
           <View style={styles.dashStyle} />
         </View>
         <View style={styles.socialView}>
@@ -359,9 +378,9 @@ const signupScreenStyle = (colors: ColorProps) =>
       fontSize: 30,
       fontWeight: '600',
       textAlign: 'center',
-      color: colors.white,
+      color: colors.text,
       textDecorationLine: 'underline',
-      textDecorationColor: colors.white,
+      textDecorationColor: colors.text,
     },
 
     container: {
@@ -380,7 +399,7 @@ const signupScreenStyle = (colors: ColorProps) =>
       marginBottom: 10,
       alignSelf: 'center',
     },
-    orStyle: { flex: 0.6, textAlign: 'center', color: colors.white },
+    orStyle: { flex: 0.6, textAlign: 'center', color: colors.text },
 
     dashStyle: {
       flex: 1,
@@ -415,13 +434,9 @@ const signupScreenStyle = (colors: ColorProps) =>
       fontWeight: '400',
       color: colors.text,
     },
-    // darkThemeFaceBookStyle: {
-    //   fontSize: 16,
-    //   color: colors.white,
-    //   fontWeight: '400',
-    // },
 
     textStyle: {
       color: colors.white,
+      fontWeight: 'bold',
     },
   });

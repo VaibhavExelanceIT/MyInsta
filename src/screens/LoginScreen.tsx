@@ -104,7 +104,7 @@ const LoginScreen = () => {
         }
       })
       .catch(error => {
-        console.error('Error changing language:', error);
+        Alert.alert('Error while changing language');
       });
   };
 
@@ -118,7 +118,7 @@ const LoginScreen = () => {
 
       let idToken: any = signInResult.data?.idToken;
       if (!idToken) {
-        throw new Error('No ID token found');
+        throw new Error('');
       }
       const googleCredential = GoogleAuthProvider.credential(
         signInResult?.data?.idToken,
@@ -169,16 +169,16 @@ const LoginScreen = () => {
         navigation.navigate('DrawerNavigation', { email: values.email });
       } else {
         showMessage({
-          message: 'success',
-          description: ' Enter the User Details',
+          message: t(LanguageConstant.success),
+          description: t(LanguageConstant.enterUserDetails),
           type: 'warning',
         });
         navigation.navigate('UserDetailsScreeen', { email: values.email });
       }
     } catch (error) {
       showMessage({
-        message: 'Error!!',
-        description: 'Email or Password has be wrong',
+        message: t(LanguageConstant.error),
+        description: t(LanguageConstant.email_password_error),
         type: 'danger',
       });
     }
@@ -210,7 +210,7 @@ const LoginScreen = () => {
           setItems={setItems}
           showBadgeDot={true}
           itemSeparator={true}
-          placeholder={'English'}
+          placeholder={t(LanguageConstant.english)}
           style={styles.dropDownStyle}
           onChangeValue={() => changeLanguage()}
           containerStyle={[styles.dropDownContainer]}
@@ -292,7 +292,7 @@ const LoginScreen = () => {
       </View>
       <View style={styles.googleView}>
         <View style={styles.dashStyle} />
-        <Text style={styles.orStyle}>OR</Text>
+        <Text style={styles.orStyle}>{t(LanguageConstant.or)}</Text>
         <View style={styles.dashStyle} />
       </View>
 
@@ -351,7 +351,9 @@ const LoginScreen = () => {
                     style={[styles.button]}
                     onPress={() => handleSubmit()}
                   >
-                    <Text style={styles.textStyle}>submit</Text>
+                    <Text style={styles.textStyle}>
+                      {t(LanguageConstant.submit)}
+                    </Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -398,7 +400,7 @@ const loginScreenStyle = (colors: ColorProps) =>
       marginVertical: 10,
     },
     forgetButtonStyle: { alignSelf: 'flex-end' },
-    dropDownStyle: { borderWidth: 0 },
+    dropDownStyle: { borderWidth: 1 },
     googleView: {
       alignSelf: 'center',
       flexDirection: 'row',
@@ -413,7 +415,7 @@ const loginScreenStyle = (colors: ColorProps) =>
     },
     dropDownContainer: {
       flex: 1,
-      width: '25%',
+      width: '35%',
       borderWidth: 0,
       alignSelf: 'center',
     },
@@ -467,6 +469,7 @@ const loginScreenStyle = (colors: ColorProps) =>
       elevation: 2,
       borderRadius: 20,
       marginVertical: 10,
+      backgroundColor: colors.primaryblue,
     },
     textStyle: {
       fontWeight: '500',
@@ -476,7 +479,6 @@ const loginScreenStyle = (colors: ColorProps) =>
     btnStyle: {
       padding: 10,
       borderRadius: 6,
-      marginVertical: 10,
       backgroundColor: colors.primaryblue,
     },
   });

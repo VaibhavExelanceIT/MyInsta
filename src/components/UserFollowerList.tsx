@@ -1,0 +1,95 @@
+import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+
+import { ColorProps } from '../constants/color';
+import { useThemeColors } from '../hooks/useThemeColors';
+
+interface UserListProp {
+  imageUrl: string;
+  userName: string;
+}
+
+const UserFollowerList: React.FC<UserListProp> = ({ userName, imageUrl }) => {
+  const colors = useThemeColors();
+  const styles = userListComponentStyle(colors);
+
+  return (
+    <View style={styles.mainLayout}>
+      <Image source={{ uri: imageUrl }} style={styles.imageStyle} />
+      <View style={styles.textView}>
+        <Text style={styles.txtNameStyle}>{userName}</Text>
+      </View>
+    </View>
+  );
+};
+
+export default UserFollowerList;
+
+const userListComponentStyle = (colors: ColorProps) =>
+  StyleSheet.create({
+    btnUnfollowStyle: {
+      padding: 10,
+      borderRadius: 6,
+      marginVertical: 15,
+      backgroundColor: colors.modalBorderStyle,
+    },
+    txtUnfollowStyle: {
+      flex: 1,
+      textAlign: 'center',
+      fontSize: 16,
+      fontWeight: '500',
+      textAlignVertical: 'center',
+      color: colors.placeholderTextColor,
+    },
+
+    btnStyle: {
+      padding: 10,
+      borderRadius: 6,
+      marginVertical: 15,
+      height: '60%',
+      width: 100,
+      backgroundColor: colors.primaryblue,
+    },
+
+    mainLayout: {
+      backgroundColor: colors.listBackgroundColor,
+
+      elevation: 3,
+      marginVertical: 5,
+      marginHorizontal: 10,
+      borderRadius: 20,
+      flexDirection: 'row',
+      padding: 10,
+      borderBottomWidth: 0.2,
+      borderBottomColor: colors.commentTextStyle,
+    },
+    imageStyle: {
+      flex: 1,
+      height: 50,
+      maxWidth: 50,
+      borderRadius: 50,
+    },
+    txtNameStyle: {
+      color: colors.text,
+      flex: 1,
+
+      marginHorizontal: 23,
+      fontSize: 15,
+      fontWeight: '400',
+      textAlignVertical: 'center',
+    },
+    textStyle: {
+      flex: 1,
+      color: colors.white,
+      fontSize: 16,
+      fontWeight: '500',
+      textAlign: 'center',
+    },
+    textView: {
+      flex: 1,
+    },
+
+    buttonStyle: {
+      justifyContent: 'center',
+    },
+  });

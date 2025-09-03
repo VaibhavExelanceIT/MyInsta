@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,11 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  ImageBackground,
   useColorScheme,
 } from 'react-native';
 
 import * as Yup from 'yup';
+import { t } from 'i18next';
 import { Formik } from 'formik';
 import { useTranslation } from 'react-i18next';
 import auth from '@react-native-firebase/auth';
@@ -21,15 +21,19 @@ import firestore from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
 
 import { ArrayUrl } from '../helper/imagesUrl';
-
-import { SettingMenu, SettingMenuDark } from '../helper/icon';
-import { instadark, instalight, more } from '../helper/images';
-import { LanguageConstant } from '../constants/language_constants';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { ColorProps } from '../constants/color';
+import { useThemeColors } from '../hooks/useThemeColors';
+import {
+  AddDark,
+  AddOutline,
+  SettingMenu,
+  SettingMenuDark,
+} from '../helper/icon';
+import { instadark, instalight } from '../helper/images';
+import { LanguageConstant } from '../constants/language_constants';
 
 const validationSchema = Yup.object().shape({
-  title: Yup.string().required('Title is Required'),
+  title: Yup.string().required(t(LanguageConstant.titleRequired)),
 });
 
 interface PostType {
@@ -39,6 +43,7 @@ interface PostType {
 
 const AddPostScreen = () => {
   const [uri, setUri] = useState<string[]>([]);
+  const [isChanges, setIsChanges] = useState(false);
   const navigation = useNavigation<any>();
   const colorScheme = useColorScheme();
   const { t } = useTranslation();
@@ -73,9 +78,10 @@ const AddPostScreen = () => {
         .then(() => {
           showMessage({
             message: t(LanguageConstant.success),
-            description: 'Post Created Successfully....',
+            description: t(LanguageConstant.postCreatedSuccesfull),
             type: 'success',
           });
+          setIsChanges(!isChanges);
           navigation.navigate('MyTab', { screen: 'HomeScreen' });
         })
         .catch(error => {
@@ -93,7 +99,9 @@ const AddPostScreen = () => {
       });
     }
   };
-
+  useEffect(() => {
+    setUri([]);
+  }, [isChanges]);
   const imageGallery = () => {
     setUri(ArrayUrl);
   };
@@ -143,10 +151,11 @@ const AddPostScreen = () => {
               />
             ) : (
               <TouchableOpacity style={styles.imagePost} onPress={imageGallery}>
-                <ImageBackground
-                  source={more}
-                  style={styles.imageBackgroundStyle}
-                />
+                {colorScheme === 'light' ? (
+                  <AddOutline height={70} width={70} />
+                ) : (
+                  <AddDark height={70} width={70} />
+                )}
                 <Text style={styles.textStyle}>
                   {t(LanguageConstant.add_image)}
                 </Text>
@@ -201,7 +210,7 @@ const AddPostScreen = () => {
                   style={styles.btnStyle}
                   onPress={() => handleSubmit()}
                 >
-                  <Text style={styles.textStyle}>
+                  <Text style={[styles.textStyle]}>
                     {t(LanguageConstant.submit)}
                   </Text>
                 </TouchableOpacity>
@@ -223,15 +232,16 @@ const addPostScreenScreen = (colors: ColorProps) =>
       alignSelf: 'center',
     },
     imageBackgroundStyle: { height: 60, width: 60 },
+    bntStyle: { color: colors.white },
     textStyle: {
-      backgroundColor: colors.text,
-      color: colors.background,
+      color: colors.white,
       textAlign: 'center',
       fontSize: 15,
       fontWeight: '800',
     },
     btnStyle: {
-      backgroundColor: colors.text,
+      backgroundColor: colors.primaryblue,
+      // color:colors.background
       marginVertical: 10,
       padding: 10,
       borderRadius: 20,

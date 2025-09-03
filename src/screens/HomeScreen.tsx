@@ -26,6 +26,8 @@ import { instadark, instalight } from '../helper/images';
 import { showMessage } from 'react-native-flash-message';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { ColorProps } from '../constants/color';
+import { LanguageConstant } from '../constants/language_constants';
+import { t } from 'i18next';
 
 interface Post {
   id: string;
@@ -91,8 +93,8 @@ const HomeScreen = ({ navigation }: any) => {
       return usersData;
     } catch (error) {
       showMessage({
-        message: 'Error!!',
-        description: 'There is some Error',
+        message: t(LanguageConstant.error),
+        description: `${t(LanguageConstant.error_message)} `,
         type: 'danger',
       });
       return [error];
