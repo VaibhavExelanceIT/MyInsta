@@ -16,6 +16,11 @@ export interface ColorProps {
   darwerTintBackground: string;
   profileBackground: string;
   activityIndicatorStyle: string;
+  acceptBtnStyle: string;
+  declineBtnStyle: string;
+  acceptBtnBorderStyle: string;
+  declineBtnBorderStyle: string;
+  listBackgroundColor: string;
 }
 
 export const lightColor = {
@@ -36,10 +41,15 @@ export const lightColor = {
   darwerTintBackground: '#e2e5e9',
   profileBackground: '#f9f9f9',
   activityIndicatorStyle: '#ff2820',
+  acceptBtnStyle: '#4CAF50',
+  declineBtnStyle: '#f44336',
+  acceptBtnBorderStyle: '#149e05',
+  declineBtnBorderStyle: '#cc101a',
+  listBackgroundColor: '#ffffff',
 };
 
 export const darkColor = {
-  background: '#1A1A1A',
+  background: '#000000',
   text: '#FAFAFA',
   primaryblue: '#1877F2',
   fromcolor: '#FFFFFF',
@@ -56,4 +66,9 @@ export const darkColor = {
   darwerTintBackground: '#2d2e31',
   profileBackground: '#000000',
   activityIndicatorStyle: '#ff2820',
+  acceptBtnStyle: '#4CAF50',
+  declineBtnStyle: '#f44336',
+  acceptBtnBorderStyle: '#149e05',
+  declineBtnBorderStyle: '#cc101a',
+  listBackgroundColor: '#1e1e1e',
 };

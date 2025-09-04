@@ -1,7 +1,6 @@
 import HomeFill from '../assets/icons/HomeFill.svg';
 import AddOutline from '../assets/icons/add.svg';
 import HeartOutline from '../assets/icons/HeartOutline.svg';
-import NotificationOutline from '../assets/icons/NotificationOutline.svg';
 import ProfileOutline from '../assets/icons/ProfileOutline.svg';
 import SearchOutline from '../assets/icons/SearchOutline.svg';
 import HeartFill from '../assets/icons/HeartFill.svg';
@@ -26,6 +25,13 @@ import CrossLight from '../assets/icons/CrossLight.svg';
 import Save from '../assets/icons/Save.svg';
 import Comment from '../assets/icons/comment.svg';
 import More from '../assets/icons/more.svg';
+import CorrectLight from '../assets/icons/CorrectLight.svg';
+import GridPost from '../assets/icons/GridPost.svg';
+import GridPostWhite from '../assets/icons/GridPostWhite.svg';
+import Shape from '../assets/icons/Shape.svg';
+import ShapeWhite from '../assets/icons/ShapeWhite.svg';
+import NotificationDark from '../assets/icons/NotificationDark.svg';
+import NotificationLight from '../assets/icons/NotificationLight.svg';
 
 export {
   HomeFill,
@@ -33,7 +39,6 @@ export {
   HeartOutline,
   SearchOutline,
   ProfileOutline,
-  NotificationOutline,
   HeartFill,
   HomeOutline,
   SearchFill,
@@ -56,4 +61,11 @@ export {
   Save,
   Comment,
   More,
+  CorrectLight,
+  GridPostWhite,
+  GridPost,
+  Shape,
+  ShapeWhite,
+  NotificationDark,
+  NotificationLight,
 };

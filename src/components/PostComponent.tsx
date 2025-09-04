@@ -2,9 +2,8 @@ import React from 'react';
 import { Image, StyleSheet, Text, useColorScheme, View } from 'react-native';
 
 import moment from 'moment';
+import { t } from 'i18next';
 
-import CarouselComponent from './CarouselComponent';
-import Heart from '../assets/icons/HeartOutline.svg';
 import {
   More,
   Message,
@@ -13,10 +12,13 @@ import {
   MessageDark,
   CommnetDark,
 } from '../helper/icon';
-import { useThemeColors } from '../hooks/useThemeColors';
-import { ColorProps } from '../constants/color';
 import { Comment, Save } from '../helper/icon';
+import { ColorProps } from '../constants/color';
 import ImagesComponent from './ImagesComponent';
+import Heart from '../assets/icons/HeartOutline.svg';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { LanguageConstant } from '../constants/language_constants';
+import { fs } from '../helper/fontSize';
 
 interface PostProp {
   date: string;
@@ -37,8 +39,8 @@ const PostComponent: React.FC<PostProp> = ({
   imageUrl,
 }) => {
   const colorScheme = useColorScheme();
-  const pastDate = moment(date, 'MM/DD/YYYY hh:mm:ss a');
-  const postDate = pastDate.fromNow();
+  const postCreationDateTime = moment(date, 'MM/DD/YYYY hh:mm:ss a');
+  const calculatedDateTime = postCreationDateTime.fromNow();
   const colors = useThemeColors();
   const styles = postComponentStyle(colors);
 
@@ -89,7 +91,9 @@ const PostComponent: React.FC<PostProp> = ({
         </View>
       </View>
 
-      <Text style={styles.likeStyle}>{likes} likes</Text>
+      <Text style={styles.likeStyle}>
+        {likes + ' ' + t(LanguageConstant.likes)}
+      </Text>
 
       {description && (
         <View style={styles.descriptionStyle}>
@@ -97,7 +101,7 @@ const PostComponent: React.FC<PostProp> = ({
         </View>
       )}
 
-      <Text style={styles.fotterStyle}>{postDate}</Text>
+      <Text style={styles.fotterStyle}>{calculatedDateTime}</Text>
     </View>
   );
 };
@@ -117,7 +121,7 @@ const postComponentStyle = (colors: ColorProps) =>
     },
 
     likeStyle: {
-      fontSize: 14,
+      fontSize: fs(14),
       paddingTop: 10,
       fontWeight: '700',
       color: colors.text,

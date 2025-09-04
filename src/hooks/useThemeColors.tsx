@@ -1,8 +1,9 @@
 // / hooks/CTeeehlmoorssu.js;
 import { useContext } from 'react';
-import { ColorProps, darkColor, lightColor } from '../constants/color';
-import { ThemeContext } from '../context/ThemeContext';
 import { Dimensions } from 'react-native';
+
+import { ThemeContext } from '../context/ThemeContext';
+import { ColorProps, darkColor, lightColor } from '../constants/color';
 
 export const useThemeColors = (): ColorProps => {
   const { isDarkMode } = useContext(ThemeContext);

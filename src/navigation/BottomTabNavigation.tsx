@@ -24,7 +24,8 @@ import {
   HomeOutlineDark,
   SearchOutlineDark,
   ProfileOutlineDark,
-  NotificationOutline,
+  NotificationDark,
+  NotificationLight,
 } from '../helper/icon';
 import { useThemeColors } from '../hooks/useThemeColors';
 
@@ -152,19 +153,20 @@ const BottomTabNavigation = () => {
           tabBarIcon: ({ focused }) =>
             focused ? (
               <>
-                <NotificationOutline
-                  width={25}
-                  height={25}
-                  fill={colors.text}
-                  stroke={colors.background}
-                />
+                {colorScheme == 'dark' ? (
+                  <NotificationLight height={30} width={30} />
+                ) : (
+                  <NotificationDark height={25} width={25} />
+                )}
               </>
             ) : (
-              <NotificationOutline
-                height={25}
-                width={25}
-                stroke={colors.white}
-              />
+              <>
+                {colorScheme == 'dark' ? (
+                  <NotificationLight height={30} width={30} />
+                ) : (
+                  <NotificationDark height={25} width={25} />
+                )}
+              </>
             ),
         }}
       />

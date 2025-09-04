@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   useColorScheme,
 } from 'react-native';
 
@@ -19,36 +18,37 @@ import { useNavigation } from '@react-navigation/native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import auth from '@react-native-firebase/auth';
 
-import { darkTheme } from '../theme/darkTheme';
 import InputText from '../components/InputText';
-import { lightTheme } from '../theme/lightTheme';
 import { instadark, instalight } from '../helper/images';
 import ButtonComponent from '../components/ButtonComponent';
 import { LanguageConstant } from '../constants/language_constants';
 import RadioButtonComponent from '../components/RadioButtonComponent';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { ColorProps } from '../constants/color';
+import { fs } from '../helper/fontSize';
 
 const validationSchema = Yup.object().shape({
-  firstName: Yup.string().required('First Name is Required'),
-  lastName: Yup.string().required('Last Name is Required'),
-  gender: Yup.string().required('Gender is Required'),
-  mobileNo: Yup.string().required('Mobile No is Required').max(10).min(10),
-  DOB: Yup.string().required('Date of Birth is Required'),
+  firstName: Yup.string().required(t(LanguageConstant.firstNameRequiredError)),
+  lastName: Yup.string().required(t(LanguageConstant.lastNameRequiredError)),
+  gender: Yup.string().required(t(LanguageConstant.genderRequiredError)),
+  mobileNo: Yup.string()
+    .required(t(LanguageConstant.mobileNoRequiredError))
+    .max(10)
+    .min(10),
+  DOB: Yup.string().required(t(LanguageConstant.dobRequired)),
   email: Yup.string()
-    .required('Email is required')
-    .email("well that's not an email"),
+    .required(t(LanguageConstant.email_required))
+    .email(t(LanguageConstant.email_error)),
   password: Yup.string()
-    .label('Password')
-    .required('Password is required')
-    .matches(/\d/, 'Password must have a number')
-    .matches(/\w*[a-z]\w*/, 'Password must have a small letter')
-    .matches(/\w*[A-Z]\w*/, 'Password must have a capital letter')
-    .min(8, ({ min }) => `Password must be at least ${min} characters`),
+    .label(t(LanguageConstant.password))
+    .required(t(LanguageConstant.password_required))
+    .matches(/\d/, t(LanguageConstant.password_must_number))
+    .matches(/\w*[a-z]\w*/, t(LanguageConstant.password_must_small))
+    .matches(/\w*[A-Z]\w*/, t(LanguageConstant.password_must_capital)),
 
   confirmPassword: Yup.string()
-    .required('Confirm Password is required')
-    .oneOf([Yup.ref('password')], 'Passwords must match'),
+    .required(t(LanguageConstant.confirmPasswordRequired))
+    .oneOf([Yup.ref('password')], t(LanguageConstant.confirmPasswordMatch)),
 });
 
 interface userData {
@@ -63,17 +63,19 @@ interface userData {
   confirmPassword: string;
   follower: Array<string>;
   following: Array<string>;
+  requestSent: Array<string>;
+  requestCome: Array<string>;
 }
 const UserDetailsScreeen = ({ route }: any) => {
+  const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
+
+  const colors = useThemeColors();
+  const colorScheme = useColorScheme();
   const navigation = useNavigation<any>();
+  const styles = userDetailsScreeenStyle(colors);
 
   const email: string = route.params.email;
-  const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
 
-  const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
-  const colors = useThemeColors();
-  const styles = userDetailsScreeenStyle(colors);
   const showDatePicker = () => {
     setIsDatePickerVisibility(true);
   };
@@ -110,38 +112,44 @@ const UserDetailsScreeen = ({ route }: any) => {
               firstName: values.firstName,
               follower: [],
               following: [],
+              requestSent: [],
+              requestCome: [],
             })
             .then(() => {
               showMessage({
-                message: 'success',
-                description: 'Your are logged in',
+                message: t(LanguageConstant.success),
+                description: `${t(LanguageConstant.logged_in_message)}`,
                 type: 'success',
               });
               navigation.navigate('DrawerNavigation', { email: values.email });
             })
             .catch(() => {
               showMessage({
+                message: t(LanguageConstant.error),
+                description: `${t(LanguageConstant.dataErrorMessage)} `,
                 type: 'danger',
-                message: 'Error',
-                description: 'There is some error in the data',
               });
             });
         } else {
-          Alert.alert('There is some Error');
+          showMessage({
+            message: t(LanguageConstant.error),
+            description: `${t(LanguageConstant.error_message)} `,
+            type: 'danger',
+          });
         }
       } else {
         showMessage({
           type: 'warning',
-          message: 'success',
-          description: 'User already Registrated',
+          message: t(LanguageConstant.success),
+          description: t(LanguageConstant.userAlreadyRegistered),
         });
         navigation.navigate('loginScreen');
       }
     } catch (error) {
       showMessage({
+        message: t(LanguageConstant.error),
+        description: `${t(LanguageConstant.error_message)} `,
         type: 'danger',
-        message: 'Error',
-        description: 'There is some error in the data',
       });
     }
   };
@@ -168,6 +176,8 @@ const UserDetailsScreeen = ({ route }: any) => {
             confirmPassword: '',
             following: [],
             follower: [],
+            requestSent: [],
+            requestCome: [],
           }}
           onSubmit={values => {
             writeFirestore(values);
@@ -277,7 +287,7 @@ const UserDetailsScreeen = ({ route }: any) => {
               )}
 
               <ButtonComponent
-                title={t(LanguageConstant.login)}
+                title={t(LanguageConstant.submit)}
                 onClick={handleSubmit}
                 btnStyle={styles.btnStyle}
                 textStyle={styles.textStyle}
@@ -295,6 +305,7 @@ export default UserDetailsScreeen;
 const userDetailsScreeenStyle = (colors: ColorProps) =>
   StyleSheet.create({
     textStyle: {
+      color: colors.white,
       fontWeight: 'bold',
       textAlign: 'center',
     },
@@ -306,12 +317,12 @@ const userDetailsScreeenStyle = (colors: ColorProps) =>
     },
 
     textDarkStyle: {
-      fontSize: 30,
-      color: colors.white,
+      fontSize: fs(25),
+      color: colors.text,
       fontWeight: '600',
       textAlign: 'center',
       textDecorationLine: 'underline',
-      textDecorationColor: colors.white,
+      textDecorationColor: colors.text,
     },
 
     container: {
@@ -327,7 +338,7 @@ const userDetailsScreeenStyle = (colors: ColorProps) =>
     },
     errorText: {
       color: 'red',
-      fontSize: 15,
+      fontSize: fs(15),
       fontWeight: '800',
     },
   });

@@ -31,25 +31,30 @@ const DrawerNavigation = ({ navigation }: any) => {
   const [userEmail, setEmail] = useState<string>('');
   const [focused, setFocused] = useState('HomeScreen');
   const dimensions = useWindowDimensions();
-  const currentUser = auth().currentUser;
 
   const colors = useThemeColors();
   const styles = drawerNavigationStyle(colors);
 
-  const getData = async () => {
+  const getData = async (email: string) => {
     const users = await firestore()
       .collection('UsersData')
-      .where('email', '==', userEmail)
+      .where('email', '==', email)
       .get();
 
     setUri(users.docs[0].data().userImage);
   };
 
   useEffect(() => {
-    if (currentUser?.email) {
-      setEmail(currentUser.email);
-    }
-    getData();
+    const unsubscribeAuth = auth().onAuthStateChanged(user => {
+      if (user?.email) {
+        setEmail(user.email);
+        getData(user.email);
+      }
+    });
+    return unsubscribeAuth;
+  }, []);
+
+  useEffect(() => {
     const unsubscribe = navigation.addListener('state', () => {
       const state = navigation.getState();
 
@@ -77,7 +82,7 @@ const DrawerNavigation = ({ navigation }: any) => {
       }
     });
     return unsubscribe;
-  }, [navigation]);
+  }, []);
 
   const signOutGoogle = async () => {
     try {
@@ -124,23 +129,22 @@ const DrawerNavigation = ({ navigation }: any) => {
       }}
       drawerContent={props => {
         return (
-          <View style={{ flex: 1 }}>
+          <View style={styles.mainLayout}>
+            <View style={styles.imageView}>
+              <Image src={uri} resizeMode="center" style={styles.headerImage} />
+              <Text style={styles.userEmailStyle}>{userEmail}</Text>
+            </View>
             <DrawerContentScrollView {...props}>
               <View style={styles.container}>
-                <View style={styles.imageView}>
-                  <Image
-                    src={uri}
-                    resizeMode="center"
-                    style={[styles.headerImage]}
-                  />
-                  <Text style={styles.userEmailStyle}>{userEmail}</Text>
-                </View>
                 {[
-                  { name: 'HomeScreen', label: 'Home' },
-                  { name: 'SearchScreen', label: 'Search' },
-                  { name: 'AddPostScreen', label: 'Add Post' },
-                  { name: 'NotificationScreen', label: 'Notifications' },
-                  { name: 'ProfileScreen', label: 'Profile' },
+                  { name: 'HomeScreen', label: t(LanguageConstant.home) },
+                  { name: 'SearchScreen', label: t(LanguageConstant.search) },
+                  { name: 'AddPostScreen', label: t(LanguageConstant.addPost) },
+                  {
+                    name: 'NotificationScreen',
+                    label: t(LanguageConstant.notification),
+                  },
+                  { name: 'ProfileScreen', label: t(LanguageConstant.profile) },
                 ].map(item => (
                   <DrawerItem
                     key={item.name}
@@ -177,7 +181,9 @@ const DrawerNavigation = ({ navigation }: any) => {
                   props.navigation.navigate('loginScreen');
                 }}
               >
-                <Text style={styles.textStyle}>{'Logout'}</Text>
+                <Text style={styles.textStyle}>
+                  {t(LanguageConstant.logout)}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -193,6 +199,9 @@ export default DrawerNavigation;
 
 const drawerNavigationStyle = (colors: ColorProps) =>
   StyleSheet.create({
+    mainLayout: {
+      flex: 1,
+    },
     textStyle: {
       padding: 5,
       elevation: 10,
@@ -206,7 +215,7 @@ const drawerNavigationStyle = (colors: ColorProps) =>
       justifyContent: 'flex-end',
     },
     imageView: {
-      marginBottom: 20,
+      marginVertical: 20,
       alignSelf: 'center',
     },
     headerImage: {
@@ -224,7 +233,6 @@ const drawerNavigationStyle = (colors: ColorProps) =>
       borderColor: colors.darwerTint,
       marginBottom: 10,
       borderRadius: 10,
-      borderBottomWidth: 0.5,
     },
     logoutView: {
       flex: 0.1,
