@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   useColorScheme,
 } from 'react-native';
 
@@ -26,6 +25,7 @@ import { LanguageConstant } from '../constants/language_constants';
 import RadioButtonComponent from '../components/RadioButtonComponent';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { ColorProps } from '../constants/color';
+import { fs } from '../helper/fontSize';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required(t(LanguageConstant.firstNameRequiredError)),
@@ -67,14 +67,15 @@ interface userData {
   requestCome: Array<string>;
 }
 const UserDetailsScreeen = ({ route }: any) => {
+  const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
+
+  const colors = useThemeColors();
+  const colorScheme = useColorScheme();
   const navigation = useNavigation<any>();
+  const styles = userDetailsScreeenStyle(colors);
 
   const email: string = route.params.email;
-  const colorScheme = useColorScheme();
 
-  const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
-  const colors = useThemeColors();
-  const styles = userDetailsScreeenStyle(colors);
   const showDatePicker = () => {
     setIsDatePickerVisibility(true);
   };
@@ -316,7 +317,7 @@ const userDetailsScreeenStyle = (colors: ColorProps) =>
     },
 
     textDarkStyle: {
-      fontSize: 30,
+      fontSize: fs(25),
       color: colors.text,
       fontWeight: '600',
       textAlign: 'center',
@@ -337,7 +338,7 @@ const userDetailsScreeenStyle = (colors: ColorProps) =>
     },
     errorText: {
       color: 'red',
-      fontSize: 15,
+      fontSize: fs(15),
       fontWeight: '800',
     },
   });

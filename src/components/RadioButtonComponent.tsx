@@ -7,6 +7,7 @@ import { t } from 'i18next';
 import { ColorProps } from '../constants/color';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { LanguageConstant } from '../constants/language_constants';
+import { fs } from '../helper/fontSize';
 
 interface RadioButtonProp {
   value: string;
@@ -53,11 +54,11 @@ const radioButtonComponentStyle = (colors: ColorProps) =>
       alignItems: 'center',
     },
     textView: {
-      fontSize: 15,
+      fontSize: fs(15),
       color: colors.text,
     },
     titleTextView: {
       fontWeight: '500',
-      fontSize: 20,
+      fontSize: fs(16),
     },
   });

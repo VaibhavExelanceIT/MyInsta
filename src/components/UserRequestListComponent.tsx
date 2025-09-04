@@ -1,5 +1,5 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
 import React from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 import firestore, {
   arrayRemove,
@@ -10,16 +10,16 @@ import { t } from 'i18next';
 
 import { ColorProps } from '../constants/color';
 import ButtonComponent from './ButtonComponent';
-
 import { useThemeColors } from '../hooks/useThemeColors';
 import { LanguageConstant } from '../constants/language_constants';
+import { CorrectLight, CrossLight } from '../helper/icon';
+import { fs } from '../helper/fontSize';
 
 interface UserRequestListProp {
   userId: string;
   imageUrl: string;
   userName: string;
   currentUserId: string;
-
   isRequested: boolean;
 }
 const UserRequestListComponent: React.FC<UserRequestListProp> = ({
@@ -46,7 +46,7 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
-        description: `${t(LanguageConstant.error_message)}` + error,
+        description: t(LanguageConstant.error_message),
         type: 'success',
       });
     }
@@ -66,7 +66,7 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
-        description: `${t(LanguageConstant.error_message)}` + error,
+        description: t(LanguageConstant.error_message),
         type: 'success',
       });
     }
@@ -91,7 +91,7 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message) + ' ' + error,
+        description: t(LanguageConstant.error_message),
         type: 'success',
       });
     }
@@ -111,7 +111,7 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message) + ' ' + error,
+        description: t(LanguageConstant.error_message),
         type: 'success',
       });
     }
@@ -137,7 +137,7 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
                 onClick={removeRequest}
                 btnStyle={styles.btnDeclineStyle}
                 textStyle={styles.txtDeclineStyle}
-                isDecline={true}
+                IconComponent={CrossLight}
               />
             </View>
             <View style={styles.buttonStyle}>
@@ -146,7 +146,7 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
                 onClick={acceptRequest}
                 btnStyle={styles.btnAcceptStyle}
                 textStyle={styles.txtAcceptStyle}
-                isAccept={true}
+                IconComponent={CorrectLight}
               />
             </View>
           </>
@@ -179,7 +179,7 @@ const userRequestListComponentStyle = (colors: ColorProps) =>
     txtAcceptStyle: {
       flex: 1,
       textAlign: 'center',
-      fontSize: 16,
+      fontSize: fs(16),
       fontWeight: '500',
       textAlignVertical: 'center',
       color: colors.white,
@@ -187,7 +187,7 @@ const userRequestListComponentStyle = (colors: ColorProps) =>
     txtDeclineStyle: {
       flex: 1,
       textAlign: 'center',
-      fontSize: 16,
+      fontSize: fs(16),
       fontWeight: '500',
       textAlignVertical: 'center',
       color: colors.white,
@@ -223,7 +223,7 @@ const userRequestListComponentStyle = (colors: ColorProps) =>
       color: colors.text,
       flex: 1,
       padding: 20,
-      fontSize: 15,
+      fontSize: fs(15),
       fontWeight: '500',
       textAlignVertical: 'center',
     },
@@ -231,7 +231,7 @@ const userRequestListComponentStyle = (colors: ColorProps) =>
       flex: 1,
       color: colors.white,
 
-      fontSize: 16,
+      fontSize: fs(16),
       fontWeight: '500',
       textAlign: 'center',
     },

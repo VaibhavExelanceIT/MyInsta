@@ -31,6 +31,7 @@ import {
 } from '../helper/icon';
 import { instadark, instalight } from '../helper/images';
 import { LanguageConstant } from '../constants/language_constants';
+import { fs } from '../helper/fontSize';
 
 const validationSchema = Yup.object().shape({
   title: Yup.string().required(t(LanguageConstant.titleRequired)),
@@ -44,6 +45,7 @@ interface PostType {
 const AddPostScreen = () => {
   const [uri, setUri] = useState<string[]>([]);
   const [isChanges, setIsChanges] = useState(false);
+
   const navigation = useNavigation<any>();
   const colorScheme = useColorScheme();
   const { t } = useTranslation();
@@ -58,6 +60,10 @@ const AddPostScreen = () => {
 
   const currentUser = auth().currentUser;
   const userId = currentUser ? currentUser.uid : null;
+
+  useEffect(() => {
+    setUri([]);
+  }, [isChanges]);
 
   const submitHandler = (value: PostType) => {
     if (userId !== null) {
@@ -88,7 +94,7 @@ const AddPostScreen = () => {
           showMessage({
             type: 'danger',
             message: t(LanguageConstant.error),
-            description: `${t(LanguageConstant.error_message)} ${error}`,
+            description: t(LanguageConstant.error_message),
           });
         });
     } else {
@@ -99,9 +105,7 @@ const AddPostScreen = () => {
       });
     }
   };
-  useEffect(() => {
-    setUri([]);
-  }, [isChanges]);
+
   const imageGallery = () => {
     setUri(ArrayUrl);
   };
@@ -231,17 +235,14 @@ const addPostScreenScreen = (colors: ColorProps) =>
     imageStyle: {
       alignSelf: 'center',
     },
-    imageBackgroundStyle: { height: 60, width: 60 },
-    bntStyle: { color: colors.white },
     textStyle: {
       color: colors.white,
       textAlign: 'center',
-      fontSize: 15,
+      fontSize: fs(15),
       fontWeight: '800',
     },
     btnStyle: {
       backgroundColor: colors.primaryblue,
-      // color:colors.background
       marginVertical: 10,
       padding: 10,
       borderRadius: 20,
@@ -275,7 +276,7 @@ const addPostScreenScreen = (colors: ColorProps) =>
       alignItems: 'center',
     },
     addPostScreen: {
-      fontSize: 30,
+      fontSize: fs(30),
       fontWeight: '600',
       marginBottom: 20,
       color: colors.text,
@@ -294,9 +295,7 @@ const addPostScreenScreen = (colors: ColorProps) =>
       justifyContent: 'space-between',
       backgroundColor: colors.background,
       borderBottomColor: colors.modalBorderStyle,
-
       borderBottomWidth: 1,
-
       elevation: 5,
     },
     userIcon: {
@@ -309,7 +308,7 @@ const addPostScreenScreen = (colors: ColorProps) =>
     },
     errorText: {
       color: 'red',
-      fontSize: 15,
+      fontSize: fs(15),
       fontWeight: '800',
     },
   });

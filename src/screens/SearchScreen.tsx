@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   FlatList,
@@ -34,33 +34,30 @@ import {
 } from '../helper/icon';
 import { instadark, instalight } from '../helper/images';
 import { LanguageConstant } from '../constants/language_constants';
+import { fs } from '../helper/fontSize';
 
 interface userData {
   id: string;
-  DOB: string;
-  email: string;
-  gender: string;
   lastName: string;
-  mobileNo: string;
   firstName: string;
   userImage: string;
   follower: Array<string>;
-  following: Array<string>;
   requestCome: Array<string>;
-  requestSent: Array<string>;
 }
 
 const SearchScreen = ({ navigation }: any) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [usersData, setUserData] = useState<userData[]>([]);
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const currentUser = auth().currentUser;
-  const userId: string = currentUser?.uid ? currentUser?.uid : '';
-  const colorScheme = useColorScheme();
-  const colors = useThemeColors();
 
+  const colors = useThemeColors();
+  const colorScheme = useColorScheme();
+  const currentUser = auth().currentUser;
   const styles = searchScreenStyle(colors);
+
+  const userId: string = currentUser?.uid ? currentUser?.uid : '';
+
   const onRefresh = () => {
     setIsLoading(true);
     setIsRefreshing(true);
@@ -112,17 +109,11 @@ const SearchScreen = ({ navigation }: any) => {
           const data = documentSnapshot.data();
           userMap.set(documentSnapshot.id, {
             id: documentSnapshot.id,
-            DOB: data.DOB,
-            email: data.email,
-            gender: data.gender,
             lastName: data.lastName,
-            mobileNo: data.mobileNo,
             follower: data.follower,
             firstName: data.firstName,
-            following: data.following,
             userImage: data.userImage,
             requestCome: data.requestCome,
-            requestSent: data.requestSent,
           });
         });
 
@@ -130,17 +121,11 @@ const SearchScreen = ({ navigation }: any) => {
           const data = documentSnapshot.data();
           userMap.set(documentSnapshot.id, {
             id: documentSnapshot.id,
-            DOB: data.DOB,
-            email: data.email,
-            gender: data.gender,
             lastName: data.lastName,
-            mobileNo: data.mobileNo,
             follower: data.follower,
             firstName: data.firstName,
-            following: data.following,
             userImage: data.userImage,
             requestCome: data.requestCome,
-            requestSent: data.requestSent,
           });
         });
 
@@ -154,8 +139,6 @@ const SearchScreen = ({ navigation }: any) => {
         setIsRefreshing(false);
         setUserData([]);
       }
-
-      return usersData;
     } catch (error) {
       setIsLoading(false);
       return [];
@@ -314,7 +297,7 @@ const searchScreenStyle = (colors: ColorProps) =>
       alignSelf: 'center',
     },
     textStyle: {
-      fontSize: 20,
+      fontSize: fs(16),
       color: colors.text,
     },
   });

@@ -32,6 +32,7 @@ import { instadark, instalight, googlelogo } from '../helper/images';
 import RadioButtonComponent from '../components/RadioButtonComponent';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { ColorProps } from '../constants/color';
+import { fs } from '../helper/fontSize';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required(t(LanguageConstant.firstNameRequiredError)),
@@ -75,6 +76,7 @@ interface userData {
 
 const SignupScreen = () => {
   const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
+
   const navigation = useNavigation<any>();
   const colorScheme = useColorScheme();
   const colors = useThemeColors();
@@ -89,7 +91,7 @@ const SignupScreen = () => {
       const signInResult = await GoogleSignin.signIn();
       let idToken: any = signInResult.data?.idToken;
       if (!idToken) {
-        throw new Error('');
+        throw new Error('No ID token found');
       }
       const googleCredential = GoogleAuthProvider.credential(
         signInResult?.data?.idToken,
@@ -375,7 +377,7 @@ const signupScreenStyle = (colors: ColorProps) =>
     },
 
     textDarkStyle: {
-      fontSize: 30,
+      fontSize: fs(26),
       fontWeight: '600',
       textAlign: 'center',
       color: colors.text,
@@ -392,7 +394,7 @@ const signupScreenStyle = (colors: ColorProps) =>
     },
     errorText: {
       color: 'red',
-      fontSize: 15,
+      fontSize: fs(15),
       fontWeight: '800',
     },
     logoView: {
@@ -425,12 +427,12 @@ const signupScreenStyle = (colors: ColorProps) =>
     socialLogo: { height: 30, width: 30, marginHorizontal: 10 },
     textViewStyle: { margin: 20, alignItems: 'center' },
     textStyleFrom: {
-      fontSize: 14,
+      fontSize: fs(14),
       fontWeight: '600',
       color: colors.fromcolor,
     },
     textStyleFacebook: {
-      fontSize: 16,
+      fontSize: fs(16),
       fontWeight: '400',
       color: colors.text,
     },

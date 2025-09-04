@@ -8,15 +8,17 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-import { CorrectLight, CrossLight } from '../helper/icon';
+
+import { SvgProps } from 'react-native-svg';
+import { fs } from '../helper/fontSize';
 
 interface ButtonProp {
   title: string;
   onClick: () => void;
   btnStyle: StyleProp<ViewStyle>;
   textStyle: StyleProp<TextStyle>;
-  isAccept?: boolean;
-  isDecline?: boolean;
+
+  IconComponent?: React.FC<SvgProps> | undefined;
 }
 
 const ButtonComponent: React.FC<ButtonProp> = ({
@@ -24,21 +26,21 @@ const ButtonComponent: React.FC<ButtonProp> = ({
   onClick,
   btnStyle,
   textStyle,
-  isAccept,
-  isDecline,
+
+  IconComponent,
 }) => {
   return (
     <View style={styles.containerStyle}>
       <TouchableOpacity style={btnStyle} onPress={onClick}>
         <View style={{ flex: 1, alignSelf: 'center' }}>
-          {isAccept ? (
-            <CorrectLight height={20} width={20} />
-          ) : isDecline ? (
-            <CrossLight height={20} width={20} />
-          ) : null}
+          {IconComponent ? (
+            <IconComponent height={fs(20)} width={fs(20)} />
+          ) : (
+            <></>
+          )}
         </View>
 
-        <Text style={[textStyle, styles.text]}>{title}</Text>
+        <Text style={[styles.text, textStyle]}>{title}</Text>
       </TouchableOpacity>
     </View>
   );

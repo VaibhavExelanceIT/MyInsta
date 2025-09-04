@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import * as Yup from 'yup';
+import { t } from 'i18next';
 import { Formik } from 'formik';
 import {
   getAuth,
@@ -21,22 +22,20 @@ import {
   signInWithEmailAndPassword,
 } from '@react-native-firebase/auth';
 import RNRestart from 'react-native-restart';
-
-import { t } from 'i18next';
 import { useNavigation } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
+import firestore from '@react-native-firebase/firestore';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import firestore from '@react-native-firebase/firestore';
 
+import InputText from '../components/InputText';
 import i18n from '../constants/language/i18next';
+import { ColorProps } from '../constants/color';
+import { useThemeColors } from '../hooks/useThemeColors';
+import ButtonComponent from '../components/ButtonComponent';
 import { LanguageConstant } from '../constants/language_constants';
 import { instadark, instalight, googlelogo } from '../helper/images';
-import InputText from '../components/InputText';
-import ButtonComponent from '../components/ButtonComponent';
-
-import { useThemeColors } from '../hooks/useThemeColors';
-import { ColorProps } from '../constants/color';
+import { fs } from '../helper/fontSize';
 
 const validationSchema = Yup.object().shape({
   email: Yup.string()
@@ -55,10 +54,19 @@ interface UserType {
 }
 
 const LoginScreen = () => {
-  const navigation = useNavigation<any>();
-  const colors = useThemeColors();
-  const colorScheme = useColorScheme();
+  const [items, setItems] = useState([
+    { label: t(LanguageConstant.english), value: 'en' },
+    { label: t(LanguageConstant.hindi), value: 'hi' },
+    { label: t(LanguageConstant.urdu), value: 'ar' },
+  ]);
+  const [value, setValue] = useState<any>();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
+  const auth = getAuth();
+  const colors = useThemeColors();
+  const colorScheme = useColorScheme() === 'dark';
+  const navigation = useNavigation<any>();
   const styles = loginScreenStyle(colors);
 
   useEffect(() => {
@@ -69,24 +77,13 @@ const LoginScreen = () => {
         '956857887247-fv38un1ht58puru0atl6vio70dabj7t6.apps.googleusercontent.com',
     });
 
-    const auth = getAuth();
-
     const user = auth.currentUser;
     if (user) {
       navigation.navigate('DrawerNavigation');
     }
   }, []);
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [value, setValue] = useState<any>();
-  const [items, setItems] = useState([
-    { label: t(LanguageConstant.english), value: 'en' },
-    { label: t(LanguageConstant.hindi), value: 'hi' },
-    { label: t(LanguageConstant.urdu), value: 'ar' },
-  ]);
-
-  colorScheme === 'dark'
+  colorScheme
     ? DropDownPicker.setTheme('DARK')
     : DropDownPicker.setTheme('LIGHT');
 
@@ -218,7 +215,7 @@ const LoginScreen = () => {
       </View>
 
       <View style={styles.logoView}>
-        <Image source={colorScheme === 'light' ? instadark : instalight} />
+        <Image source={colorScheme ? instadark : instalight} />
       </View>
 
       <View style={styles.formView}>
@@ -369,8 +366,16 @@ export default LoginScreen;
 
 const loginScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
-    textStyleFrom: { fontSize: 14, fontWeight: '600', color: colors.fromcolor },
-    textStyleFacebook: { fontSize: 16, fontWeight: '400', color: colors.text },
+    textStyleFrom: {
+      fontSize: fs(14),
+      fontWeight: '600',
+      color: colors.fromcolor,
+    },
+    textStyleFacebook: {
+      fontSize: fs(16),
+      fontWeight: '400',
+      color: colors.text,
+    },
     textViewStyle: { margin: 20, alignItems: 'center' },
     socialLogoView: {
       margin: 20,
@@ -395,7 +400,7 @@ const loginScreenStyle = (colors: ColorProps) =>
     signUpStyle: { fontWeight: '700', color: colors.primaryblue },
     forgetTextStyle: {
       color: colors.primaryblue,
-      fontSize: 13,
+      fontSize: fs(13),
       fontWeight: '700',
       marginVertical: 10,
     },
@@ -435,7 +440,7 @@ const loginScreenStyle = (colors: ColorProps) =>
     },
     errorText: {
       color: 'red',
-      fontSize: 15,
+      fontSize: fs(16),
       fontWeight: '800',
     },
 

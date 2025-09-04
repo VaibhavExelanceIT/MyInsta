@@ -9,14 +9,12 @@ import {
   useColorScheme,
   TouchableOpacity,
   Image,
-  Text,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
 import { useThemeColors } from '../hooks/useThemeColors';
 import { ColorProps } from '../constants/color';
-
 import {
   HeartDark,
   HeartOutline,
@@ -52,22 +50,23 @@ const NotificationScreen = ({ navigation }: any) => {
   const currentUser = auth().currentUser;
   const userId: string = currentUser?.uid ? currentUser?.uid : '';
 
-  const colorScheme = useColorScheme();
+  const colorScheme = useColorScheme() === 'light';
   const colors = useThemeColors();
 
   const styles = notificationScreenStyle(colors);
-  const onRefresh = () => {
-    setIsLoading(true);
-    setIsRefreshing(true);
-    getAllUsersDataFirestore();
-    getRequestCome();
-  };
 
   useEffect(() => {
     setUserData([]);
     getAllUsersDataFirestore();
     getRequestCome();
   }, []);
+
+  const onRefresh = () => {
+    setIsLoading(true);
+    setIsRefreshing(true);
+    getAllUsersDataFirestore();
+    getRequestCome();
+  };
 
   const getAllUsersDataFirestore = async () => {
     try {
@@ -77,28 +76,15 @@ const NotificationScreen = ({ navigation }: any) => {
       usersCollection.forEach(documentSnapshot => {
         const data = documentSnapshot.data();
         fetchedUsers.push({
+          ...data,
           id: documentSnapshot.id,
-          DOB: data.DOB,
-          email: data.email,
-          gender: data.gender,
-          lastName: data.lastName,
-          mobileNo: data.mobileNo,
-          follower: data.follower,
-          firstName: data.firstName,
-          following: data.following,
-          userImage: data.userImage,
-          requestCome: data.requestCome,
-          requestSent: data.requestSent,
-        });
+        } as userData);
       });
       setIsLoading(false);
       setIsRefreshing(false);
       setUserData(fetchedUsers);
-
-      return usersData;
     } catch (error) {
       setIsLoading(false);
-      return [];
     }
   };
 
@@ -135,7 +121,7 @@ const NotificationScreen = ({ navigation }: any) => {
       <View style={styles.sortStyle}>
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
-            {colorScheme === 'light' ? (
+            {colorScheme ? (
               <SettingMenu height={30} width={30} />
             ) : (
               <SettingMenuDark height={30} width={30} />
@@ -145,22 +131,18 @@ const NotificationScreen = ({ navigation }: any) => {
         <View style={styles.logoView}>
           <Image
             style={styles.imageStyle}
-            source={colorScheme === 'light' ? instadark : instalight}
+            source={colorScheme ? instadark : instalight}
           />
         </View>
         <View style={styles.actionBtn}>
           <View style={styles.heartStyle}>
-            {colorScheme === 'light' ? (
+            {colorScheme ? (
               <HeartOutline height={25} width={25} />
             ) : (
               <HeartDark height={25} width={25} />
             )}
           </View>
-          {colorScheme === 'light' ? (
-            <Message />
-          ) : (
-            <MessageDark height={25} width={25} />
-          )}
+          {colorScheme ? <Message /> : <MessageDark height={25} width={25} />}
         </View>
       </View>
 
@@ -198,11 +180,6 @@ const notificationScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
     loaderStyle: { flex: 1, justifyContent: 'center' },
     mainLayout: { flex: 1 },
-    searchStyle: {
-      color: colors.text,
-      backgroundColor: colors.background,
-      borderRadius: 30,
-    },
     userIcon: {
       marginBottom: '2%',
       alignSelf: 'flex-end',
@@ -229,10 +206,5 @@ const notificationScreenStyle = (colors: ColorProps) =>
     },
     heartStyle: {
       marginHorizontal: 10,
-    },
-    dataNotFoundStyle: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
   });

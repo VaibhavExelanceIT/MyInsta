@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-import { ColorProps } from '../constants/color';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { CrossLight } from '../helper/icon';
+import { ColorProps } from '../constants/color';
 import CarouselComponent from './CarouselComponent';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 interface PostCarouselProp {
   isOpen: boolean;
@@ -12,19 +12,18 @@ interface PostCarouselProp {
   setIsImageClicked: React.Dispatch<React.SetStateAction<boolean>>;
 }
 const PostCarouselComponent: React.FC<PostCarouselProp> = ({
-  imagePost,
   isOpen,
+  imagePost,
   setIsImageClicked,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(isOpen);
 
-  const onModalClose = () => {
-    setIsImageClicked(false);
-    setIsModalOpen(false);
-  };
   const colors = useThemeColors();
-
   const styles = postCarouselComponentStyle(colors);
+  const onModalClose = () => {
+    setIsModalOpen(false);
+    setIsImageClicked(false);
+  };
 
   return (
     <View style={styles.flatListView}>

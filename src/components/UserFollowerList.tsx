@@ -1,8 +1,9 @@
-import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { ColorProps } from '../constants/color';
 import { useThemeColors } from '../hooks/useThemeColors';
+import { fs } from '../helper/fontSize';
 
 interface UserListProp {
   imageUrl: string;
@@ -27,30 +28,6 @@ export default UserFollowerList;
 
 const userListComponentStyle = (colors: ColorProps) =>
   StyleSheet.create({
-    btnUnfollowStyle: {
-      padding: 10,
-      borderRadius: 6,
-      marginVertical: 15,
-      backgroundColor: colors.modalBorderStyle,
-    },
-    txtUnfollowStyle: {
-      flex: 1,
-      textAlign: 'center',
-      fontSize: 16,
-      fontWeight: '500',
-      textAlignVertical: 'center',
-      color: colors.placeholderTextColor,
-    },
-
-    btnStyle: {
-      padding: 10,
-      borderRadius: 6,
-      marginVertical: 15,
-      height: '60%',
-      width: 100,
-      backgroundColor: colors.primaryblue,
-    },
-
     mainLayout: {
       backgroundColor: colors.listBackgroundColor,
 
@@ -74,22 +51,12 @@ const userListComponentStyle = (colors: ColorProps) =>
       flex: 1,
 
       marginHorizontal: 23,
-      fontSize: 15,
+      fontSize: fs(16),
       fontWeight: '400',
       textAlignVertical: 'center',
     },
-    textStyle: {
-      flex: 1,
-      color: colors.white,
-      fontSize: 16,
-      fontWeight: '500',
-      textAlign: 'center',
-    },
+
     textView: {
       flex: 1,
-    },
-
-    buttonStyle: {
-      justifyContent: 'center',
     },
   });

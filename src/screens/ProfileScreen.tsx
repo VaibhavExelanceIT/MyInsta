@@ -17,12 +17,12 @@ import { useNavigation } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
 
 import {
-  GridPost,
-  GridPostWhite,
-  SettingMenu,
-  SettingMenuDark,
   Shape,
+  GridPost,
   ShapeWhite,
+  SettingMenu,
+  GridPostWhite,
+  SettingMenuDark,
 } from '../helper/icon';
 import ProfileTopComponent from '../components/ProfileTopComponent';
 import ProfilePostItem from '../components/ProfilePostItem';
@@ -30,6 +30,7 @@ import { useThemeColors } from '../hooks/useThemeColors';
 import { ColorProps } from '../constants/color';
 import { LanguageConstant } from '../constants/language_constants';
 import { t } from 'i18next';
+import { fs } from '../helper/fontSize';
 
 interface Post {
   id: string;
@@ -56,14 +57,14 @@ interface User {
 }
 
 const ProfileScreen = () => {
-  const navigation = useNavigation<any>();
-  const [isLoading, setIsLoading] = useState(true);
   const [post, setPost] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [usersData, setUserData] = useState<User>();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSelected, setIsSelected] = useState<Number>(1);
 
-  const colorScheme = useColorScheme();
+  const navigation = useNavigation<any>();
+  const colorScheme = useColorScheme() === 'light';
   const currentUser = auth().currentUser;
 
   const userId = currentUser ? currentUser.uid : '';
@@ -88,8 +89,8 @@ const ProfileScreen = () => {
       return data.docs;
     } catch (error) {
       showMessage({
-        message: 'Error ',
-        description: `There is some Error ${error}`,
+        message: t(LanguageConstant.error),
+        description: t(LanguageConstant.error_message),
         type: 'danger',
       });
     }
@@ -138,10 +139,12 @@ const ProfileScreen = () => {
         firstName: documentSnapshot.firstName,
       };
       setUserData(data);
-
-      return usersData;
     } catch (error) {
-      return [];
+      showMessage({
+        message: t(LanguageConstant.error),
+        description: t(LanguageConstant.error_message),
+        type: 'danger',
+      });
     }
   };
 
@@ -153,7 +156,7 @@ const ProfileScreen = () => {
       <View style={styles.sortStyle}>
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
-            {colorScheme === 'light' ? (
+            {colorScheme ? (
               <SettingMenu height={30} width={30} />
             ) : (
               <SettingMenuDark height={30} width={30} />
@@ -189,7 +192,6 @@ const ProfileScreen = () => {
             flex: 1,
             flexDirection: 'row',
             borderBottomWidth: 1,
-
             justifyContent: 'space-around',
           }}
         >
@@ -198,7 +200,7 @@ const ProfileScreen = () => {
               setIsSelected(1);
             }}
           >
-            {colorScheme == 'light' ? (
+            {colorScheme ? (
               <GridPost height={23} width={23} />
             ) : (
               <GridPostWhite height={23} width={23} />
@@ -210,7 +212,7 @@ const ProfileScreen = () => {
               setIsSelected(2);
             }}
           >
-            {colorScheme == 'light' ? (
+            {colorScheme ? (
               <Shape height={23} width={23} />
             ) : (
               <ShapeWhite height={23} width={23} />
@@ -268,7 +270,7 @@ const profileScreenStyle = (colors: ColorProps) =>
     loaderStyle: { flex: 1, justifyContent: 'center' },
     textStyle: {
       flex: 1,
-      fontSize: 20,
+      fontSize: fs(16),
       fontWeight: '400',
       textAlign: 'center',
 

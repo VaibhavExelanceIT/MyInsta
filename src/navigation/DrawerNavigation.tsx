@@ -212,12 +212,10 @@ const drawerNavigationStyle = (colors: ColorProps) =>
     },
     container: {
       flex: 2,
-      // borderWidth: 1,
       justifyContent: 'flex-end',
     },
     imageView: {
       marginVertical: 20,
-
       alignSelf: 'center',
     },
     headerImage: {
@@ -235,7 +233,6 @@ const drawerNavigationStyle = (colors: ColorProps) =>
       borderColor: colors.darwerTint,
       marginBottom: 10,
       borderRadius: 10,
-      // borderBottomWidth: 0.5,
     },
     logoutView: {
       flex: 0.1,

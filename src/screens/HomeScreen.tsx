@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Image,
@@ -8,8 +9,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
 
+import { t } from 'i18next';
+import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
 
 import {
@@ -20,14 +22,11 @@ import {
   HeartOutline,
   SettingMenuDark,
 } from '../helper/icon';
+import { ColorProps } from '../constants/color';
 import PostComponent from '../components/PostComponent';
 import { instadark, instalight } from '../helper/images';
-
-import { showMessage } from 'react-native-flash-message';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { ColorProps } from '../constants/color';
 import { LanguageConstant } from '../constants/language_constants';
-import { t } from 'i18next';
 
 interface Post {
   id: string;
@@ -41,12 +40,12 @@ interface Post {
 }
 
 const HomeScreen = ({ navigation }: any) => {
-  const usersData: any[] = [];
-
-  const [isloading, setIsLoading] = useState(true);
   const [post, setPost] = useState<Post[]>([]);
+  const [isloading, setIsLoading] = useState(true);
   const [isrefreshing, setIsRefreshing] = useState(false);
-  const colorScheme = useColorScheme();
+
+  const usersData: any[] = [];
+  const colorScheme = useColorScheme() == 'light';
   const colors = useThemeColors();
   const styles = homeScreenStyle(colors);
 
@@ -113,7 +112,7 @@ const HomeScreen = ({ navigation }: any) => {
       <View style={styles.sortStyle}>
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
-            {colorScheme === 'light' ? (
+            {colorScheme ? (
               <SettingMenu height={30} width={30} />
             ) : (
               <SettingMenuDark height={30} width={30} />
@@ -123,22 +122,18 @@ const HomeScreen = ({ navigation }: any) => {
         <View style={styles.logoView}>
           <Image
             style={styles.imageStyle}
-            source={colorScheme === 'light' ? instadark : instalight}
+            source={colorScheme ? instadark : instalight}
           />
         </View>
         <View style={styles.actionBtn}>
           <View style={styles.heartStyle}>
-            {colorScheme === 'light' ? (
+            {colorScheme ? (
               <HeartOutline height={25} width={25} />
             ) : (
               <HeartDark height={25} width={25} />
             )}
           </View>
-          {colorScheme === 'light' ? (
-            <Message />
-          ) : (
-            <MessageDark height={25} width={25} />
-          )}
+          {colorScheme ? <Message /> : <MessageDark height={25} width={25} />}
         </View>
       </View>
       {isloading ? (
@@ -172,12 +167,6 @@ export default HomeScreen;
 const homeScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
     imageStyle: { alignSelf: 'flex-end' },
-    container: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
     mainLayout: {
       flex: 8,
       backgroundColor: colors.background,
@@ -196,11 +185,6 @@ const homeScreenStyle = (colors: ColorProps) =>
     userIcon: {
       marginBottom: '2%',
       alignSelf: 'flex-end',
-    },
-    userIconText: {
-      fontSize: 27,
-      fontWeight: '600',
-      textAlign: 'center',
     },
     actionBtn: {
       padding: 10,

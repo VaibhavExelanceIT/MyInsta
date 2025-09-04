@@ -1,5 +1,7 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
 import React from 'react';
+import { Image, StyleSheet, Text, View } from 'react-native';
+
+import { t } from 'i18next';
 import firestore, {
   arrayRemove,
   arrayUnion,
@@ -11,7 +13,7 @@ import { ColorProps } from '../constants/color';
 import { useThemeColors } from '../hooks/useThemeColors';
 
 import { LanguageConstant } from '../constants/language_constants';
-import { t } from 'i18next';
+import { fs } from '../helper/fontSize';
 
 interface UserListProp {
   userId?: string;
@@ -50,7 +52,7 @@ const UserListComponent: React.FC<UserListProp> = ({
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
-        description: `${t(LanguageConstant.error_message)}  ${error}`,
+        description: t(LanguageConstant.error_message),
         type: 'danger',
       });
     }
@@ -69,7 +71,7 @@ const UserListComponent: React.FC<UserListProp> = ({
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
-        description: `${t(LanguageConstant.error_message)}  ${error}`,
+        description: t(LanguageConstant.error_message),
         type: 'danger',
       });
     }
@@ -94,7 +96,7 @@ const UserListComponent: React.FC<UserListProp> = ({
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message) + ' ' + error,
+        description: t(LanguageConstant.error_message),
         type: 'success',
       });
     }
@@ -114,7 +116,7 @@ const UserListComponent: React.FC<UserListProp> = ({
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message) + ' ' + error,
+        description: t(LanguageConstant.error_message),
         type: 'success',
       });
     }
@@ -139,7 +141,7 @@ const UserListComponent: React.FC<UserListProp> = ({
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
-        description: `${t(LanguageConstant.error_message)}  ${error}`,
+        description: t(LanguageConstant.error_message),
         type: 'danger',
       });
     }
@@ -158,7 +160,7 @@ const UserListComponent: React.FC<UserListProp> = ({
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
-        description: `${t(LanguageConstant.error_message)}  ${error}`,
+        description: t(LanguageConstant.error_message),
         type: 'danger',
       });
     }
@@ -174,9 +176,7 @@ const UserListComponent: React.FC<UserListProp> = ({
       <View style={styles.textView}>
         <Text style={styles.txtNameStyle}>{`${firstName} ${lastName}`}</Text>
 
-        {userId == currentUserId ? (
-          <View />
-        ) : isRequested ? (
+        {isRequested ? (
           <View style={styles.buttonStyle}>
             <ButtonComponent
               title={t(LanguageConstant.cancelRequest)}
@@ -222,7 +222,7 @@ const userListComponentStyle = (colors: ColorProps) =>
     txtUnfollowStyle: {
       flex: 1,
       textAlign: 'center',
-      fontSize: 16,
+      fontSize: fs(16),
       fontWeight: '500',
       textAlignVertical: 'center',
       color: colors.placeholderTextColor,
@@ -259,14 +259,14 @@ const userListComponentStyle = (colors: ColorProps) =>
       color: colors.text,
       flex: 1,
       padding: 20,
-      fontSize: 15,
+      fontSize: fs(15),
       fontWeight: '500',
       textAlignVertical: 'center',
     },
     textStyle: {
       flex: 1,
       color: colors.white,
-      fontSize: 16,
+      fontSize: fs(16),
       fontWeight: '500',
       textAlign: 'center',
     },

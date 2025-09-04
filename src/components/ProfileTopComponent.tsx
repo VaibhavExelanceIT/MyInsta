@@ -1,5 +1,5 @@
+import React, { useState } from 'react';
 import {
-  Alert,
   FlatList,
   Image,
   Modal,
@@ -8,16 +8,16 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useState } from 'react';
-import firestore from '@react-native-firebase/firestore';
-import { t } from 'i18next';
 
-import ButtonComponent from './ButtonComponent';
-import ProfileTextComponent from './ProfileTextComponent';
-import { ColorProps } from '../constants/color';
-import { useThemeColors } from '../hooks/useThemeColors';
-import { LanguageConstant } from '../constants/language_constants';
+import { t } from 'i18next';
+import firestore from '@react-native-firebase/firestore';
+
 import { CrossLight } from '../helper/icon';
+import { ColorProps } from '../constants/color';
+import ButtonComponent from './ButtonComponent';
+import { useThemeColors } from '../hooks/useThemeColors';
+import ProfileTextComponent from './ProfileTextComponent';
+import { LanguageConstant } from '../constants/language_constants';
 
 import UserFollowerList from './UserFollowerList';
 
@@ -43,14 +43,15 @@ const ProfileTopComponent: React.FC<ProfileTopProp> = ({
   profilePhoto,
   currentUserId,
 }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUserData, setIsUserData] = useState<Array<userData>>([]);
+
   const colors = useThemeColors();
   const styles = profileTopComponentStyle(colors);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const onModalClose = () => {
     setIsModalOpen(false);
   };
-
-  const [isUserData, setIsUserData] = useState<Array<userData>>([]);
 
   const getFollowingData = async () => {
     const usersCollection = await firestore()
@@ -60,17 +61,15 @@ const ProfileTopComponent: React.FC<ProfileTopProp> = ({
 
     const followingCollection = await firestore().collection('UsersData').get();
     setIsUserData([]);
-    followingCollection.docs.filter(
-      ele =>
-        usersCollection.data()?.following?.includes(ele.id) &&
-        setIsUserData(prev => [
-          ...prev,
-          {
-            imageUrl: ele.data().userImage,
-            userName: ele.data().firstName + ' ' + ele.data().lastName,
-          },
-        ]),
-    );
+
+    const filteredUsers = followingCollection.docs
+      .filter(ele => usersCollection.data()?.following?.includes(ele.id))
+      .map(ele => ({
+        imageUrl: ele.data().userImage,
+        userName: ele.data().firstName + ' ' + ele.data().lastName,
+      }));
+
+    setIsUserData(filteredUsers);
     setModalOpen();
   };
 
@@ -80,19 +79,17 @@ const ProfileTopComponent: React.FC<ProfileTopProp> = ({
       .doc(currentUserId)
       .get();
 
-    const followingCollection = await firestore().collection('UsersData').get();
+    const followerCollection = await firestore().collection('UsersData').get();
     setIsUserData([]);
-    followingCollection.docs.filter(
-      ele =>
-        usersCollection.data()?.follower?.includes(ele.id) &&
-        setIsUserData(prev => [
-          ...prev,
-          {
-            imageUrl: ele.data().userImage,
-            userName: ele.data().firstName + ' ' + ele.data().lastName,
-          },
-        ]),
-    );
+
+    const filteredUsers = followerCollection.docs
+      .filter(ele => usersCollection.data()?.follower?.includes(ele.id))
+      .map(ele => ({
+        imageUrl: ele.data().userImage,
+        userName: ele.data().firstName + ' ' + ele.data().lastName,
+      }));
+
+    setIsUserData(filteredUsers);
     setModalOpen();
   };
 
@@ -110,9 +107,7 @@ const ProfileTopComponent: React.FC<ProfileTopProp> = ({
         />
 
         <TouchableOpacity
-          onPress={() => {
-            getFollowerData();
-          }}
+          onPress={getFollowerData}
           style={styles.postTextStyle}
         >
           <ProfileTextComponent
@@ -122,9 +117,7 @@ const ProfileTopComponent: React.FC<ProfileTopProp> = ({
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => {
-            getFollowingData();
-          }}
+          onPress={getFollowingData}
           style={styles.postTextStyle}
         >
           <ProfileTextComponent
