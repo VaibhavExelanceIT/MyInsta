@@ -40,8 +40,10 @@ const profileBottomComponentStyle = (colors: ColorProps) =>
   StyleSheet.create({
     imageStyle: { height: 130, maxWidth: 137 },
     imageContainerStyle: {
-      flex: 1,
+      flex: 0.33,
+      alignItems: 'stretch',
       borderWidth: 0.5,
+
       borderColor: colors.background,
     },
   });

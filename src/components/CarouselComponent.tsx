@@ -19,6 +19,7 @@ interface CarouselProp {
   reSizeMethod: 'auto' | 'resize' | 'scale' | 'none' | undefined;
   reSizeMode: ImageResizeMode | undefined;
   height: number;
+  clickEnable: boolean;
 }
 
 const CarouselComponent: React.FC<CarouselProp> = ({
@@ -26,6 +27,7 @@ const CarouselComponent: React.FC<CarouselProp> = ({
   reSizeMethod,
   reSizeMode,
   height,
+  clickEnable,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
@@ -61,7 +63,7 @@ const CarouselComponent: React.FC<CarouselProp> = ({
         renderItem={({ item }) => {
           return (
             <GestureHandlerRootView style={styles.gestureStyle}>
-              <TouchableOpacity onPress={onImageClick}>
+              <TouchableOpacity disabled={!clickEnable} onPress={onImageClick}>
                 <RenderImageComponent
                   imageUri={item}
                   width={screenWidth}
@@ -89,7 +91,7 @@ const CarouselComponent: React.FC<CarouselProp> = ({
           />
         ))}
       </View>
-      {isVisible && (
+      {clickEnable && isVisible && (
         <PostCarouselComponent
           imagePost={imagePost}
           isOpen={isVisible}

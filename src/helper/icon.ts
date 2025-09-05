@@ -1,7 +1,6 @@
 import HomeFill from '../assets/icons/HomeFill.svg';
 import AddOutline from '../assets/icons/add.svg';
 import HeartOutline from '../assets/icons/HeartOutline.svg';
-import ProfileOutline from '../assets/icons/ProfileOutline.svg';
 import SearchOutline from '../assets/icons/SearchOutline.svg';
 import HeartFill from '../assets/icons/HeartFill.svg';
 import HomeOutline from '../assets/icons/HomeOutline.svg';
@@ -11,7 +10,6 @@ import HomeFillDark from '../assets/icons/HomeFillDark.svg';
 import SearchFillDark from '../assets/icons/SearchFillDark.svg';
 import HomeOutlineDark from '../assets/icons/HomeOutlineDark.svg';
 import SearchOutlineDark from '../assets/icons/SearchOutlineDark.svg';
-import ProfileOutlineDark from '../assets/icons/ProfileOutlineDark.svg';
 import Logout from '../assets/icons/LogoutOutline.svg';
 import Message from '../assets/icons/message.svg';
 import SettingMenu from '../assets/icons/SettingMenu.svg';
@@ -30,15 +28,21 @@ import GridPost from '../assets/icons/GridPost.svg';
 import GridPostWhite from '../assets/icons/GridPostWhite.svg';
 import Shape from '../assets/icons/Shape.svg';
 import ShapeWhite from '../assets/icons/ShapeWhite.svg';
-import NotificationDark from '../assets/icons/NotificationDark.svg';
-import NotificationLight from '../assets/icons/NotificationLight.svg';
+import UserFillDark from '../assets/icons/UserFillDark.svg';
+import UserFillLight from '../assets/icons/UserFillLight.svg';
+import UserOutlineDark from '../assets/icons/UserOutlineDark.svg';
+import UserOutlineLight from '../assets/icons/UserOutlineLight.svg';
+
+import BellFillDark from '../assets/icons/BellFillDark.svg';
+import BellFillLight from '../assets/icons/BellFillLight.svg';
+import BellOutlineLight from '../assets/icons/BellOutlineLight.svg';
+import BellOutlineDark from '../assets/icons/BellOutlineDark.svg';
 
 export {
   HomeFill,
   AddOutline,
   HeartOutline,
   SearchOutline,
-  ProfileOutline,
   HeartFill,
   HomeOutline,
   SearchFill,
@@ -47,7 +51,6 @@ export {
   SearchFillDark,
   HomeOutlineDark,
   SearchOutlineDark,
-  ProfileOutlineDark,
   Logout,
   Message,
   SettingMenu,
@@ -66,6 +69,12 @@ export {
   GridPost,
   Shape,
   ShapeWhite,
-  NotificationDark,
-  NotificationLight,
+  UserFillDark,
+  UserFillLight,
+  UserOutlineDark,
+  UserOutlineLight,
+  BellFillDark,
+  BellFillLight,
+  BellOutlineDark,
+  BellOutlineLight,
 };

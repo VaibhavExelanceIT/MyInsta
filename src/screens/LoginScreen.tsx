@@ -27,6 +27,7 @@ import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import InputText from '../components/InputText';
 import i18n from '../constants/language/i18next';
@@ -87,24 +88,20 @@ const LoginScreen = () => {
     ? DropDownPicker.setTheme('DARK')
     : DropDownPicker.setTheme('LIGHT');
 
-  const changeLanguage = () => {
-    i18n
-      .changeLanguage(value)
-      .then(() => {
-        const isRTL = value === 'ar';
+  const changeLanguage = async (language: string) => {
+    try {
+      await i18n.changeLanguage(language);
+      await AsyncStorage.setItem('user-language', language);
 
-        if (I18nManager.isRTL !== isRTL) {
-          I18nManager.forceRTL(isRTL);
-          setTimeout(() => {
-            RNRestart.Restart();
-          }, 100);
-        }
-      })
-      .catch(error => {
-        Alert.alert('Error while changing language');
-      });
+      const isRTL = language === 'ar';
+      if (I18nManager.isRTL !== isRTL) {
+        I18nManager.forceRTL(isRTL);
+      }
+      RNRestart.Restart();
+    } catch (error) {
+      Alert.alert('Error while changing language');
+    }
   };
-
   const googleSignIn = async () => {
     try {
       await GoogleSignin.hasPlayServices({
@@ -115,7 +112,7 @@ const LoginScreen = () => {
 
       let idToken: any = signInResult.data?.idToken;
       if (!idToken) {
-        throw new Error('');
+        throw new Error('No ID token found');
       }
       const googleCredential = GoogleAuthProvider.credential(
         signInResult?.data?.idToken,
@@ -209,7 +206,7 @@ const LoginScreen = () => {
           itemSeparator={true}
           placeholder={t(LanguageConstant.english)}
           style={styles.dropDownStyle}
-          onChangeValue={() => changeLanguage()}
+          onChangeValue={e => changeLanguage(e)}
           containerStyle={[styles.dropDownContainer]}
         />
       </View>
@@ -479,7 +476,7 @@ const loginScreenStyle = (colors: ColorProps) =>
     textStyle: {
       fontWeight: '500',
       textAlign: 'center',
-      color: colors.background,
+      color: colors.white,
     },
     btnStyle: {
       padding: 10,

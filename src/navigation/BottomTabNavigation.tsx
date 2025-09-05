@@ -20,12 +20,16 @@ import {
   HomeFillDark,
   SearchOutline,
   SearchFillDark,
-  ProfileOutline,
   HomeOutlineDark,
   SearchOutlineDark,
-  ProfileOutlineDark,
-  NotificationDark,
-  NotificationLight,
+  UserFillDark,
+  UserFillLight,
+  UserOutlineDark,
+  UserOutlineLight,
+  BellFillLight,
+  BellFillDark,
+  BellOutlineLight,
+  BellOutlineDark,
 } from '../helper/icon';
 import { useThemeColors } from '../hooks/useThemeColors';
 
@@ -154,17 +158,17 @@ const BottomTabNavigation = () => {
             focused ? (
               <>
                 {colorScheme == 'dark' ? (
-                  <NotificationLight height={30} width={30} />
+                  <BellFillLight height={25} width={25} />
                 ) : (
-                  <NotificationDark height={25} width={25} />
+                  <BellFillDark height={25} width={25} />
                 )}
               </>
             ) : (
               <>
                 {colorScheme == 'dark' ? (
-                  <NotificationLight height={30} width={30} />
+                  <BellOutlineLight height={25} width={25} />
                 ) : (
-                  <NotificationDark height={25} width={25} />
+                  <BellOutlineDark height={25} width={25} />
                 )}
               </>
             ),
@@ -187,17 +191,17 @@ const BottomTabNavigation = () => {
             focused ? (
               <>
                 {colorScheme == 'dark' ? (
-                  <ProfileOutlineDark height={30} width={30} />
+                  <UserFillLight height={25} width={25} />
                 ) : (
-                  <ProfileOutline height={25} width={25} />
+                  <UserFillDark height={25} width={25} />
                 )}
               </>
             ) : (
               <>
                 {colorScheme == 'dark' ? (
-                  <ProfileOutlineDark height={30} width={30} />
+                  <UserOutlineLight height={25} width={25} />
                 ) : (
-                  <ProfileOutline height={25} width={25} />
+                  <UserOutlineDark height={25} width={25} />
                 )}
               </>
             ),

@@ -13,4 +13,4 @@ export const useThemeColors = (): ColorProps => {
   return isDark ? darkColor : lightColor;
 };
 
-export const screenWidth = Dimensions.get('window').width - 10;
+export const screenWidth = Dimensions.get('window').width;

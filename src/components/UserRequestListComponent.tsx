@@ -201,7 +201,7 @@ const userRequestListComponentStyle = (colors: ColorProps) =>
     },
 
     mainLayout: {
-      backgroundColor: colors.background,
+      backgroundColor: colors.listBackgroundColor,
       elevation: 3,
       marginVertical: 5,
       marginHorizontal: 10,
