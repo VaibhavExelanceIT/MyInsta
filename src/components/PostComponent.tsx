@@ -14,11 +14,11 @@ import {
 } from '../helper/icon';
 import { Comment, Save } from '../helper/icon';
 import { ColorProps } from '../constants/color';
-import ImagesComponent from './ImagesComponent';
 import Heart from '../assets/icons/HeartOutline.svg';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { LanguageConstant } from '../constants/language_constants';
 import { fs } from '../helper/fontSize';
+import CarouselComponent from './CarouselComponent';
 
 interface PostProp {
   date: string;
@@ -28,6 +28,7 @@ interface PostProp {
   imageUrl: string;
   description: string;
   imagePost: Array<string>;
+  userName: string;
 }
 
 const PostComponent: React.FC<PostProp> = ({
@@ -37,6 +38,7 @@ const PostComponent: React.FC<PostProp> = ({
   imagePost,
   date,
   imageUrl,
+  userName,
 }) => {
   const colorScheme = useColorScheme();
   const postCreationDateTime = moment(date, 'MM/DD/YYYY hh:mm:ss a');
@@ -51,15 +53,24 @@ const PostComponent: React.FC<PostProp> = ({
           <View style={styles.headerStyle}>
             <View style={styles.titleImageStyle}>
               <Image style={styles.profilePicStyle} src={imageUrl} />
+              <View style={styles.nameAndTitleStyle}>
+                <Text style={styles.nameStyle}>{userName}</Text>
+                <Text style={styles.textStyle}>{title}</Text>
+              </View>
             </View>
             <View style={styles.moreBtnStyle}>
               <More height={30} width={30} stroke={colors.text} />
             </View>
           </View>
-          <Text style={styles.textStyle}>{title}</Text>
         </View>
         <View style={styles.postStyle}>
-          <ImagesComponent imagePost={imagePost} />
+          <CarouselComponent
+            imagePost={imagePost}
+            reSizeMethod="resize"
+            reSizeMode="contain"
+            height={200}
+            clickEnable={true}
+          />
         </View>
       </View>
       <View style={styles.actionsStyle}>
@@ -110,7 +121,19 @@ export default PostComponent;
 
 const postComponentStyle = (colors: ColorProps) =>
   StyleSheet.create({
-    textStyle: { color: colors.text },
+    textStyle: {
+      color: colors.text,
+      fontSize: fs(11),
+    },
+    nameStyle: {
+      color: colors.text,
+      fontSize: fs(13),
+      fontWeight: '600',
+    },
+
+    nameAndTitleStyle: {
+      justifyContent: 'center',
+    },
 
     fotterStyle: {
       paddingBottom: 10,
@@ -133,8 +156,8 @@ const postComponentStyle = (colors: ColorProps) =>
       justifyContent: 'space-around',
     },
     profilePicStyle: {
-      width: 40,
-      height: 40,
+      width: fs(40),
+      height: fs(40),
       marginRight: 10,
       borderRadius: 50,
     },

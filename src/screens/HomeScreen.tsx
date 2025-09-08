@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { t } from 'i18next';
+import auth from '@react-native-firebase/auth';
 import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
 
@@ -29,25 +30,36 @@ import { useThemeColors } from '../hooks/useThemeColors';
 import { LanguageConstant } from '../constants/language_constants';
 
 interface Post {
+  name: string;
+  userImage: string;
   id: string;
   like: number;
   title: string;
   comment: number;
-  userimage: string;
   dateAndTime: string;
   description: string;
   postURL: Array<string>;
 }
 
+interface userData {
+  id: string;
+  userName: string;
+  userImage: string;
+}
+
 const HomeScreen = ({ navigation }: any) => {
   const [post, setPost] = useState<Post[]>([]);
+
   const [isloading, setIsLoading] = useState(true);
   const [isrefreshing, setIsRefreshing] = useState(false);
 
-  const usersData: any[] = [];
   const colorScheme = useColorScheme() == 'light';
   const colors = useThemeColors();
   const styles = homeScreenStyle(colors);
+
+  const currentUser = auth().currentUser;
+
+  const userId = currentUser ? currentUser.uid : '';
 
   const onRefresh = () => {
     setIsRefreshing(true);
@@ -56,7 +68,7 @@ const HomeScreen = ({ navigation }: any) => {
       setIsRefreshing(false);
     }, 1000);
   };
-  const getData = async (id: string) => {
+  const getData = async (id: string, name: string, userImage: string) => {
     const data = await firestore()
       .collection('UsersData')
       .doc(id)
@@ -64,7 +76,10 @@ const HomeScreen = ({ navigation }: any) => {
       .get();
 
     data.docs.forEach(item => {
-      setPost(prevState => [...prevState, item.data() as Post]);
+      setPost(prevState => [
+        ...prevState,
+        { name: name, userImage: userImage, ...item.data() } as Post,
+      ]);
     });
     setIsLoading(false);
     return data.docs;
@@ -72,31 +87,48 @@ const HomeScreen = ({ navigation }: any) => {
 
   const getPost = async () => {
     setPost([]);
-    const userIds = await getAllUsersDataFirestore();
-    await Promise.allSettled(
-      userIds.map(async cv => {
-        return await getData(cv.id);
-      }),
-    );
+    try {
+      const userIds: userData[] | undefined = await getAllUsersDataFirestore();
+      await Promise.allSettled(
+        (userIds ?? []).map(async (cv: userData) => {
+          return await getData(cv.id, cv.userName, cv.userImage);
+        }),
+      );
+    } catch (error) {
+      console.error('Failed to fetch user IDs:', error);
+      showMessage({
+        message: t(LanguageConstant.error),
+        description: `${t(LanguageConstant.error_message)} `,
+        type: 'danger',
+      });
+    }
   };
 
   const getAllUsersDataFirestore = async () => {
     try {
-      const usersCollection = await firestore().collection('UsersData').get();
-      usersCollection.forEach(documentSnapshot => {
-        usersData.push({
-          id: documentSnapshot.id,
-          ...documentSnapshot.data(),
-        });
-      });
-      return usersData;
+      const usersCollection = await firestore()
+        .collection('UsersData')
+        .doc(userId)
+        .get();
+      const followingCollection = await firestore()
+        .collection('UsersData')
+        .get();
+
+      const filteredUsers: userData[] = followingCollection.docs
+        .filter(ele => usersCollection.data()?.following?.includes(ele.id))
+        .map(ele => ({
+          id: ele.id,
+          userName: ele.data().firstName + ' ' + ele.data().lastName,
+          userImage: ele.data().userImage,
+        }));
+
+      return filteredUsers;
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
         description: `${t(LanguageConstant.error_message)} `,
         type: 'danger',
       });
-      return [error];
     }
   };
   useEffect(() => {
@@ -144,6 +176,7 @@ const HomeScreen = ({ navigation }: any) => {
             <RefreshControl refreshing={isrefreshing} onRefresh={onRefresh} />
           }
           data={post}
+          keyExtractor={item => item.id}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <PostComponent
@@ -153,7 +186,8 @@ const HomeScreen = ({ navigation }: any) => {
               date={item.dateAndTime}
               imagePost={item.postURL}
               description={item.description}
-              imageUrl="https://images.pexels.com/photos/33106717/pexels-photo-33106717.jpeg?_gl=1*18doh69*_ga*MTk3NDc0NTgxMi4xNzQ3OTk4NTM2*_ga_8JE65Q40S6*czE3NTQzMDExMjMkbzMkZzEkdDE3NTQzMDEyMzEkajM3JGwwJGgw"
+              userName={item.name}
+              imageUrl={item.userImage}
             />
           )}
         />

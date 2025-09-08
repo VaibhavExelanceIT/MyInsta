@@ -38,36 +38,26 @@ const UserListComponent: React.FC<UserListProp> = ({
   const styles = userListComponentStyle(colors);
   const database = firestore().collection('UsersData');
 
-  const addFollowRequest = async () => {
-    try {
-      await database
-        .doc(userId)
-        .update({ requestCome: arrayUnion(currentUserId) })
-        .then(() => {
-          showMessage({
-            message: t(LanguageConstant.followRequestSent),
-            type: 'success',
-          });
-        });
-    } catch (error) {
-      showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
-        type: 'danger',
-      });
-    }
-  };
-  const sentFollowRequest = async () => {
+  const followRequest = async () => {
     try {
       await database
         .doc(currentUserId)
         .update({ requestSent: arrayUnion(userId) })
-        .then(() => {
-          showMessage({
-            message: t(LanguageConstant.followRequestSent),
-            type: 'success',
-          });
+        .catch(err => {
+          throw err;
         });
+
+      await database
+        .doc(userId)
+        .update({ requestCome: arrayUnion(currentUserId) })
+        .catch(err => {
+          throw err;
+        });
+
+      showMessage({
+        message: t(LanguageConstant.followRequestSent),
+        type: 'success',
+      });
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
@@ -77,42 +67,26 @@ const UserListComponent: React.FC<UserListProp> = ({
     }
   };
 
-  const followRequest = () => {
-    addFollowRequest();
-    sentFollowRequest();
-  };
-
-  const removeFollowRequest = async () => {
+  const removeRequest = async () => {
     try {
       await database
         .doc(currentUserId)
         .update({ requestSent: arrayRemove(userId) })
-        .then(() => {
-          showMessage({
-            message: t(LanguageConstant.cancelFollowRequest),
-            type: 'success',
-          });
+        .catch(err => {
+          throw err;
         });
-    } catch (error) {
-      showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
-        type: 'success',
-      });
-    }
-  };
 
-  const removeComeFollowRequest = async () => {
-    try {
       await database
         .doc(userId)
         .update({ requestCome: arrayRemove(currentUserId) })
-        .then(() => {
-          showMessage({
-            message: t(LanguageConstant.cancelFollowRequest),
-            type: 'success',
-          });
+        .catch(err => {
+          throw err;
         });
+
+      showMessage({
+        message: t(LanguageConstant.cancelFollowRequest),
+        type: 'success',
+      });
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
@@ -122,41 +96,28 @@ const UserListComponent: React.FC<UserListProp> = ({
     }
   };
 
-  const removeRequest = () => {
-    removeFollowRequest();
-    removeComeFollowRequest();
-  };
-
-  const removeFollower = async () => {
+  const onUnfollow = async () => {
     try {
+      // remove from follower list from unfollowed user
       await database
         .doc(userId)
         .update({ follower: arrayRemove(currentUserId) })
-        .then(() => {
-          showMessage({
-            message: `${t(LanguageConstant.youUnFollowed)} ` + firstName,
-            type: 'success',
-          });
+        .catch(err => {
+          throw err;
         });
-    } catch (error) {
-      showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
-        type: 'danger',
-      });
-    }
-  };
-  const removeFollowing = async () => {
-    try {
+
+      // remove from following list from current user
       await database
         .doc(currentUserId)
         .update({ following: arrayRemove(userId) })
-        .then(() => {
-          showMessage({
-            message: `${t(LanguageConstant.youUnFollowed)} ` + firstName,
-            type: 'success',
-          });
+        .catch(err => {
+          throw err;
         });
+
+      showMessage({
+        message: `${t(LanguageConstant.youUnFollowed)} ` + firstName,
+        type: 'success',
+      });
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
@@ -164,10 +125,6 @@ const UserListComponent: React.FC<UserListProp> = ({
         type: 'danger',
       });
     }
-  };
-  const Unfollow = () => {
-    removeFollower();
-    removeFollowing();
   };
 
   return (
@@ -189,7 +146,7 @@ const UserListComponent: React.FC<UserListProp> = ({
           <View style={styles.buttonStyle}>
             <ButtonComponent
               title={t(LanguageConstant.unFollow)}
-              onClick={Unfollow}
+              onClick={onUnfollow}
               btnStyle={styles.btnUnfollowStyle}
               textStyle={styles.txtUnfollowStyle}
             />
