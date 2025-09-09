@@ -23,6 +23,7 @@ interface UserListProp {
   isFollowed?: boolean;
   isRequested?: boolean;
   lastName: string;
+  onActionComplete: () => void;
 }
 
 const UserListComponent: React.FC<UserListProp> = ({
@@ -33,6 +34,7 @@ const UserListComponent: React.FC<UserListProp> = ({
   isFollowed,
   isRequested,
   lastName,
+  onActionComplete,
 }) => {
   const colors = useThemeColors();
   const styles = userListComponentStyle(colors);
@@ -58,6 +60,7 @@ const UserListComponent: React.FC<UserListProp> = ({
         message: t(LanguageConstant.followRequestSent),
         type: 'success',
       });
+      onActionComplete();
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
@@ -87,6 +90,7 @@ const UserListComponent: React.FC<UserListProp> = ({
         message: t(LanguageConstant.cancelFollowRequest),
         type: 'success',
       });
+      onActionComplete();
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
@@ -118,6 +122,7 @@ const UserListComponent: React.FC<UserListProp> = ({
         message: `${t(LanguageConstant.youUnFollowed)} ` + firstName,
         type: 'success',
       });
+      onActionComplete();
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),

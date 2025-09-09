@@ -4,7 +4,6 @@ import {
   View,
   FlatList,
   StyleSheet,
-  useColorScheme,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
@@ -15,6 +14,8 @@ import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
+import { t } from 'i18next';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   Shape,
@@ -29,8 +30,8 @@ import ProfilePostItem from '../components/ProfilePostItem';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { ColorProps } from '../constants/color';
 import { LanguageConstant } from '../constants/language_constants';
-import { t } from 'i18next';
 import { fs } from '../helper/fontSize';
+import { useTheme } from '../hooks/useTheme';
 
 interface Post {
   id: string;
@@ -64,7 +65,9 @@ const ProfileScreen = () => {
   const [isSelected, setIsSelected] = useState<Number>(1);
 
   const navigation = useNavigation<any>();
-  const colorScheme = useColorScheme() === 'light';
+
+  const { isDarkMode } = useTheme();
+
   const currentUser = auth().currentUser;
 
   const userId = currentUser ? currentUser.uid : '';
@@ -152,14 +155,14 @@ const ProfileScreen = () => {
     navigation.openDrawer();
   };
   return (
-    <View style={styles.mainLayout}>
+    <SafeAreaView style={styles.mainLayout} edges={['top', 'left', 'right']}>
       <View style={styles.sortStyle}>
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
-            {colorScheme ? (
-              <SettingMenu height={30} width={30} />
-            ) : (
+            {isDarkMode ? (
               <SettingMenuDark height={30} width={30} />
+            ) : (
+              <SettingMenu height={30} width={30} />
             )}
           </TouchableOpacity>
         </View>
@@ -200,10 +203,10 @@ const ProfileScreen = () => {
               setIsSelected(1);
             }}
           >
-            {colorScheme ? (
-              <GridPost height={23} width={23} />
-            ) : (
+            {isDarkMode ? (
               <GridPostWhite height={23} width={23} />
+            ) : (
+              <GridPost height={23} width={23} />
             )}
           </TouchableOpacity>
 
@@ -212,10 +215,10 @@ const ProfileScreen = () => {
               setIsSelected(2);
             }}
           >
-            {colorScheme ? (
-              <Shape height={23} width={23} />
-            ) : (
+            {isDarkMode ? (
               <ShapeWhite height={23} width={23} />
+            ) : (
+              <Shape height={23} width={23} />
             )}
           </TouchableOpacity>
         </View>
@@ -258,7 +261,7 @@ const ProfileScreen = () => {
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -282,7 +285,6 @@ const profileScreenStyle = (colors: ColorProps) =>
       backgroundColor: colors.profileBackground,
     },
     sortStyle: {
-      paddingTop: 30,
       paddingHorizontal: 10,
       flexDirection: 'row',
       justifyContent: 'space-between',

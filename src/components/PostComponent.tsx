@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 import moment from 'moment';
 import { t } from 'i18next';
@@ -19,6 +19,7 @@ import { useThemeColors } from '../hooks/useThemeColors';
 import { LanguageConstant } from '../constants/language_constants';
 import { fs } from '../helper/fontSize';
 import CarouselComponent from './CarouselComponent';
+import { useTheme } from '../hooks/useTheme';
 
 interface PostProp {
   date: string;
@@ -40,7 +41,7 @@ const PostComponent: React.FC<PostProp> = ({
   imageUrl,
   userName,
 }) => {
-  const colorScheme = useColorScheme();
+  const { isDarkMode } = useTheme();
   const postCreationDateTime = moment(date, 'MM/DD/YYYY hh:mm:ss a');
   const calculatedDateTime = postCreationDateTime.fromNow();
   const colors = useThemeColors();
@@ -75,30 +76,18 @@ const PostComponent: React.FC<PostProp> = ({
       </View>
       <View style={styles.actionsStyle}>
         <View style={styles.actionBtnStyle}>
-          {colorScheme === 'light' ? (
-            <Heart />
-          ) : (
-            <HeartDark height={25} width={25} />
-          )}
+          {isDarkMode ? <HeartDark height={25} width={25} /> : <Heart />}
           <View style={styles.commentBtnStyle}>
-            {colorScheme === 'light' ? (
-              <Comment />
-            ) : (
+            {isDarkMode ? (
               <CommnetDark height={28} width={28} stroke={colors.text} />
+            ) : (
+              <Comment />
             )}
           </View>
-          {colorScheme === 'light' ? (
-            <Message />
-          ) : (
-            <MessageDark height={25} width={25} />
-          )}
+          {isDarkMode ? <MessageDark height={25} width={25} /> : <Message />}
         </View>
         <View style={styles.saveBtnStyle}>
-          {colorScheme === 'light' ? (
-            <Save />
-          ) : (
-            <SaveDark height={30} width={30} />
-          )}
+          {isDarkMode ? <SaveDark height={30} width={30} /> : <Save />}
         </View>
       </View>
 

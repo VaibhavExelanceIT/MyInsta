@@ -12,6 +12,7 @@ import { ThemeProvider } from './src/context/ThemeContext';
 import LoginScreen from './src/screens/LoginScreen';
 import i18n from './src/constants/language/i18next';
 import { I18nextProvider } from 'react-i18next';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const App = () => {
   const scheme = useColorScheme();
@@ -19,11 +20,12 @@ const App = () => {
   return (
     <ThemeProvider>
       <I18nextProvider i18n={i18n}>
-        <NavigationContainer theme={MyTheme}>
-          <FlashMessage position="top" />
-          {/* <LoginScreen /> */}
-          <RootStack />
-        </NavigationContainer>
+        <SafeAreaProvider>
+          <NavigationContainer theme={MyTheme}>
+            <FlashMessage position="top" />
+            <RootStack />
+          </NavigationContainer>
+        </SafeAreaProvider>
       </I18nextProvider>
     </ThemeProvider>
   );

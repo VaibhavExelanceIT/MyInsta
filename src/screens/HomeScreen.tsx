@@ -5,7 +5,6 @@ import {
   FlatList,
   StyleSheet,
   RefreshControl,
-  useColorScheme,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
@@ -14,6 +13,7 @@ import { t } from 'i18next';
 import auth from '@react-native-firebase/auth';
 import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   Message,
@@ -28,6 +28,7 @@ import PostComponent from '../components/PostComponent';
 import { instadark, instalight } from '../helper/images';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { LanguageConstant } from '../constants/language_constants';
+import { useTheme } from '../hooks/useTheme';
 
 interface Post {
   name: string;
@@ -53,7 +54,7 @@ const HomeScreen = ({ navigation }: any) => {
   const [isloading, setIsLoading] = useState(true);
   const [isrefreshing, setIsRefreshing] = useState(false);
 
-  const colorScheme = useColorScheme() == 'light';
+  const { isDarkMode } = useTheme();
   const colors = useThemeColors();
   const styles = homeScreenStyle(colors);
 
@@ -133,39 +134,39 @@ const HomeScreen = ({ navigation }: any) => {
   };
   useEffect(() => {
     getPost();
-  }, [colorScheme]);
+  }, [isDarkMode]);
 
   const openDrawer = () => {
     navigation.openDrawer();
   };
 
   return (
-    <View style={styles.mainLayout}>
+    <SafeAreaView style={styles.mainLayout} edges={['top', 'left', 'right']}>
       <View style={styles.sortStyle}>
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
-            {colorScheme ? (
-              <SettingMenu height={30} width={30} />
-            ) : (
+            {isDarkMode ? (
               <SettingMenuDark height={30} width={30} />
+            ) : (
+              <SettingMenu height={30} width={30} />
             )}
           </TouchableOpacity>
         </View>
         <View style={styles.logoView}>
           <Image
             style={styles.imageStyle}
-            source={colorScheme ? instadark : instalight}
+            source={isDarkMode ? instalight : instadark}
           />
         </View>
         <View style={styles.actionBtn}>
           <View style={styles.heartStyle}>
-            {colorScheme ? (
-              <HeartOutline height={25} width={25} />
-            ) : (
+            {isDarkMode ? (
               <HeartDark height={25} width={25} />
+            ) : (
+              <HeartOutline height={25} width={25} />
             )}
           </View>
-          {colorScheme ? <Message /> : <MessageDark height={25} width={25} />}
+          {isDarkMode ? <MessageDark height={25} width={25} /> : <Message />}
         </View>
       </View>
       {isloading ? (
@@ -192,7 +193,7 @@ const HomeScreen = ({ navigation }: any) => {
           )}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -206,7 +207,6 @@ const homeScreenStyle = (colors: ColorProps) =>
       backgroundColor: colors.background,
     },
     sortStyle: {
-      paddingTop: 30,
       elevation: 100,
       paddingBottom: 10,
       flexDirection: 'row',
@@ -221,6 +221,7 @@ const homeScreenStyle = (colors: ColorProps) =>
       alignSelf: 'flex-end',
     },
     actionBtn: {
+      marginTop: 10,
       padding: 10,
       flexDirection: 'row',
     },
@@ -228,6 +229,7 @@ const homeScreenStyle = (colors: ColorProps) =>
       marginHorizontal: 10,
     },
     logoView: {
+      marginTop: 10,
       flex: 1,
       marginHorizontal: 10,
     },

@@ -14,7 +14,7 @@
      "email" :"Email",
     "password" : "Password",
     "doNotHaveAccount" : "Don't have an account? ",
-    "signup": "signup",
+    "signup": "Sign Up",
     "from":"from",
     "facebook":"FACEBOOK",
     "firstname":"First Name",
@@ -76,5 +76,10 @@
 "followRequestSent":"Follow Request Sent!",
 "youUnFollowed":"You UnFollowed",
 "youStartedFollowing":"You Started Following",
-"youFollowed":"You Followed"
+"youFollowed":"You Followed",
+"loginForm": "Login Form",
+"selectedLanguage":"English",
+"languageSelection":"Language Selection",
+"loaderMessage":"Just a Second...."
+
   } 

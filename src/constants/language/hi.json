@@ -2,7 +2,7 @@
     "change_language": "भाषा बदलें",
     "english": "अंग्रेज़ी",
     "hindi": "हिन्दी",
-    "'urdu":"अरबी / उर्दू",
+    "urdu":"अरबी / उर्दू",
     "home": "होम",
     "search": "सर्च",
     "addPost": "ऐड पोस्ट",
@@ -76,5 +76,10 @@
 "followRequestSent":"फ़ॉलो रिक्वेस्ट सेन्ट!",
 "youUnFollowed":"यु अनफोल्लोवेद",
 "youStartedFollowing":"यु स्टॉर्टेड फोलोविंग",
-"youFollowed":"यु फ़ॉलोवेद"
+"youFollowed":"यु फ़ॉलोवेद",
+  "loginForm": "लॉगिन फॉर्म",
+  "selectedLanguage":"हिन्दी",
+  "languageSelection":"भाषा चुनें",
+  "loaderMessage":"कुछ सेकंड..."
+
   } 

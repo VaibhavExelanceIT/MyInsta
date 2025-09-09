@@ -1,5 +1,5 @@
 import React from 'react';
-import { Easing, useColorScheme } from 'react-native';
+import { Easing } from 'react-native';
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { DrawerActions } from '@react-navigation/native';
@@ -32,10 +32,11 @@ import {
   BellOutlineDark,
 } from '../helper/icon';
 import { useThemeColors } from '../hooks/useThemeColors';
+import { useTheme } from '../hooks/useTheme';
 
 const Tab = createBottomTabNavigator();
 const BottomTabNavigation = () => {
-  const colorScheme = useColorScheme();
+  const { isDarkMode } = useTheme();
   const colors = useThemeColors();
   return (
     <Tab.Navigator
@@ -47,10 +48,7 @@ const BottomTabNavigation = () => {
         tabBarStyle: {
           height: '10%',
           paddingTop: 10,
-          paddingVertical: 10,
           paddingHorizontal: 10,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
           backgroundColor: colors.background,
         },
       }}
@@ -71,8 +69,8 @@ const BottomTabNavigation = () => {
           tabBarActiveTintColor: colors.activityIndicatorStyle,
           tabBarIcon: ({ focused }) =>
             focused ? (
-              <>{colorScheme == 'dark' ? <HomeFillDark /> : <HomeFill />}</>
-            ) : colorScheme == 'dark' ? (
+              <>{isDarkMode ? <HomeFillDark /> : <HomeFill />}</>
+            ) : isDarkMode ? (
               <HomeOutlineDark />
             ) : (
               <HomeOutline />
@@ -101,15 +99,9 @@ const BottomTabNavigation = () => {
 
           tabBarIcon: ({ focused }) =>
             focused ? (
-              <>{colorScheme == 'dark' ? <SearchFillDark /> : <SearchFill />}</>
+              <>{isDarkMode ? <SearchFillDark /> : <SearchFill />}</>
             ) : (
-              <>
-                {colorScheme == 'dark' ? (
-                  <SearchOutlineDark />
-                ) : (
-                  <SearchOutline />
-                )}
-              </>
+              <>{isDarkMode ? <SearchOutlineDark /> : <SearchOutline />}</>
             ),
         }}
       />
@@ -129,12 +121,12 @@ const BottomTabNavigation = () => {
 
           tabBarIcon: ({ focused }) =>
             focused ? (
-              colorScheme == 'dark' ? (
+              isDarkMode ? (
                 <AddDark />
               ) : (
                 <AddOutline />
               )
-            ) : colorScheme == 'dark' ? (
+            ) : isDarkMode ? (
               <AddDark />
             ) : (
               <AddOutline />
@@ -157,7 +149,7 @@ const BottomTabNavigation = () => {
           tabBarIcon: ({ focused }) =>
             focused ? (
               <>
-                {colorScheme == 'dark' ? (
+                {isDarkMode ? (
                   <BellFillLight height={25} width={25} />
                 ) : (
                   <BellFillDark height={25} width={25} />
@@ -165,7 +157,7 @@ const BottomTabNavigation = () => {
               </>
             ) : (
               <>
-                {colorScheme == 'dark' ? (
+                {isDarkMode ? (
                   <BellOutlineLight height={25} width={25} />
                 ) : (
                   <BellOutlineDark height={25} width={25} />
@@ -190,7 +182,7 @@ const BottomTabNavigation = () => {
           tabBarIcon: ({ focused }) =>
             focused ? (
               <>
-                {colorScheme == 'dark' ? (
+                {isDarkMode ? (
                   <UserFillLight height={25} width={25} />
                 ) : (
                   <UserFillDark height={25} width={25} />
@@ -198,7 +190,7 @@ const BottomTabNavigation = () => {
               </>
             ) : (
               <>
-                {colorScheme == 'dark' ? (
+                {isDarkMode ? (
                   <UserOutlineLight height={25} width={25} />
                 ) : (
                   <UserOutlineDark height={25} width={25} />

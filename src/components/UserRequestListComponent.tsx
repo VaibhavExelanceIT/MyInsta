@@ -32,37 +32,27 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
   const styles = userRequestListComponentStyle(colors);
   const database = firestore().collection('UsersData');
 
-  const addFollower = async () => {
+  const acceptRequest = async () => {
     try {
       await database
         .doc(currentUserId)
         .update({ follower: arrayUnion(userId) })
-        .then(() => {
-          showMessage({
-            message: `${t(LanguageConstant.youStartedFollowing)}` + userName,
-            type: 'success',
-          });
+        .catch(err => {
+          throw err;
         });
-    } catch (error) {
-      showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
-        type: 'success',
-      });
-    }
-  };
 
-  const addFollowing = async () => {
-    try {
       await database
         .doc(userId)
         .update({ following: arrayUnion(currentUserId) })
-        .then(() => {
-          showMessage({
-            message: `${t(LanguageConstant.youFollowed)}` + userName,
-            type: 'success',
-          });
+        .catch(err => {
+          throw err;
         });
+      removeRequest();
+
+      showMessage({
+        message: `${t(LanguageConstant.youFollowed)}` + userName,
+        type: 'success',
+      });
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
@@ -71,43 +61,27 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
       });
     }
   };
-  const acceptRequest = () => {
-    addFollower();
-    addFollowing();
-    removeRequest();
-  };
 
-  const removeFollowRequest = async () => {
+  const removeRequest = async () => {
     try {
       await database
         .doc(userId)
         .update({ requestSent: arrayRemove(currentUserId) })
-        .then(() => {
-          showMessage({
-            message: t(LanguageConstant.cancelFollowRequest),
-            type: 'success',
-          });
+        .catch(err => {
+          throw err;
         });
-    } catch (error) {
-      showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
-        type: 'success',
-      });
-    }
-  };
 
-  const removeComeFollowRequest = async () => {
-    try {
       await database
         .doc(currentUserId)
         .update({ requestCome: arrayRemove(userId) })
-        .then(() => {
-          showMessage({
-            message: t(LanguageConstant.cancelFollowRequest),
-            type: 'success',
-          });
+        .catch(err => {
+          throw err;
         });
+
+      showMessage({
+        message: t(LanguageConstant.cancelFollowRequest),
+        type: 'success',
+      });
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
@@ -115,10 +89,6 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
         type: 'success',
       });
     }
-  };
-  const removeRequest = () => {
-    removeFollowRequest();
-    removeComeFollowRequest();
   };
 
   return (

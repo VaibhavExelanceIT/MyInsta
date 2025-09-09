@@ -1,4 +1,5 @@
 export const LanguageConstant = {
+  selectedLanguage: 'selectedLanguage',
   changeLanguage: 'change_language',
   urdu: 'urdu',
   english: 'english',
@@ -77,4 +78,7 @@ export const LanguageConstant = {
   youUnFollowed: 'youUnFollowed',
   youStartedFollowing: 'youStartedFollowing',
   youFollowed: 'youFollowed',
+  loginForm: 'loginForm',
+  languageSelection: 'languageSelection',
+  loaderMessage: 'loaderMessage',
 };

@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
-
 import {
   View,
   FlatList,
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
-  useColorScheme,
   TouchableOpacity,
   Image,
+  Text,
 } from 'react-native';
+
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { t } from 'i18next';
 
 import { useThemeColors } from '../hooks/useThemeColors';
 import { ColorProps } from '../constants/color';
@@ -25,6 +27,9 @@ import {
 } from '../helper/icon';
 import { instadark, instalight } from '../helper/images';
 import UserRequestListComponent from '../components/UserRequestListComponent';
+import { useTheme } from '../hooks/useTheme';
+import { LanguageConstant } from '../constants/language_constants';
+import { fs } from '../helper/fontSize';
 
 interface userData {
   id: string;
@@ -47,10 +52,10 @@ const NotificationScreen = ({ navigation }: any) => {
   const [usersData, setUserData] = useState<userData[]>([]);
   const [usersRequestData, setUserRequestData] = useState<string[]>([]);
 
+  const { isDarkMode } = useTheme();
   const currentUser = auth().currentUser;
   const userId: string = currentUser?.uid ? currentUser?.uid : '';
 
-  const colorScheme = useColorScheme() === 'light';
   const colors = useThemeColors();
 
   const styles = notificationScreenStyle(colors);
@@ -117,38 +122,38 @@ const NotificationScreen = ({ navigation }: any) => {
     navigation.openDrawer();
   };
   return (
-    <View style={styles.mainLayout}>
+    <SafeAreaView style={styles.mainLayout} edges={['top', 'left', 'right']}>
       <View style={styles.sortStyle}>
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
-            {colorScheme ? (
-              <SettingMenu height={30} width={30} />
-            ) : (
+            {isDarkMode ? (
               <SettingMenuDark height={30} width={30} />
+            ) : (
+              <SettingMenu height={30} width={30} />
             )}
           </TouchableOpacity>
         </View>
         <View style={styles.logoView}>
           <Image
             style={styles.imageStyle}
-            source={colorScheme ? instadark : instalight}
+            source={isDarkMode ? instalight : instadark}
           />
         </View>
         <View style={styles.actionBtn}>
           <View style={styles.heartStyle}>
-            {colorScheme ? (
-              <HeartOutline height={25} width={25} />
-            ) : (
+            {isDarkMode ? (
               <HeartDark height={25} width={25} />
+            ) : (
+              <HeartOutline height={25} width={25} />
             )}
           </View>
-          {colorScheme ? <Message /> : <MessageDark height={25} width={25} />}
+          {isDarkMode ? <MessageDark height={25} width={25} /> : <Message />}
         </View>
       </View>
 
       {isLoading ? (
         <ActivityIndicator style={styles.loaderStyle} size={'large'} />
-      ) : (
+      ) : usersRequestData.length > 0 ? (
         <FlatList
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
@@ -169,8 +174,12 @@ const NotificationScreen = ({ navigation }: any) => {
             </View>
           )}
         />
+      ) : (
+        <View style={styles.txtViewStyle}>
+          <Text style={styles.textStyle}>{t(LanguageConstant.noPostTxt)}</Text>
+        </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -179,13 +188,13 @@ export default NotificationScreen;
 const notificationScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
     loaderStyle: { flex: 1, justifyContent: 'center' },
-    mainLayout: { flex: 1 },
+    mainLayout: { flex: 1, backgroundColor: colors.background },
     userIcon: {
       marginBottom: '2%',
       alignSelf: 'flex-end',
     },
     sortStyle: {
-      paddingTop: 30,
+      paddingTop: 10,
       elevation: 100,
       paddingBottom: 10,
       flexDirection: 'row',
@@ -206,5 +215,14 @@ const notificationScreenStyle = (colors: ColorProps) =>
     },
     heartStyle: {
       marginHorizontal: 10,
+    },
+    txtViewStyle: {
+      flex: 1,
+      justifyContent: 'center',
+      alignSelf: 'center',
+    },
+    textStyle: {
+      fontSize: fs(16),
+      color: colors.text,
     },
   });
