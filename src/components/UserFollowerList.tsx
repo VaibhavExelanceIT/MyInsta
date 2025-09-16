@@ -1,9 +1,9 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
+import { fs } from '../helper/fontSize';
 import { ColorProps } from '../constants/color';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { fs } from '../helper/fontSize';
 
 interface UserListProp {
   imageUrl: string;

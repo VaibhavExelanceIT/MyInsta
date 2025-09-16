@@ -1,16 +1,17 @@
 import React, { useContext, useRef } from 'react';
 import {
   View,
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
   Image,
+  Animated,
+  StyleSheet,
   I18nManager,
+  TouchableOpacity,
 } from 'react-native';
+
 import { ColorProps } from '../constants/color';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { darkMode, lightMode } from '../helper/images';
 import { ThemeContext } from '../context/ThemeContext';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 const ThemeSwitch = () => {
   const { isDarkMode, toggleTheme } = useContext(ThemeContext);

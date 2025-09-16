@@ -80,6 +80,13 @@
 "loginForm": "Login Form",
 "selectedLanguage":"English",
 "languageSelection":"Language Selection",
-"loaderMessage":"Just a Second...."
+"loaderMessage":"Just a Second....",
+"commentSuccess":"Comment added successfully",
+"commentError":"Error in adding comment",
+"commentNotEmpty":"Comment cannot be empty",
+"emptyCommentMessage":"No Comment Yet.",
+"comment":"Comment",
+"enterComment":"Enter the Comment",
+"loading": "Loading...."
 
   } 

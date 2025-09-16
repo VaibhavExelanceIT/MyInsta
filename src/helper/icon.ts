@@ -40,6 +40,8 @@ import BellOutlineDark from '../assets/icons/BellOutlineDark.svg';
 import BackArrowLight from '../assets/icons/BackArrowLight.svg';
 import BackArrowDark from '../assets/icons/BackArrowDark.svg';
 
+import LikedHeart from '../assets/icons/LikedHeart.svg';
+
 export {
   HomeFill,
   AddOutline,
@@ -81,4 +83,5 @@ export {
   BellOutlineLight,
   BackArrowDark,
   BackArrowLight,
+  LikedHeart,
 };

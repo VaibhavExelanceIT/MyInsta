@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import {
+  Text,
   View,
+  Image,
   FlatList,
   StyleSheet,
   RefreshControl,
-  ActivityIndicator,
   TouchableOpacity,
-  Image,
-  Text,
+  ActivityIndicator,
 } from 'react-native';
 
 import { t } from 'i18next';
@@ -15,26 +15,22 @@ import { Searchbar } from 'react-native-paper';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import UserListComponent from '../components/UserListComponent';
-import { useThemeColors } from '../hooks/useThemeColors';
-import { ColorProps } from '../constants/color';
 
 import {
   CrossDark,
   CrossLight,
-  HeartDark,
-  HeartOutline,
-  Message,
-  MessageDark,
   SearchFill,
-  SearchFillDark,
   SettingMenu,
+  SearchFillDark,
   SettingMenuDark,
 } from '../helper/icon';
-import { instadark, instalight } from '../helper/images';
-import { LanguageConstant } from '../constants/language_constants';
 import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
+import { ColorProps } from '../constants/color';
+import { instadark, instalight } from '../helper/images';
+import { useThemeColors } from '../hooks/useThemeColors';
+import UserListComponent from '../components/UserListComponent';
+import { LanguageConstant } from '../constants/language_constants';
 
 interface userData {
   id: string;
@@ -57,7 +53,6 @@ const SearchScreen = ({ navigation }: any) => {
 
   const currentUser = auth().currentUser;
   const styles = searchScreenStyle(colors);
-
   const userId: string = currentUser?.uid ? currentUser?.uid : '';
 
   const handleActionComplete = () => {
@@ -85,11 +80,10 @@ const SearchScreen = ({ navigation }: any) => {
 
   const userSearch = async (query: string) => {
     try {
-      setUserData([]);
-
-      const usersRef = firestore().collection('UsersData');
       let firstNameUsers;
       let lastNameUsers;
+      setUserData([]);
+      const usersRef = firestore().collection('UsersData');
 
       if (query.trim() != '') {
         const firstNameQuery = usersRef
@@ -178,16 +172,6 @@ const SearchScreen = ({ navigation }: any) => {
             style={styles.imageStyle}
             source={isDarkMode ? instalight : instadark}
           />
-        </View>
-        <View style={styles.actionBtn}>
-          <View style={styles.heartStyle}>
-            {isDarkMode ? (
-              <HeartDark height={25} width={25} />
-            ) : (
-              <HeartOutline height={25} width={25} />
-            )}
-          </View>
-          {isDarkMode ? <MessageDark height={25} width={25} /> : <Message />}
         </View>
       </View>
       <View style={styles.searchBarStyle}>
@@ -285,15 +269,13 @@ const searchScreenStyle = (colors: ColorProps) =>
       flex: 1,
       marginHorizontal: 10,
     },
-    imageStyle: { alignSelf: 'flex-end' },
+    imageStyle: { alignSelf: 'center' },
     actionBtn: {
       marginTop: 10,
       padding: 10,
       flexDirection: 'row',
     },
-    heartStyle: {
-      marginHorizontal: 10,
-    },
+
     searchBarStyle: { padding: 10 },
     txtViewStyle: {
       flex: 1,

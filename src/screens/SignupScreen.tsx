@@ -11,31 +11,31 @@ import {
 import * as Yup from 'yup';
 import { t } from 'i18next';
 import { Formik } from 'formik';
-import auth from '@react-native-firebase/auth';
-import { useNavigation } from '@react-navigation/native';
-import firestore from '@react-native-firebase/firestore';
-import { showMessage } from 'react-native-flash-message';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import {
   getAuth,
   GoogleAuthProvider,
   signInWithCredential,
   createUserWithEmailAndPassword,
 } from '@react-native-firebase/auth';
+import auth from '@react-native-firebase/auth';
+import { useNavigation } from '@react-navigation/native';
+import firestore from '@react-native-firebase/firestore';
+import { showMessage } from 'react-native-flash-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
+import { fs } from '../helper/fontSize';
+import { useTheme } from '../hooks/useTheme';
 import InputText from '../components/InputText';
+import { ColorProps } from '../constants/color';
+import { useThemeColors } from '../hooks/useThemeColors';
+import LoaderComponent from '../components/LoaderComponent';
 import ButtonComponent from '../components/ButtonComponent';
+import { BackArrowDark, BackArrowLight } from '../helper/icon';
 import { LanguageConstant } from '../constants/language_constants';
 import { instadark, instalight, googlelogo } from '../helper/images';
 import RadioButtonComponent from '../components/RadioButtonComponent';
-import { useThemeColors } from '../hooks/useThemeColors';
-import { ColorProps } from '../constants/color';
-import { fs } from '../helper/fontSize';
-import { BackArrowDark, BackArrowLight } from '../helper/icon';
-import LoaderComponent from '../components/LoaderComponent';
-import { useTheme } from '../hooks/useTheme';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required(t(LanguageConstant.firstNameRequiredError)),
@@ -95,7 +95,8 @@ const SignupScreen = () => {
       await GoogleSignin.hasPlayServices({
         showPlayServicesUpdateDialog: true,
       });
-
+      setIsLoading(true);
+      setIsModalVisible(true);
       const signInResult = await GoogleSignin.signIn();
       let idToken: any = signInResult.data?.idToken;
       if (!idToken) {
@@ -117,8 +118,12 @@ const SignupScreen = () => {
         navigation.navigate('UserDetailsScreeen', { email: userEmail });
       }
 
+      setIsLoading(false);
+      setIsModalVisible(false);
       return signInWithCredential(getAuth(), googleCredential);
     } catch (error) {
+      setIsLoading(false);
+      setIsModalVisible(false);
       showMessage({
         message: t(LanguageConstant.error),
         description: `${t(LanguageConstant.error_message)} ${error}`,
@@ -223,15 +228,13 @@ const SignupScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View>
-        {isDarkMode ? (
-          <TouchableOpacity onPress={goBack}>
+        <TouchableOpacity onPress={goBack}>
+          {isDarkMode ? (
             <BackArrowLight height={20} width={20} />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={goBack}>
+          ) : (
             <BackArrowDark height={20} width={20} />
-          </TouchableOpacity>
-        )}
+          )}
+        </TouchableOpacity>
       </View>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.logoView}>

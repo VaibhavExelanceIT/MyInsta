@@ -10,28 +10,21 @@ import {
   ScrollView,
 } from 'react-native';
 
+import { t } from 'i18next';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
-import { t } from 'i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  Shape,
-  GridPost,
-  ShapeWhite,
-  SettingMenu,
-  GridPostWhite,
-  SettingMenuDark,
-} from '../helper/icon';
-import ProfileTopComponent from '../components/ProfileTopComponent';
-import ProfilePostItem from '../components/ProfilePostItem';
-import { useThemeColors } from '../hooks/useThemeColors';
-import { ColorProps } from '../constants/color';
-import { LanguageConstant } from '../constants/language_constants';
 import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
+import { ColorProps } from '../constants/color';
+import { useThemeColors } from '../hooks/useThemeColors';
+import ProfilePostItem from '../components/ProfilePostItem';
+import { SettingMenu, SettingMenuDark } from '../helper/icon';
+import { LanguageConstant } from '../constants/language_constants';
+import ProfileTopComponent from '../components/ProfileTopComponent';
 
 interface Post {
   id: string;
@@ -62,7 +55,6 @@ const ProfileScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [usersData, setUserData] = useState<User>();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isSelected, setIsSelected] = useState<Number>(1);
 
   const navigation = useNavigation<any>();
 
@@ -166,6 +158,11 @@ const ProfileScreen = () => {
             )}
           </TouchableOpacity>
         </View>
+        <View style={styles.logoView}>
+          <Text style={styles.profileTextStyle}>
+            {t(LanguageConstant.profile)}
+          </Text>
+        </View>
       </View>
       <ScrollView
         refreshControl={
@@ -189,39 +186,15 @@ const ProfileScreen = () => {
         )}
         <View
           style={{
-            borderTopWidth: 0.5,
-            borderTopColor: colors.dashcolor,
-            padding: 10,
             flex: 1,
+            padding: 10,
+            borderTopWidth: 0.5,
             flexDirection: 'row',
             borderBottomWidth: 1,
             justifyContent: 'space-around',
+            borderTopColor: colors.dashcolor,
           }}
-        >
-          <TouchableOpacity
-            onPress={() => {
-              setIsSelected(1);
-            }}
-          >
-            {isDarkMode ? (
-              <GridPostWhite height={23} width={23} />
-            ) : (
-              <GridPost height={23} width={23} />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => {
-              setIsSelected(2);
-            }}
-          >
-            {isDarkMode ? (
-              <ShapeWhite height={23} width={23} />
-            ) : (
-              <Shape height={23} width={23} />
-            )}
-          </TouchableOpacity>
-        </View>
+        />
 
         {isLoading ? (
           <ActivityIndicator
@@ -230,29 +203,19 @@ const ProfileScreen = () => {
             size={'large'}
           />
         ) : post.length > 0 ? (
-          isSelected == 1 ? (
-            <View style={styles.postStyle}>
-              <FlatList
-                scrollEnabled
-                data={post}
-                numColumns={3}
-                horizontal={false}
-                showsVerticalScrollIndicator={false}
-                renderItem={({ item }) => (
-                  <ProfilePostItem image={item.postURL} />
-                )}
-                keyExtractor={item => item.id}
-              />
-            </View>
-          ) : (
-            isSelected == 2 && (
-              <View style={styles.postStyle}>
-                <Text style={styles.textStyle}>
-                  {t(LanguageConstant.noPostTxt)}
-                </Text>
-              </View>
-            )
-          )
+          <View style={styles.postStyle}>
+            <FlatList
+              scrollEnabled
+              data={post}
+              numColumns={3}
+              horizontal={false}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <ProfilePostItem image={item.postURL} />
+              )}
+              keyExtractor={item => item.id}
+            />
+          </View>
         ) : (
           <View style={styles.postStyle}>
             <Text style={styles.textStyle}>
@@ -269,6 +232,12 @@ export default ProfileScreen;
 
 const profileScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
+    profileTextStyle: {
+      fontSize: fs(25),
+      fontWeight: '600',
+      color: colors.text,
+    },
+    logoView: { alignItems: 'center', flex: 1 },
     postStyle: { flex: 1.2, padding: 1 },
     loaderStyle: { flex: 1, justifyContent: 'center' },
     textStyle: {

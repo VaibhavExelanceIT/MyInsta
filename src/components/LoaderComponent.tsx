@@ -26,7 +26,7 @@ const LoaderComponent: React.FC<LoaderProps> = ({
     <Modal transparent={true} animationType="fade" visible={isModalVisible}>
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
-          {isLoading ? (
+          {isLoading && (
             <>
               <ActivityIndicator
                 animating={true}
@@ -37,8 +37,6 @@ const LoaderComponent: React.FC<LoaderProps> = ({
                 {t(LanguageConstant.loaderMessage)}
               </Text>
             </>
-          ) : (
-            <></>
           )}
         </View>
       </View>
@@ -60,7 +58,7 @@ const loaderComponentStyle = (colors: ColorProps) =>
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: 'colors.backgroundtint',
     },
     modalView: {
       padding: 30,

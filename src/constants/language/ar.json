@@ -79,7 +79,14 @@
 "loginForm": "نموذج تسجيل الدخول",
 "selectedLanguage":"اللغة العربية",
 "languageSelection":"اختيار اللغة",
- "loaderMessage":"ثواني قليلة..."
+ "loaderMessage":"ثواني قليلة...",
+ "commentSuccess":"تم إضافة التعليق بنجاح",
+ "commentError":"خطأ في إضافة التعليق",
+ "commentNotEmpty":"لا يمكن أن يكون التعليق فارغًا",
+ "emptyCommentMessage":"لا يمكن أن يكون التعليق فارغًا",
+ "comment":"تعليق",
+ "enterComment":"أدخل التعليق",
+ "loading": "جار التحميل...."
 
   
 } 

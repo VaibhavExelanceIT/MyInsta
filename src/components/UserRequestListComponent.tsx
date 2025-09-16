@@ -1,26 +1,26 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
+import { t } from 'i18next';
 import firestore, {
   arrayRemove,
   arrayUnion,
 } from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
-import { t } from 'i18next';
 
+import { fs } from '../helper/fontSize';
 import { ColorProps } from '../constants/color';
 import ButtonComponent from './ButtonComponent';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { LanguageConstant } from '../constants/language_constants';
 import { CorrectLight, CrossLight } from '../helper/icon';
-import { fs } from '../helper/fontSize';
+import { LanguageConstant } from '../constants/language_constants';
 
 interface UserRequestListProp {
   userId: string;
   imageUrl: string;
   userName: string;
-  currentUserId: string;
   isRequested: boolean;
+  currentUserId: string;
 }
 const UserRequestListComponent: React.FC<UserRequestListProp> = ({
   userId,

@@ -29,10 +29,10 @@ import {
   SettingMenu,
   SettingMenuDark,
 } from '../helper/icon';
-import { instadark, instalight } from '../helper/images';
-import { LanguageConstant } from '../constants/language_constants';
 import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
+import { instadark, instalight } from '../helper/images';
+import { LanguageConstant } from '../constants/language_constants';
 
 const validationSchema = Yup.object().shape({
   title: Yup.string().required(t(LanguageConstant.titleRequired)),
@@ -46,12 +46,11 @@ interface PostType {
 const AddPostScreen = () => {
   const [uri, setUri] = useState<string[]>([]);
 
-  const navigation = useNavigation<any>();
-  const { isDarkMode } = useTheme();
-
   const { t } = useTranslation();
-
   const colors = useThemeColors();
+  const { isDarkMode } = useTheme();
+  const navigation = useNavigation<any>();
+
   const styles = addPostScreenScreen(colors);
 
   const currentDate = new Date();
@@ -75,8 +74,8 @@ const AddPostScreen = () => {
           description: value.description,
           postURL: uri,
           dateAndTime: dateTime,
-          like: 0,
-          comment: 0,
+          like: [],
+          comment: [],
         })
         .then(() => {
           showMessage({

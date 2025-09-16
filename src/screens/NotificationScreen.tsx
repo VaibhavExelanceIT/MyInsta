@@ -10,26 +10,19 @@ import {
   Text,
 } from 'react-native';
 
-import firestore from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from 'i18next';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useThemeColors } from '../hooks/useThemeColors';
-import { ColorProps } from '../constants/color';
-import {
-  HeartDark,
-  HeartOutline,
-  Message,
-  MessageDark,
-  SettingMenu,
-  SettingMenuDark,
-} from '../helper/icon';
-import { instadark, instalight } from '../helper/images';
-import UserRequestListComponent from '../components/UserRequestListComponent';
-import { useTheme } from '../hooks/useTheme';
-import { LanguageConstant } from '../constants/language_constants';
 import { fs } from '../helper/fontSize';
+import { useTheme } from '../hooks/useTheme';
+import { ColorProps } from '../constants/color';
+import { instadark, instalight } from '../helper/images';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { SettingMenu, SettingMenuDark } from '../helper/icon';
+import { LanguageConstant } from '../constants/language_constants';
+import UserRequestListComponent from '../components/UserRequestListComponent';
 
 interface userData {
   id: string;
@@ -57,20 +50,19 @@ const NotificationScreen = ({ navigation }: any) => {
   const userId: string = currentUser?.uid ? currentUser?.uid : '';
 
   const colors = useThemeColors();
-
   const styles = notificationScreenStyle(colors);
 
   useEffect(() => {
     setUserData([]);
-    getAllUsersDataFirestore();
     getRequestCome();
+    getAllUsersDataFirestore();
   }, []);
 
   const onRefresh = () => {
+    getRequestCome();
     setIsLoading(true);
     setIsRefreshing(true);
     getAllUsersDataFirestore();
-    getRequestCome();
   };
 
   const getAllUsersDataFirestore = async () => {
@@ -139,16 +131,6 @@ const NotificationScreen = ({ navigation }: any) => {
             source={isDarkMode ? instalight : instadark}
           />
         </View>
-        <View style={styles.actionBtn}>
-          <View style={styles.heartStyle}>
-            {isDarkMode ? (
-              <HeartDark height={25} width={25} />
-            ) : (
-              <HeartOutline height={25} width={25} />
-            )}
-          </View>
-          {isDarkMode ? <MessageDark height={25} width={25} /> : <Message />}
-        </View>
       </View>
 
       {isLoading ? (
@@ -164,11 +146,11 @@ const NotificationScreen = ({ navigation }: any) => {
             <View>
               {usersRequestData.includes(item.id) && (
                 <UserRequestListComponent
-                  isRequested={item.requestCome.includes(userId)}
                   userId={item.id}
                   currentUserId={userId}
                   imageUrl={item.userImage}
                   userName={item.firstName}
+                  isRequested={item.requestCome.includes(userId)}
                 />
               )}
             </View>
@@ -208,14 +190,8 @@ const notificationScreenStyle = (colors: ColorProps) =>
       flex: 1,
       marginHorizontal: 10,
     },
-    imageStyle: { alignSelf: 'flex-end' },
-    actionBtn: {
-      padding: 10,
-      flexDirection: 'row',
-    },
-    heartStyle: {
-      marginHorizontal: 10,
-    },
+    imageStyle: { alignSelf: 'center' },
+
     txtViewStyle: {
       flex: 1,
       justifyContent: 'center',

@@ -21,6 +21,7 @@ export interface ColorProps {
   acceptBtnBorderStyle: string;
   declineBtnBorderStyle: string;
   listBackgroundColor: string;
+  backgroundtint: string;
 }
 
 export const lightColor = {
@@ -46,10 +47,11 @@ export const lightColor = {
   acceptBtnBorderStyle: '#149e05',
   declineBtnBorderStyle: '#cc101a',
   listBackgroundColor: '#ffffff',
+  backgroundtint: 'rgba(0, 0, 0, 0.5)',
 };
 
 export const darkColor = {
-  background: '#000000',
+  background: '#121212',
   text: '#FAFAFA',
   primaryblue: '#1877F2',
   fromcolor: '#FFFFFF',
@@ -71,4 +73,5 @@ export const darkColor = {
   acceptBtnBorderStyle: '#149e05',
   declineBtnBorderStyle: '#cc101a',
   listBackgroundColor: '#1e1e1e',
+  backgroundtint: 'rgba(0, 0, 0, 0.5)',
 };

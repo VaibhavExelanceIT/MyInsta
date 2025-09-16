@@ -81,4 +81,11 @@ export const LanguageConstant = {
   loginForm: 'loginForm',
   languageSelection: 'languageSelection',
   loaderMessage: 'loaderMessage',
+  commentSuccess: 'commentSuccess',
+  commentError: 'commentError',
+  commentNotEmpty: 'commentNotEmpty',
+  emptyCommentMessage: 'emptyCommentMessage',
+  comment: 'comment',
+  enterComment: 'enterComment',
+  loading: 'loading....',
 };

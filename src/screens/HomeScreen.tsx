@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Image,
@@ -15,31 +15,30 @@ import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {
-  Message,
-  HeartDark,
-  MessageDark,
-  SettingMenu,
-  HeartOutline,
-  SettingMenuDark,
-} from '../helper/icon';
+import { SettingMenu, SettingMenuDark } from '../helper/icon';
 import { ColorProps } from '../constants/color';
 import PostComponent from '../components/PostComponent';
 import { instadark, instalight } from '../helper/images';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { LanguageConstant } from '../constants/language_constants';
 import { useTheme } from '../hooks/useTheme';
+import BottomSheetComponent, {
+  BottomSheetHandler,
+  CommentType,
+} from '../components/BottomSheetComponent';
 
 interface Post {
   name: string;
   userImage: string;
-  id: string;
-  like: number;
+  userId: string;
+  postId: string;
+  like: Array<string>;
   title: string;
-  comment: number;
+  comment: Array<CommentType>;
   dateAndTime: string;
   description: string;
   postURL: Array<string>;
+  currentUserID: string;
 }
 
 interface userData {
@@ -53,6 +52,7 @@ const HomeScreen = ({ navigation }: any) => {
 
   const [isloading, setIsLoading] = useState(true);
   const [isrefreshing, setIsRefreshing] = useState(false);
+  const [currentUserImage, setCurrentUserImage] = useState<string>('');
 
   const { isDarkMode } = useTheme();
   const colors = useThemeColors();
@@ -62,6 +62,23 @@ const HomeScreen = ({ navigation }: any) => {
 
   const userId = currentUser ? currentUser.uid : '';
 
+  const bottomSheetRef = useRef<BottomSheetHandler>(null);
+  const [selectedComments, setSelectedComments] = useState<CommentType[]>([]);
+
+  const [postID, setPostID] = useState<string>('');
+  const [postUserID, setPostUserID] = useState<string>('');
+
+  const handleOpenBottomSheet = (
+    comments: CommentType[],
+    postId: string,
+    userId: string,
+  ) => {
+    setSelectedComments(comments);
+    setPostID(postId);
+    setPostUserID(userId);
+    bottomSheetRef.current?.open();
+  };
+
   const onRefresh = () => {
     setIsRefreshing(true);
     getPost();
@@ -69,6 +86,7 @@ const HomeScreen = ({ navigation }: any) => {
       setIsRefreshing(false);
     }, 1000);
   };
+
   const getData = async (id: string, name: string, userImage: string) => {
     const data = await firestore()
       .collection('UsersData')
@@ -79,8 +97,16 @@ const HomeScreen = ({ navigation }: any) => {
     data.docs.forEach(item => {
       setPost(prevState => [
         ...prevState,
-        { name: name, userImage: userImage, ...item.data() } as Post,
+        {
+          name: name,
+          userImage: userImage,
+          userId: id,
+          postId: item.id,
+          currentUserID: userId,
+          ...item.data(),
+        } as Post,
       ]);
+      console.log(item.data());
     });
     setIsLoading(false);
     return data.docs;
@@ -95,8 +121,17 @@ const HomeScreen = ({ navigation }: any) => {
           return await getData(cv.id, cv.userName, cv.userImage);
         }),
       );
+      await firestore()
+        .collection('UsersData')
+        .doc(userId)
+        .get()
+        .then(doc => {
+          if (doc.exists()) {
+            const currentUserImage = doc.data()?.userImage;
+            setCurrentUserImage(currentUserImage);
+          }
+        });
     } catch (error) {
-      console.error('Failed to fetch user IDs:', error);
       showMessage({
         message: t(LanguageConstant.error),
         description: `${t(LanguageConstant.error_message)} `,
@@ -158,16 +193,6 @@ const HomeScreen = ({ navigation }: any) => {
             source={isDarkMode ? instalight : instadark}
           />
         </View>
-        <View style={styles.actionBtn}>
-          <View style={styles.heartStyle}>
-            {isDarkMode ? (
-              <HeartDark height={25} width={25} />
-            ) : (
-              <HeartOutline height={25} width={25} />
-            )}
-          </View>
-          {isDarkMode ? <MessageDark height={25} width={25} /> : <Message />}
-        </View>
       </View>
       {isloading ? (
         <ActivityIndicator size={'large'} />
@@ -177,20 +202,38 @@ const HomeScreen = ({ navigation }: any) => {
             <RefreshControl refreshing={isrefreshing} onRefresh={onRefresh} />
           }
           data={post}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item.postId}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <PostComponent
-              likes={item.like}
-              title={item.title}
-              comment={item.comment}
-              date={item.dateAndTime}
-              imagePost={item.postURL}
-              description={item.description}
-              userName={item.name}
-              imageUrl={item.userImage}
-            />
+            <>
+              <PostComponent
+                likes={item.like}
+                title={item.title}
+                comment={item.comment}
+                date={item.dateAndTime}
+                imagePost={item.postURL}
+                description={item.description}
+                userName={item.name}
+                imageUrl={item.userImage}
+                userId={item.userId}
+                postId={item.postId}
+                currentUserID={item.currentUserID}
+                onOpenComments={() =>
+                  handleOpenBottomSheet(item.comment, item.postId, item.userId)
+                }
+              />
+            </>
           )}
+        />
+      )}
+      {currentUserImage && (
+        <BottomSheetComponent
+          postID={postID}
+          ref={bottomSheetRef}
+          postUserID={postUserID}
+          comments={selectedComments}
+          userId={currentUser?.uid || ''}
+          currentUserImage={currentUserImage}
         />
       )}
     </SafeAreaView>
@@ -201,9 +244,9 @@ export default HomeScreen;
 
 const homeScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
-    imageStyle: { alignSelf: 'flex-end' },
+    imageStyle: { alignSelf: 'center' },
     mainLayout: {
-      flex: 8,
+      flex: 1,
       backgroundColor: colors.background,
     },
     sortStyle: {
@@ -221,16 +264,17 @@ const homeScreenStyle = (colors: ColorProps) =>
       alignSelf: 'flex-end',
     },
     actionBtn: {
-      marginTop: 10,
       padding: 10,
+      marginTop: 10,
       flexDirection: 'row',
     },
     heartStyle: {
       marginHorizontal: 10,
     },
     logoView: {
-      marginTop: 10,
       flex: 1,
+      marginTop: 10,
       marginHorizontal: 10,
+      justifyContent: 'flex-end',
     },
   });

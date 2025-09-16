@@ -11,24 +11,24 @@ import {
 import * as Yup from 'yup';
 import { t } from 'i18next';
 import { Formik } from 'formik';
+import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
 import { useNavigation } from '@react-navigation/native';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import auth from '@react-native-firebase/auth';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
+import { fs } from '../helper/fontSize';
+import { useTheme } from '../hooks/useTheme';
+import { ColorProps } from '../constants/color';
 import InputText from '../components/InputText';
+import { useThemeColors } from '../hooks/useThemeColors';
 import { instadark, instalight } from '../helper/images';
 import ButtonComponent from '../components/ButtonComponent';
+import LoaderComponent from '../components/LoaderComponent';
+import { BackArrowDark, BackArrowLight } from '../helper/icon';
 import { LanguageConstant } from '../constants/language_constants';
 import RadioButtonComponent from '../components/RadioButtonComponent';
-import { useThemeColors } from '../hooks/useThemeColors';
-import { ColorProps } from '../constants/color';
-import { BackArrowDark, BackArrowLight } from '../helper/icon';
-import { fs } from '../helper/fontSize';
-import LoaderComponent from '../components/LoaderComponent';
-import { useTheme } from '../hooks/useTheme';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required(t(LanguageConstant.firstNameRequiredError)),
