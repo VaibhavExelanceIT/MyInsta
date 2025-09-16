@@ -6,29 +6,26 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  useColorScheme,
 } from 'react-native';
 
 import * as Yup from 'yup';
 import { t } from 'i18next';
 import { Formik } from 'formik';
-import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
 import { useNavigation } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import auth from '@react-native-firebase/auth';
 
-import { fs } from '../helper/fontSize';
-import { useTheme } from '../hooks/useTheme';
-import { ColorProps } from '../constants/color';
 import InputText from '../components/InputText';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { instadark, instalight } from '../helper/images';
 import ButtonComponent from '../components/ButtonComponent';
-import LoaderComponent from '../components/LoaderComponent';
-import { BackArrowDark, BackArrowLight } from '../helper/icon';
 import { LanguageConstant } from '../constants/language_constants';
 import RadioButtonComponent from '../components/RadioButtonComponent';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { ColorProps } from '../constants/color';
+import { fs } from '../helper/fontSize';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required(t(LanguageConstant.firstNameRequiredError)),
@@ -72,12 +69,8 @@ interface userData {
 const UserDetailsScreeen = ({ route }: any) => {
   const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const currentDate = new Date();
-
   const colors = useThemeColors();
-  const { isDarkMode } = useTheme();
+  const colorScheme = useColorScheme();
   const navigation = useNavigation<any>();
   const styles = userDetailsScreeenStyle(colors);
 
@@ -158,31 +151,14 @@ const UserDetailsScreeen = ({ route }: any) => {
         description: `${t(LanguageConstant.error_message)} `,
         type: 'danger',
       });
-    } finally {
-      setIsModalVisible(false);
-      setIsLoading(false);
     }
-  };
-  const goBack = () => {
-    navigation.goBack();
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <View style={styles.backButtonStyle}>
-        {isDarkMode ? (
-          <TouchableOpacity onPress={goBack}>
-            <BackArrowLight height={20} width={20} />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={goBack}>
-            <BackArrowDark height={20} width={20} />
-          </TouchableOpacity>
-        )}
-      </View>
+    <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.logoView}>
-          <Image source={isDarkMode ? instalight : instadark} />
+          <Image source={colorScheme === 'light' ? instadark : instalight} />
         </View>
 
         <Text style={styles.textDarkStyle}>{'User Details'}</Text>
@@ -204,8 +180,6 @@ const UserDetailsScreeen = ({ route }: any) => {
             requestCome: [],
           }}
           onSubmit={values => {
-            setIsLoading(true);
-            setIsModalVisible(true);
             writeFirestore(values);
           }}
           validationSchema={validationSchema}
@@ -270,9 +244,9 @@ const UserDetailsScreeen = ({ route }: any) => {
               <DateTimePickerModal
                 isVisible={isDatePickerVisible}
                 mode="date"
-                maximumDate={currentDate}
                 onConfirm={date => {
                   handleChange(setFieldValue('DOB', date.toDateString()));
+
                   hideDatePicker();
                 }}
                 onCancel={hideDatePicker}
@@ -321,20 +295,8 @@ const UserDetailsScreeen = ({ route }: any) => {
             </>
           )}
         </Formik>
-        {isLoading && (
-          <LoaderComponent
-            isLoading={isLoading}
-            isModalVisible={isModalVisible}
-          />
-        )}
       </ScrollView>
-      <View style={styles.textViewStyle}>
-        <Text style={styles.textStyleFrom}>{t(LanguageConstant.from)}</Text>
-        <Text style={styles.textStyleFacebook}>
-          {t(LanguageConstant.facebook)}
-        </Text>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -342,17 +304,6 @@ export default UserDetailsScreeen;
 
 const userDetailsScreeenStyle = (colors: ColorProps) =>
   StyleSheet.create({
-    textViewStyle: { marginTop: 10, alignItems: 'center' },
-    textStyleFrom: {
-      fontSize: fs(14),
-      fontWeight: '600',
-      color: colors.fromcolor,
-    },
-    textStyleFacebook: {
-      fontSize: fs(16),
-      fontWeight: '400',
-      color: colors.text,
-    },
     textStyle: {
       color: colors.white,
       fontWeight: 'bold',
@@ -382,15 +333,12 @@ const userDetailsScreeenStyle = (colors: ColorProps) =>
       justifyContent: 'center',
     },
     logoView: {
-      marginVertical: 10,
+      marginBottom: 10,
       alignSelf: 'center',
     },
     errorText: {
       color: 'red',
       fontSize: fs(15),
       fontWeight: '800',
-    },
-    backButtonStyle: {
-      marginBottom: 5,
     },
   });

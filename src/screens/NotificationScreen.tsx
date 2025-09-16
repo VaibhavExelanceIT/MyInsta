@@ -1,27 +1,29 @@
 import React, { useEffect, useState } from 'react';
+
 import {
   View,
   FlatList,
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
+  useColorScheme,
   TouchableOpacity,
   Image,
-  Text,
 } from 'react-native';
-
-import { t } from 'i18next';
-import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import auth from '@react-native-firebase/auth';
 
-import { fs } from '../helper/fontSize';
-import { useTheme } from '../hooks/useTheme';
-import { ColorProps } from '../constants/color';
-import { instadark, instalight } from '../helper/images';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { SettingMenu, SettingMenuDark } from '../helper/icon';
-import { LanguageConstant } from '../constants/language_constants';
+import { ColorProps } from '../constants/color';
+import {
+  HeartDark,
+  HeartOutline,
+  Message,
+  MessageDark,
+  SettingMenu,
+  SettingMenuDark,
+} from '../helper/icon';
+import { instadark, instalight } from '../helper/images';
 import UserRequestListComponent from '../components/UserRequestListComponent';
 
 interface userData {
@@ -45,24 +47,25 @@ const NotificationScreen = ({ navigation }: any) => {
   const [usersData, setUserData] = useState<userData[]>([]);
   const [usersRequestData, setUserRequestData] = useState<string[]>([]);
 
-  const { isDarkMode } = useTheme();
   const currentUser = auth().currentUser;
   const userId: string = currentUser?.uid ? currentUser?.uid : '';
 
+  const colorScheme = useColorScheme() === 'light';
   const colors = useThemeColors();
+
   const styles = notificationScreenStyle(colors);
 
   useEffect(() => {
     setUserData([]);
-    getRequestCome();
     getAllUsersDataFirestore();
+    getRequestCome();
   }, []);
 
   const onRefresh = () => {
-    getRequestCome();
     setIsLoading(true);
     setIsRefreshing(true);
     getAllUsersDataFirestore();
+    getRequestCome();
   };
 
   const getAllUsersDataFirestore = async () => {
@@ -114,28 +117,38 @@ const NotificationScreen = ({ navigation }: any) => {
     navigation.openDrawer();
   };
   return (
-    <SafeAreaView style={styles.mainLayout} edges={['top', 'left', 'right']}>
+    <View style={styles.mainLayout}>
       <View style={styles.sortStyle}>
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
-            {isDarkMode ? (
-              <SettingMenuDark height={30} width={30} />
-            ) : (
+            {colorScheme ? (
               <SettingMenu height={30} width={30} />
+            ) : (
+              <SettingMenuDark height={30} width={30} />
             )}
           </TouchableOpacity>
         </View>
         <View style={styles.logoView}>
           <Image
             style={styles.imageStyle}
-            source={isDarkMode ? instalight : instadark}
+            source={colorScheme ? instadark : instalight}
           />
+        </View>
+        <View style={styles.actionBtn}>
+          <View style={styles.heartStyle}>
+            {colorScheme ? (
+              <HeartOutline height={25} width={25} />
+            ) : (
+              <HeartDark height={25} width={25} />
+            )}
+          </View>
+          {colorScheme ? <Message /> : <MessageDark height={25} width={25} />}
         </View>
       </View>
 
       {isLoading ? (
         <ActivityIndicator style={styles.loaderStyle} size={'large'} />
-      ) : usersRequestData.length > 0 ? (
+      ) : (
         <FlatList
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
@@ -146,22 +159,18 @@ const NotificationScreen = ({ navigation }: any) => {
             <View>
               {usersRequestData.includes(item.id) && (
                 <UserRequestListComponent
+                  isRequested={item.requestCome.includes(userId)}
                   userId={item.id}
                   currentUserId={userId}
                   imageUrl={item.userImage}
                   userName={item.firstName}
-                  isRequested={item.requestCome.includes(userId)}
                 />
               )}
             </View>
           )}
         />
-      ) : (
-        <View style={styles.txtViewStyle}>
-          <Text style={styles.textStyle}>{t(LanguageConstant.noPostTxt)}</Text>
-        </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -170,13 +179,13 @@ export default NotificationScreen;
 const notificationScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
     loaderStyle: { flex: 1, justifyContent: 'center' },
-    mainLayout: { flex: 1, backgroundColor: colors.background },
+    mainLayout: { flex: 1 },
     userIcon: {
       marginBottom: '2%',
       alignSelf: 'flex-end',
     },
     sortStyle: {
-      paddingTop: 10,
+      paddingTop: 30,
       elevation: 100,
       paddingBottom: 10,
       flexDirection: 'row',
@@ -190,15 +199,12 @@ const notificationScreenStyle = (colors: ColorProps) =>
       flex: 1,
       marginHorizontal: 10,
     },
-    imageStyle: { alignSelf: 'center' },
-
-    txtViewStyle: {
-      flex: 1,
-      justifyContent: 'center',
-      alignSelf: 'center',
+    imageStyle: { alignSelf: 'flex-end' },
+    actionBtn: {
+      padding: 10,
+      flexDirection: 'row',
     },
-    textStyle: {
-      fontSize: fs(16),
-      color: colors.text,
+    heartStyle: {
+      marginHorizontal: 10,
     },
   });

@@ -14,6 +14,7 @@ const resources = {
   ar: { translation: arabic },
 };
 
+// Asynchronously load the saved language
 const loadSavedLanguage = async () => {
   try {
     const savedLanguage = await AsyncStorage.getItem('user-language');

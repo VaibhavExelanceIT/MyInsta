@@ -6,61 +6,34 @@ import {
   StyleSheet,
   TouchableOpacity,
   useWindowDimensions,
-  I18nManager,
-  Alert,
 } from 'react-native';
 
-import { t } from 'i18next';
 import {
   DrawerItem,
   createDrawerNavigator,
   DrawerContentScrollView,
 } from '@react-navigation/drawer';
-import RNRestart from 'react-native-restart';
+import { t } from 'i18next';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
 import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
-import DropDownPicker from 'react-native-dropdown-picker';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
-import { ColorProps } from '../constants/color';
-import i18n from '../constants/language/i18next';
-import ThemeSwitch from '../components/ThemeSwitch';
 import BottomTabNavigation from './BottomTabNavigation';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { LanguageConstant } from '../constants/language_constants';
+import { ColorProps } from '../constants/color';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 const Drawer = createDrawerNavigator();
 
 const DrawerNavigation = ({ navigation }: any) => {
-  const [items, setItems] = useState([
-    { label: t(LanguageConstant.english), value: 'en' },
-    { label: t(LanguageConstant.hindi), value: 'hi' },
-    { label: t(LanguageConstant.urdu), value: 'ar' },
-  ]);
   const [uri, setUri] = useState<string>();
-  const [isOpen, setIsOpen] = useState(false);
-  const [value, setValue] = useState<string>('en');
   const [userEmail, setEmail] = useState<string>('');
   const [focused, setFocused] = useState('HomeScreen');
-
-  const colors = useThemeColors();
   const dimensions = useWindowDimensions();
 
+  const colors = useThemeColors();
   const styles = drawerNavigationStyle(colors);
-
-  const navigationData = [
-    { name: 'HomeScreen', label: t(LanguageConstant.home) },
-    { name: 'SearchScreen', label: t(LanguageConstant.search) },
-    { name: 'AddPostScreen', label: t(LanguageConstant.addPost) },
-    {
-      name: 'NotificationScreen',
-      label: t(LanguageConstant.notification),
-    },
-    { name: 'ProfileScreen', label: t(LanguageConstant.profile) },
-  ];
 
   const getData = async (email: string) => {
     const users = await firestore()
@@ -141,21 +114,6 @@ const DrawerNavigation = ({ navigation }: any) => {
     }
   };
 
-  const changeLanguage = async (language: string) => {
-    try {
-      await i18n.changeLanguage(language);
-      await AsyncStorage.setItem('user-language', language);
-
-      const isRTL = language === 'ar';
-      if (I18nManager.isRTL !== isRTL) {
-        I18nManager.forceRTL(isRTL);
-      }
-      RNRestart.Restart();
-    } catch (error) {
-      Alert.alert('Error while changing language');
-    }
-  };
-
   return (
     <Drawer.Navigator
       initialRouteName="MyTab"
@@ -171,69 +129,51 @@ const DrawerNavigation = ({ navigation }: any) => {
       }}
       drawerContent={props => {
         return (
-          <SafeAreaView style={styles.mainLayout}>
-            <View style={styles.viewContainer}>
-              <DropDownPicker
-                open={isOpen}
-                value={value}
-                items={items}
-                setOpen={setIsOpen}
-                setValue={setValue}
-                setItems={setItems}
-                showBadgeDot={true}
-                itemSeparator={true}
-                placeholder={t(LanguageConstant.selectedLanguage)}
-                style={styles.dropDownStyle}
-                onChangeValue={e => e && changeLanguage(e)}
-                containerStyle={[styles.dropDownContainer]}
-              />
-              <>
-                <ThemeSwitch />
-              </>
-            </View>
-
+          <View style={styles.mainLayout}>
             <View style={styles.imageView}>
               <Image src={uri} resizeMode="center" style={styles.headerImage} />
               <Text style={styles.userEmailStyle}>{userEmail}</Text>
             </View>
-
             <DrawerContentScrollView {...props}>
               <View style={styles.container}>
-                {navigationData.map(item => {
-                  const isFocused = focused === item.name;
-                  return (
-                    <DrawerItem
-                      key={item.name}
-                      label={item.label}
-                      icon={() => (
-                        <Image
-                          style={[
-                            styles.drawerImage,
-                            {
-                              tintColor: isFocused
+                {[
+                  { name: 'HomeScreen', label: t(LanguageConstant.home) },
+                  { name: 'SearchScreen', label: t(LanguageConstant.search) },
+                  { name: 'AddPostScreen', label: t(LanguageConstant.addPost) },
+                  {
+                    name: 'NotificationScreen',
+                    label: t(LanguageConstant.notification),
+                  },
+                  { name: 'ProfileScreen', label: t(LanguageConstant.profile) },
+                ].map(item => (
+                  <DrawerItem
+                    key={item.name}
+                    label={item.label}
+                    icon={() => (
+                      <Image
+                        style={[
+                          styles.drawerImage,
+                          {
+                            tintColor:
+                              focused === item.name
                                 ? colors.black
-                                : colors.acceptBtnBorderStyle,
-                            },
-                          ]}
-                        />
-                      )}
-                      onPress={() => {
-                        setFocused(item.name);
-                        props.navigation.navigate('MyTab', {
-                          screen: item.name,
-                        });
-                      }}
-                      style={styles.bottomStyle}
-                      focused={isFocused}
-                      activeBackgroundColor={colors.darwerTintBackground}
-                      activeTintColor={colors.darwerTint}
-                      inactiveTintColor={colors.commentTextStyle}
-                    />
-                  );
-                })}
+                                : colors.activityIndicatorStyle,
+                          },
+                        ]}
+                      />
+                    )}
+                    onPress={() => {
+                      setFocused(item.name);
+                      props.navigation.navigate('MyTab', { screen: item.name });
+                    }}
+                    style={styles.bottomStyle}
+                    focused={focused === item.name}
+                    activeBackgroundColor={colors.darwerTintBackground}
+                    activeTintColor={colors.darwerTint}
+                  />
+                ))}
               </View>
             </DrawerContentScrollView>
-
             <View style={styles.logoutView}>
               <TouchableOpacity
                 onPress={() => {
@@ -246,7 +186,7 @@ const DrawerNavigation = ({ navigation }: any) => {
                 </Text>
               </TouchableOpacity>
             </View>
-          </SafeAreaView>
+          </View>
         );
       }}
     >
@@ -259,18 +199,6 @@ export default DrawerNavigation;
 
 const drawerNavigationStyle = (colors: ColorProps) =>
   StyleSheet.create({
-    viewContainer: {
-      justifyContent: 'space-between',
-      padding: 20,
-      flexDirection: 'row',
-    },
-    dropDownContainer: {
-      width: '35%',
-      borderWidth: 0,
-      alignSelf: 'center',
-    },
-
-    dropDownStyle: { borderWidth: 1 },
     mainLayout: {
       flex: 1,
     },
@@ -283,14 +211,14 @@ const drawerNavigationStyle = (colors: ColorProps) =>
       backgroundColor: 'red',
     },
     container: {
+      flex: 2,
       justifyContent: 'flex-end',
     },
     imageView: {
-      marginBottom: 20,
+      marginVertical: 20,
       alignSelf: 'center',
     },
     headerImage: {
-      marginTop: 20,
       width: 100,
       height: 100,
       borderRadius: 50,

@@ -4,27 +4,33 @@ import {
   View,
   FlatList,
   StyleSheet,
+  useColorScheme,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
   ScrollView,
 } from 'react-native';
 
-import { t } from 'i18next';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { fs } from '../helper/fontSize';
-import { useTheme } from '../hooks/useTheme';
-import { ColorProps } from '../constants/color';
-import { useThemeColors } from '../hooks/useThemeColors';
-import ProfilePostItem from '../components/ProfilePostItem';
-import { SettingMenu, SettingMenuDark } from '../helper/icon';
-import { LanguageConstant } from '../constants/language_constants';
+import {
+  Shape,
+  GridPost,
+  ShapeWhite,
+  SettingMenu,
+  GridPostWhite,
+  SettingMenuDark,
+} from '../helper/icon';
 import ProfileTopComponent from '../components/ProfileTopComponent';
+import ProfilePostItem from '../components/ProfilePostItem';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { ColorProps } from '../constants/color';
+import { LanguageConstant } from '../constants/language_constants';
+import { t } from 'i18next';
+import { fs } from '../helper/fontSize';
 
 interface Post {
   id: string;
@@ -55,11 +61,10 @@ const ProfileScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [usersData, setUserData] = useState<User>();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSelected, setIsSelected] = useState<Number>(1);
 
   const navigation = useNavigation<any>();
-
-  const { isDarkMode } = useTheme();
-
+  const colorScheme = useColorScheme() === 'light';
   const currentUser = auth().currentUser;
 
   const userId = currentUser ? currentUser.uid : '';
@@ -147,21 +152,16 @@ const ProfileScreen = () => {
     navigation.openDrawer();
   };
   return (
-    <SafeAreaView style={styles.mainLayout} edges={['top', 'left', 'right']}>
+    <View style={styles.mainLayout}>
       <View style={styles.sortStyle}>
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
-            {isDarkMode ? (
-              <SettingMenuDark height={30} width={30} />
-            ) : (
+            {colorScheme ? (
               <SettingMenu height={30} width={30} />
+            ) : (
+              <SettingMenuDark height={30} width={30} />
             )}
           </TouchableOpacity>
-        </View>
-        <View style={styles.logoView}>
-          <Text style={styles.profileTextStyle}>
-            {t(LanguageConstant.profile)}
-          </Text>
         </View>
       </View>
       <ScrollView
@@ -186,15 +186,39 @@ const ProfileScreen = () => {
         )}
         <View
           style={{
-            flex: 1,
-            padding: 10,
             borderTopWidth: 0.5,
+            borderTopColor: colors.dashcolor,
+            padding: 10,
+            flex: 1,
             flexDirection: 'row',
             borderBottomWidth: 1,
             justifyContent: 'space-around',
-            borderTopColor: colors.dashcolor,
           }}
-        />
+        >
+          <TouchableOpacity
+            onPress={() => {
+              setIsSelected(1);
+            }}
+          >
+            {colorScheme ? (
+              <GridPost height={23} width={23} />
+            ) : (
+              <GridPostWhite height={23} width={23} />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => {
+              setIsSelected(2);
+            }}
+          >
+            {colorScheme ? (
+              <Shape height={23} width={23} />
+            ) : (
+              <ShapeWhite height={23} width={23} />
+            )}
+          </TouchableOpacity>
+        </View>
 
         {isLoading ? (
           <ActivityIndicator
@@ -203,19 +227,29 @@ const ProfileScreen = () => {
             size={'large'}
           />
         ) : post.length > 0 ? (
-          <View style={styles.postStyle}>
-            <FlatList
-              scrollEnabled
-              data={post}
-              numColumns={3}
-              horizontal={false}
-              showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <ProfilePostItem image={item.postURL} />
-              )}
-              keyExtractor={item => item.id}
-            />
-          </View>
+          isSelected == 1 ? (
+            <View style={styles.postStyle}>
+              <FlatList
+                scrollEnabled
+                data={post}
+                numColumns={3}
+                horizontal={false}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <ProfilePostItem image={item.postURL} />
+                )}
+                keyExtractor={item => item.id}
+              />
+            </View>
+          ) : (
+            isSelected == 2 && (
+              <View style={styles.postStyle}>
+                <Text style={styles.textStyle}>
+                  {t(LanguageConstant.noPostTxt)}
+                </Text>
+              </View>
+            )
+          )
         ) : (
           <View style={styles.postStyle}>
             <Text style={styles.textStyle}>
@@ -224,7 +258,7 @@ const ProfileScreen = () => {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -232,12 +266,6 @@ export default ProfileScreen;
 
 const profileScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
-    profileTextStyle: {
-      fontSize: fs(25),
-      fontWeight: '600',
-      color: colors.text,
-    },
-    logoView: { alignItems: 'center', flex: 1 },
     postStyle: { flex: 1.2, padding: 1 },
     loaderStyle: { flex: 1, justifyContent: 'center' },
     textStyle: {
@@ -254,6 +282,7 @@ const profileScreenStyle = (colors: ColorProps) =>
       backgroundColor: colors.profileBackground,
     },
     sortStyle: {
+      paddingTop: 30,
       paddingHorizontal: 10,
       flexDirection: 'row',
       justifyContent: 'space-between',

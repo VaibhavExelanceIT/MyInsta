@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Image,
   FlatList,
   StyleSheet,
   RefreshControl,
+  useColorScheme,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
@@ -13,32 +14,31 @@ import { t } from 'i18next';
 import auth from '@react-native-firebase/auth';
 import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { SettingMenu, SettingMenuDark } from '../helper/icon';
+import {
+  Message,
+  HeartDark,
+  MessageDark,
+  SettingMenu,
+  HeartOutline,
+  SettingMenuDark,
+} from '../helper/icon';
 import { ColorProps } from '../constants/color';
 import PostComponent from '../components/PostComponent';
 import { instadark, instalight } from '../helper/images';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { LanguageConstant } from '../constants/language_constants';
-import { useTheme } from '../hooks/useTheme';
-import BottomSheetComponent, {
-  BottomSheetHandler,
-  CommentType,
-} from '../components/BottomSheetComponent';
 
 interface Post {
   name: string;
   userImage: string;
-  userId: string;
-  postId: string;
-  like: Array<string>;
+  id: string;
+  like: number;
   title: string;
-  comment: Array<CommentType>;
+  comment: number;
   dateAndTime: string;
   description: string;
   postURL: Array<string>;
-  currentUserID: string;
 }
 
 interface userData {
@@ -52,32 +52,14 @@ const HomeScreen = ({ navigation }: any) => {
 
   const [isloading, setIsLoading] = useState(true);
   const [isrefreshing, setIsRefreshing] = useState(false);
-  const [currentUserImage, setCurrentUserImage] = useState<string>('');
 
-  const { isDarkMode } = useTheme();
+  const colorScheme = useColorScheme() == 'light';
   const colors = useThemeColors();
   const styles = homeScreenStyle(colors);
 
   const currentUser = auth().currentUser;
 
   const userId = currentUser ? currentUser.uid : '';
-
-  const bottomSheetRef = useRef<BottomSheetHandler>(null);
-  const [selectedComments, setSelectedComments] = useState<CommentType[]>([]);
-
-  const [postID, setPostID] = useState<string>('');
-  const [postUserID, setPostUserID] = useState<string>('');
-
-  const handleOpenBottomSheet = (
-    comments: CommentType[],
-    postId: string,
-    userId: string,
-  ) => {
-    setSelectedComments(comments);
-    setPostID(postId);
-    setPostUserID(userId);
-    bottomSheetRef.current?.open();
-  };
 
   const onRefresh = () => {
     setIsRefreshing(true);
@@ -86,7 +68,6 @@ const HomeScreen = ({ navigation }: any) => {
       setIsRefreshing(false);
     }, 1000);
   };
-
   const getData = async (id: string, name: string, userImage: string) => {
     const data = await firestore()
       .collection('UsersData')
@@ -97,16 +78,8 @@ const HomeScreen = ({ navigation }: any) => {
     data.docs.forEach(item => {
       setPost(prevState => [
         ...prevState,
-        {
-          name: name,
-          userImage: userImage,
-          userId: id,
-          postId: item.id,
-          currentUserID: userId,
-          ...item.data(),
-        } as Post,
+        { name: name, userImage: userImage, ...item.data() } as Post,
       ]);
-      console.log(item.data());
     });
     setIsLoading(false);
     return data.docs;
@@ -121,17 +94,8 @@ const HomeScreen = ({ navigation }: any) => {
           return await getData(cv.id, cv.userName, cv.userImage);
         }),
       );
-      await firestore()
-        .collection('UsersData')
-        .doc(userId)
-        .get()
-        .then(doc => {
-          if (doc.exists()) {
-            const currentUserImage = doc.data()?.userImage;
-            setCurrentUserImage(currentUserImage);
-          }
-        });
     } catch (error) {
+      console.error('Failed to fetch user IDs:', error);
       showMessage({
         message: t(LanguageConstant.error),
         description: `${t(LanguageConstant.error_message)} `,
@@ -169,29 +133,39 @@ const HomeScreen = ({ navigation }: any) => {
   };
   useEffect(() => {
     getPost();
-  }, [isDarkMode]);
+  }, [colorScheme]);
 
   const openDrawer = () => {
     navigation.openDrawer();
   };
 
   return (
-    <SafeAreaView style={styles.mainLayout} edges={['top', 'left', 'right']}>
+    <View style={styles.mainLayout}>
       <View style={styles.sortStyle}>
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
-            {isDarkMode ? (
-              <SettingMenuDark height={30} width={30} />
-            ) : (
+            {colorScheme ? (
               <SettingMenu height={30} width={30} />
+            ) : (
+              <SettingMenuDark height={30} width={30} />
             )}
           </TouchableOpacity>
         </View>
         <View style={styles.logoView}>
           <Image
             style={styles.imageStyle}
-            source={isDarkMode ? instalight : instadark}
+            source={colorScheme ? instadark : instalight}
           />
+        </View>
+        <View style={styles.actionBtn}>
+          <View style={styles.heartStyle}>
+            {colorScheme ? (
+              <HeartOutline height={25} width={25} />
+            ) : (
+              <HeartDark height={25} width={25} />
+            )}
+          </View>
+          {colorScheme ? <Message /> : <MessageDark height={25} width={25} />}
         </View>
       </View>
       {isloading ? (
@@ -202,41 +176,23 @@ const HomeScreen = ({ navigation }: any) => {
             <RefreshControl refreshing={isrefreshing} onRefresh={onRefresh} />
           }
           data={post}
-          keyExtractor={item => item.postId}
+          keyExtractor={item => item.id}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <>
-              <PostComponent
-                likes={item.like}
-                title={item.title}
-                comment={item.comment}
-                date={item.dateAndTime}
-                imagePost={item.postURL}
-                description={item.description}
-                userName={item.name}
-                imageUrl={item.userImage}
-                userId={item.userId}
-                postId={item.postId}
-                currentUserID={item.currentUserID}
-                onOpenComments={() =>
-                  handleOpenBottomSheet(item.comment, item.postId, item.userId)
-                }
-              />
-            </>
+            <PostComponent
+              likes={item.like}
+              title={item.title}
+              comment={item.comment}
+              date={item.dateAndTime}
+              imagePost={item.postURL}
+              description={item.description}
+              userName={item.name}
+              imageUrl={item.userImage}
+            />
           )}
         />
       )}
-      {currentUserImage && (
-        <BottomSheetComponent
-          postID={postID}
-          ref={bottomSheetRef}
-          postUserID={postUserID}
-          comments={selectedComments}
-          userId={currentUser?.uid || ''}
-          currentUserImage={currentUserImage}
-        />
-      )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -244,12 +200,13 @@ export default HomeScreen;
 
 const homeScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
-    imageStyle: { alignSelf: 'center' },
+    imageStyle: { alignSelf: 'flex-end' },
     mainLayout: {
-      flex: 1,
+      flex: 8,
       backgroundColor: colors.background,
     },
     sortStyle: {
+      paddingTop: 30,
       elevation: 100,
       paddingBottom: 10,
       flexDirection: 'row',
@@ -265,7 +222,6 @@ const homeScreenStyle = (colors: ColorProps) =>
     },
     actionBtn: {
       padding: 10,
-      marginTop: 10,
       flexDirection: 'row',
     },
     heartStyle: {
@@ -273,8 +229,6 @@ const homeScreenStyle = (colors: ColorProps) =>
     },
     logoView: {
       flex: 1,
-      marginTop: 10,
       marginHorizontal: 10,
-      justifyContent: 'flex-end',
     },
   });

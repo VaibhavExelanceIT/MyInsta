@@ -4,17 +4,18 @@ import { Image, ImageResizeMode, View } from 'react-native';
 interface RenderImageProp {
   width: number;
   imageUri: string;
+
   reSizeMethod: 'auto' | 'resize' | 'scale' | 'none' | undefined;
   reSizeMode: ImageResizeMode | undefined;
   height: number;
 }
 
 const RenderImageComponent: React.FC<RenderImageProp> = ({
-  width,
-  height,
   imageUri,
-  reSizeMode,
+  width,
   reSizeMethod,
+  reSizeMode,
+  height,
 }) => {
   return (
     <View>

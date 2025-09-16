@@ -14,7 +14,7 @@
      "email" :"Email",
     "password" : "Password",
     "doNotHaveAccount" : "Don't have an account? ",
-    "signup": "Sign Up",
+    "signup": "signup",
     "from":"from",
     "facebook":"FACEBOOK",
     "firstname":"First Name",
@@ -76,17 +76,5 @@
 "followRequestSent":"Follow Request Sent!",
 "youUnFollowed":"You UnFollowed",
 "youStartedFollowing":"You Started Following",
-"youFollowed":"You Followed",
-"loginForm": "Login Form",
-"selectedLanguage":"English",
-"languageSelection":"Language Selection",
-"loaderMessage":"Just a Second....",
-"commentSuccess":"Comment added successfully",
-"commentError":"Error in adding comment",
-"commentNotEmpty":"Comment cannot be empty",
-"emptyCommentMessage":"No Comment Yet.",
-"comment":"Comment",
-"enterComment":"Enter the Comment",
-"loading": "Loading...."
-
+"youFollowed":"You Followed"
   } 

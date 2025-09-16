@@ -8,32 +8,31 @@ import firestore, {
 } from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
 
-import { fs } from '../helper/fontSize';
 import ButtonComponent from './ButtonComponent';
 import { ColorProps } from '../constants/color';
 import { useThemeColors } from '../hooks/useThemeColors';
+
 import { LanguageConstant } from '../constants/language_constants';
+import { fs } from '../helper/fontSize';
 
 interface UserListProp {
   userId?: string;
   imageUrl: string;
-  lastName: string;
   firstName: string;
+  currentUserId: string;
   isFollowed?: boolean;
   isRequested?: boolean;
-  currentUserId: string;
-  onActionComplete: () => void;
+  lastName: string;
 }
 
 const UserListComponent: React.FC<UserListProp> = ({
   userId,
-  imageUrl,
-  lastName,
   firstName,
+  imageUrl,
+  currentUserId,
   isFollowed,
   isRequested,
-  currentUserId,
-  onActionComplete,
+  lastName,
 }) => {
   const colors = useThemeColors();
   const styles = userListComponentStyle(colors);
@@ -59,7 +58,6 @@ const UserListComponent: React.FC<UserListProp> = ({
         message: t(LanguageConstant.followRequestSent),
         type: 'success',
       });
-      onActionComplete();
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
@@ -89,7 +87,6 @@ const UserListComponent: React.FC<UserListProp> = ({
         message: t(LanguageConstant.cancelFollowRequest),
         type: 'success',
       });
-      onActionComplete();
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
@@ -101,6 +98,7 @@ const UserListComponent: React.FC<UserListProp> = ({
 
   const onUnfollow = async () => {
     try {
+      // remove from follower list from unfollowed user
       await database
         .doc(userId)
         .update({ follower: arrayRemove(currentUserId) })
@@ -108,6 +106,7 @@ const UserListComponent: React.FC<UserListProp> = ({
           throw err;
         });
 
+      // remove from following list from current user
       await database
         .doc(currentUserId)
         .update({ following: arrayRemove(userId) })
@@ -119,7 +118,6 @@ const UserListComponent: React.FC<UserListProp> = ({
         message: `${t(LanguageConstant.youUnFollowed)} ` + firstName,
         type: 'success',
       });
-      onActionComplete();
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),

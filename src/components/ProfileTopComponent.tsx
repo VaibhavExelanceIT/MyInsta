@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  Modal,
-  Image,
   FlatList,
+  Image,
+  Modal,
   StyleSheet,
+  Text,
   TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { t } from 'i18next';
@@ -18,6 +18,7 @@ import ButtonComponent from './ButtonComponent';
 import { useThemeColors } from '../hooks/useThemeColors';
 import ProfileTextComponent from './ProfileTextComponent';
 import { LanguageConstant } from '../constants/language_constants';
+
 import UserFollowerList from './UserFollowerList';
 
 interface ProfileTopProp {
@@ -36,9 +37,9 @@ interface userData {
 
 const ProfileTopComponent: React.FC<ProfileTopProp> = ({
   follower,
-  userName,
   following,
   totalPost,
+  userName,
   profilePhoto,
   currentUserId,
 }) => {

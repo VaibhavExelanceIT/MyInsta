@@ -1,8 +1,8 @@
-import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-
+import React from 'react';
 import { ColorProps } from '../constants/color';
 import { useThemeColors } from '../hooks/useThemeColors';
+
 interface TextProps {
   textTitle: string;
   textData: number;

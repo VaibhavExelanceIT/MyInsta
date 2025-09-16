@@ -1,36 +1,40 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Text,
   View,
-  Image,
   FlatList,
   StyleSheet,
   RefreshControl,
-  TouchableOpacity,
   ActivityIndicator,
+  useColorScheme,
+  TouchableOpacity,
+  Image,
+  Text,
 } from 'react-native';
 
 import { t } from 'i18next';
 import { Searchbar } from 'react-native-paper';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
+import UserListComponent from '../components/UserListComponent';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { ColorProps } from '../constants/color';
 
 import {
   CrossDark,
   CrossLight,
+  HeartDark,
+  HeartOutline,
+  Message,
+  MessageDark,
   SearchFill,
-  SettingMenu,
   SearchFillDark,
+  SettingMenu,
   SettingMenuDark,
 } from '../helper/icon';
-import { fs } from '../helper/fontSize';
-import { useTheme } from '../hooks/useTheme';
-import { ColorProps } from '../constants/color';
 import { instadark, instalight } from '../helper/images';
-import { useThemeColors } from '../hooks/useThemeColors';
-import UserListComponent from '../components/UserListComponent';
 import { LanguageConstant } from '../constants/language_constants';
+import { fs } from '../helper/fontSize';
 
 interface userData {
   id: string;
@@ -48,16 +52,12 @@ const SearchScreen = ({ navigation }: any) => {
   const [usersData, setUserData] = useState<userData[]>([]);
 
   const colors = useThemeColors();
-
-  const { isDarkMode } = useTheme();
-
+  const colorScheme = useColorScheme();
   const currentUser = auth().currentUser;
   const styles = searchScreenStyle(colors);
+
   const userId: string = currentUser?.uid ? currentUser?.uid : '';
 
-  const handleActionComplete = () => {
-    dSearch(searchQuery);
-  };
   const onRefresh = () => {
     setIsLoading(true);
     setIsRefreshing(true);
@@ -80,10 +80,11 @@ const SearchScreen = ({ navigation }: any) => {
 
   const userSearch = async (query: string) => {
     try {
+      setUserData([]);
+
+      const usersRef = firestore().collection('UsersData');
       let firstNameUsers;
       let lastNameUsers;
-      setUserData([]);
-      const usersRef = firestore().collection('UsersData');
 
       if (query.trim() != '') {
         const firstNameQuery = usersRef
@@ -156,22 +157,36 @@ const SearchScreen = ({ navigation }: any) => {
   const dSearch = useMemo(() => debounce(userSearch, 1000), []);
 
   return (
-    <SafeAreaView style={styles.mainLayout} edges={['top', 'left', 'right']}>
+    <View style={styles.mainLayout}>
       <View style={styles.sortStyle}>
-        <View style={styles.settingIcon}>
-          <TouchableOpacity onPress={openDrawer} style={styles.settingIcon}>
-            {isDarkMode ? (
-              <SettingMenuDark height={30} width={30} />
-            ) : (
+        <View style={styles.userIcon}>
+          <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
+            {colorScheme === 'light' ? (
               <SettingMenu height={30} width={30} />
+            ) : (
+              <SettingMenuDark height={30} width={30} />
             )}
           </TouchableOpacity>
         </View>
         <View style={styles.logoView}>
           <Image
             style={styles.imageStyle}
-            source={isDarkMode ? instalight : instadark}
+            source={colorScheme === 'light' ? instadark : instalight}
           />
+        </View>
+        <View style={styles.actionBtn}>
+          <View style={styles.heartStyle}>
+            {colorScheme === 'light' ? (
+              <HeartOutline height={25} width={25} />
+            ) : (
+              <HeartDark height={25} width={25} />
+            )}
+          </View>
+          {colorScheme === 'light' ? (
+            <Message />
+          ) : (
+            <MessageDark height={25} width={25} />
+          )}
         </View>
       </View>
       <View style={styles.searchBarStyle}>
@@ -180,7 +195,6 @@ const SearchScreen = ({ navigation }: any) => {
           inputStyle={{ color: colors.text }}
           placeholder={t(LanguageConstant.search)}
           onChangeText={e => {
-            setIsLoading(true);
             handleSearch(e);
             setSearchQuery(e);
           }}
@@ -190,17 +204,17 @@ const SearchScreen = ({ navigation }: any) => {
           placeholderTextColor={colors.text}
           elevation={2}
           icon={({ size, color }) =>
-            isDarkMode ? (
-              <SearchFillDark width={size} height={size} fill={color} />
-            ) : (
+            colorScheme == 'light' ? (
               <SearchFill width={size} height={size} fill={color} />
+            ) : (
+              <SearchFillDark width={size} height={size} fill={color} />
             )
           }
           clearIcon={({ size, color }) =>
-            isDarkMode ? (
-              <CrossLight width={size} height={size} fill={color} />
-            ) : (
+            colorScheme == 'light' ? (
               <CrossDark width={size} height={size} fill={color} />
+            ) : (
+              <CrossLight width={size} height={size} fill={color} />
             )
           }
           onClearIconPress={() => setSearchQuery('')}
@@ -225,7 +239,6 @@ const SearchScreen = ({ navigation }: any) => {
                 imageUrl={item.userImage}
                 firstName={item.firstName}
                 lastName={item.lastName}
-                onActionComplete={handleActionComplete}
               />
             </View>
           )}
@@ -235,7 +248,7 @@ const SearchScreen = ({ navigation }: any) => {
           <Text style={styles.textStyle}>{t(LanguageConstant.noPostTxt)}</Text>
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -244,17 +257,18 @@ export default SearchScreen;
 const searchScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
     loaderStyle: { flex: 1, justifyContent: 'center' },
-    mainLayout: { flex: 1, backgroundColor: colors.background },
+    mainLayout: { flex: 1 },
     searchStyle: {
       color: colors.white,
       backgroundColor: colors.listBackgroundColor,
       borderRadius: 30,
     },
-    settingIcon: {
+    userIcon: {
       marginBottom: '2%',
       alignSelf: 'flex-end',
     },
     sortStyle: {
+      paddingTop: 30,
       elevation: 100,
       paddingBottom: 10,
       flexDirection: 'row',
@@ -265,17 +279,17 @@ const searchScreenStyle = (colors: ColorProps) =>
       borderBottomColor: colors.modalBorderStyle,
     },
     logoView: {
-      marginTop: 10,
       flex: 1,
       marginHorizontal: 10,
     },
-    imageStyle: { alignSelf: 'center' },
+    imageStyle: { alignSelf: 'flex-end' },
     actionBtn: {
-      marginTop: 10,
       padding: 10,
       flexDirection: 'row',
     },
-
+    heartStyle: {
+      marginHorizontal: 10,
+    },
     searchBarStyle: { padding: 10 },
     txtViewStyle: {
       flex: 1,

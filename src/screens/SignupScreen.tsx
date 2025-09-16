@@ -5,37 +5,34 @@ import {
   Image,
   StyleSheet,
   ScrollView,
+  useColorScheme,
   TouchableOpacity,
 } from 'react-native';
 
 import * as Yup from 'yup';
 import { t } from 'i18next';
 import { Formik } from 'formik';
+import auth from '@react-native-firebase/auth';
+import { useNavigation } from '@react-navigation/native';
+import firestore from '@react-native-firebase/firestore';
+import { showMessage } from 'react-native-flash-message';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import {
   getAuth,
   GoogleAuthProvider,
   signInWithCredential,
   createUserWithEmailAndPassword,
 } from '@react-native-firebase/auth';
-import auth from '@react-native-firebase/auth';
-import { useNavigation } from '@react-navigation/native';
-import firestore from '@react-native-firebase/firestore';
-import { showMessage } from 'react-native-flash-message';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
-import { fs } from '../helper/fontSize';
-import { useTheme } from '../hooks/useTheme';
 import InputText from '../components/InputText';
-import { ColorProps } from '../constants/color';
-import { useThemeColors } from '../hooks/useThemeColors';
-import LoaderComponent from '../components/LoaderComponent';
 import ButtonComponent from '../components/ButtonComponent';
-import { BackArrowDark, BackArrowLight } from '../helper/icon';
 import { LanguageConstant } from '../constants/language_constants';
 import { instadark, instalight, googlelogo } from '../helper/images';
 import RadioButtonComponent from '../components/RadioButtonComponent';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { ColorProps } from '../constants/color';
+import { fs } from '../helper/fontSize';
 
 const validationSchema = Yup.object().shape({
   firstName: Yup.string().required(t(LanguageConstant.firstNameRequiredError)),
@@ -80,13 +77,8 @@ interface userData {
 const SignupScreen = () => {
   const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const currentDate = new Date();
-
   const navigation = useNavigation<any>();
-  const { isDarkMode } = useTheme();
-
+  const colorScheme = useColorScheme();
   const colors = useThemeColors();
   const styles = signupScreenStyle(colors);
 
@@ -95,8 +87,7 @@ const SignupScreen = () => {
       await GoogleSignin.hasPlayServices({
         showPlayServicesUpdateDialog: true,
       });
-      setIsLoading(true);
-      setIsModalVisible(true);
+
       const signInResult = await GoogleSignin.signIn();
       let idToken: any = signInResult.data?.idToken;
       if (!idToken) {
@@ -118,12 +109,8 @@ const SignupScreen = () => {
         navigation.navigate('UserDetailsScreeen', { email: userEmail });
       }
 
-      setIsLoading(false);
-      setIsModalVisible(false);
       return signInWithCredential(getAuth(), googleCredential);
     } catch (error) {
-      setIsLoading(false);
-      setIsModalVisible(false);
       showMessage({
         message: t(LanguageConstant.error),
         description: `${t(LanguageConstant.error_message)} ${error}`,
@@ -207,12 +194,7 @@ const SignupScreen = () => {
           type: 'danger',
         });
       }
-
-      setIsModalVisible(false);
-      setIsLoading(false);
     } catch (error) {
-      setIsModalVisible(false);
-      setIsLoading(false);
       showMessage({
         message: t(LanguageConstant.error),
         description: `${t(LanguageConstant.dataErrorMessage)}  ${error}`,
@@ -221,24 +203,11 @@ const SignupScreen = () => {
     }
   };
 
-  const goBack = () => {
-    navigation.goBack();
-  };
-
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <View>
-        <TouchableOpacity onPress={goBack}>
-          {isDarkMode ? (
-            <BackArrowLight height={20} width={20} />
-          ) : (
-            <BackArrowDark height={20} width={20} />
-          )}
-        </TouchableOpacity>
-      </View>
+    <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.logoView}>
-          <Image source={isDarkMode ? instalight : instadark} />
+          <Image source={colorScheme === 'light' ? instadark : instalight} />
         </View>
         <Text style={styles.textDarkStyle}>
           {t(LanguageConstant.signupForm)}
@@ -259,8 +228,6 @@ const SignupScreen = () => {
             confirmPassword: '',
           }}
           onSubmit={values => {
-            setIsLoading(true);
-            setIsModalVisible(true);
             writeFirestore(values);
           }}
           validationSchema={validationSchema}
@@ -324,7 +291,6 @@ const SignupScreen = () => {
 
               <DateTimePickerModal
                 isVisible={isDatePickerVisible}
-                maximumDate={currentDate}
                 mode="date"
                 onConfirm={date => {
                   hideDatePicker();
@@ -376,14 +342,6 @@ const SignupScreen = () => {
             </>
           )}
         </Formik>
-
-        {isLoading && (
-          <LoaderComponent
-            isLoading={isLoading}
-            isModalVisible={isModalVisible}
-          />
-        )}
-
         <View style={styles.googleView}>
           <View style={styles.dashStyle} />
           <Text style={styles.orStyle}>{t(LanguageConstant.or)}</Text>
@@ -395,15 +353,15 @@ const SignupScreen = () => {
               <Image style={styles.socialLogo} source={googlelogo} />
             </TouchableOpacity>
           </View>
+          <View style={styles.textViewStyle}>
+            <Text style={styles.textStyleFrom}>{t(LanguageConstant.from)}</Text>
+            <Text style={styles.textStyleFacebook}>
+              {t(LanguageConstant.facebook)}
+            </Text>
+          </View>
         </View>
       </ScrollView>
-      <View style={styles.textViewStyle}>
-        <Text style={styles.textStyleFrom}>{t(LanguageConstant.from)}</Text>
-        <Text style={styles.textStyleFacebook}>
-          {t(LanguageConstant.facebook)}
-        </Text>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -467,7 +425,7 @@ const signupScreenStyle = (colors: ColorProps) =>
       justifyContent: 'center',
     },
     socialLogo: { height: 30, width: 30, marginHorizontal: 10 },
-    textViewStyle: { alignItems: 'center' },
+    textViewStyle: { margin: 20, alignItems: 'center' },
     textStyleFrom: {
       fontSize: fs(14),
       fontWeight: '600',
@@ -482,6 +440,5 @@ const signupScreenStyle = (colors: ColorProps) =>
     textStyle: {
       color: colors.white,
       fontWeight: 'bold',
-      fontSize: fs(15),
     },
   });

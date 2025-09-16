@@ -1,26 +1,26 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-import { t } from 'i18next';
 import firestore, {
   arrayRemove,
   arrayUnion,
 } from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
+import { t } from 'i18next';
 
-import { fs } from '../helper/fontSize';
 import { ColorProps } from '../constants/color';
 import ButtonComponent from './ButtonComponent';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { CorrectLight, CrossLight } from '../helper/icon';
 import { LanguageConstant } from '../constants/language_constants';
+import { CorrectLight, CrossLight } from '../helper/icon';
+import { fs } from '../helper/fontSize';
 
 interface UserRequestListProp {
   userId: string;
   imageUrl: string;
   userName: string;
-  isRequested: boolean;
   currentUserId: string;
+  isRequested: boolean;
 }
 const UserRequestListComponent: React.FC<UserRequestListProp> = ({
   userId,
@@ -32,27 +32,17 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
   const styles = userRequestListComponentStyle(colors);
   const database = firestore().collection('UsersData');
 
-  const acceptRequest = async () => {
+  const addFollower = async () => {
     try {
       await database
         .doc(currentUserId)
         .update({ follower: arrayUnion(userId) })
-        .catch(err => {
-          throw err;
+        .then(() => {
+          showMessage({
+            message: `${t(LanguageConstant.youStartedFollowing)}` + userName,
+            type: 'success',
+          });
         });
-
-      await database
-        .doc(userId)
-        .update({ following: arrayUnion(currentUserId) })
-        .catch(err => {
-          throw err;
-        });
-      removeRequest();
-
-      showMessage({
-        message: `${t(LanguageConstant.youFollowed)}` + userName,
-        type: 'success',
-      });
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
@@ -62,26 +52,17 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
     }
   };
 
-  const removeRequest = async () => {
+  const addFollowing = async () => {
     try {
       await database
         .doc(userId)
-        .update({ requestSent: arrayRemove(currentUserId) })
-        .catch(err => {
-          throw err;
+        .update({ following: arrayUnion(currentUserId) })
+        .then(() => {
+          showMessage({
+            message: `${t(LanguageConstant.youFollowed)}` + userName,
+            type: 'success',
+          });
         });
-
-      await database
-        .doc(currentUserId)
-        .update({ requestCome: arrayRemove(userId) })
-        .catch(err => {
-          throw err;
-        });
-
-      showMessage({
-        message: t(LanguageConstant.cancelFollowRequest),
-        type: 'success',
-      });
     } catch (error) {
       showMessage({
         message: t(LanguageConstant.error),
@@ -89,6 +70,55 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
         type: 'success',
       });
     }
+  };
+  const acceptRequest = () => {
+    addFollower();
+    addFollowing();
+    removeRequest();
+  };
+
+  const removeFollowRequest = async () => {
+    try {
+      await database
+        .doc(userId)
+        .update({ requestSent: arrayRemove(currentUserId) })
+        .then(() => {
+          showMessage({
+            message: t(LanguageConstant.cancelFollowRequest),
+            type: 'success',
+          });
+        });
+    } catch (error) {
+      showMessage({
+        message: t(LanguageConstant.error),
+        description: t(LanguageConstant.error_message),
+        type: 'success',
+      });
+    }
+  };
+
+  const removeComeFollowRequest = async () => {
+    try {
+      await database
+        .doc(currentUserId)
+        .update({ requestCome: arrayRemove(userId) })
+        .then(() => {
+          showMessage({
+            message: t(LanguageConstant.cancelFollowRequest),
+            type: 'success',
+          });
+        });
+    } catch (error) {
+      showMessage({
+        message: t(LanguageConstant.error),
+        description: t(LanguageConstant.error_message),
+        type: 'success',
+      });
+    }
+  };
+  const removeRequest = () => {
+    removeFollowRequest();
+    removeComeFollowRequest();
   };
 
   return (

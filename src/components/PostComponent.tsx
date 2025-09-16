@@ -1,43 +1,34 @@
-import React, { useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { Image, StyleSheet, Text, useColorScheme, View } from 'react-native';
 
 import moment from 'moment';
 import { t } from 'i18next';
-import firestore, {
-  arrayRemove,
-  arrayUnion,
-} from '@react-native-firebase/firestore';
-import { showMessage } from 'react-native-flash-message';
 
 import {
+  More,
   Message,
+  SaveDark,
   HeartDark,
   MessageDark,
   CommnetDark,
-  LikedHeart,
 } from '../helper/icon';
-import { Comment } from '../helper/icon';
+import { Comment, Save } from '../helper/icon';
 import { ColorProps } from '../constants/color';
 import Heart from '../assets/icons/HeartOutline.svg';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { LanguageConstant } from '../constants/language_constants';
 import { fs } from '../helper/fontSize';
 import CarouselComponent from './CarouselComponent';
-import { useTheme } from '../hooks/useTheme';
 
 interface PostProp {
   date: string;
-  likes: Array<string>;
+  likes: number;
   title: string;
-  comment: Array<object>;
+  comment: number;
   imageUrl: string;
   description: string;
   imagePost: Array<string>;
   userName: string;
-  userId: string;
-  postId: string;
-  currentUserID: string;
-  onOpenComments: () => void;
 }
 
 const PostComponent: React.FC<PostProp> = ({
@@ -48,64 +39,13 @@ const PostComponent: React.FC<PostProp> = ({
   date,
   imageUrl,
   userName,
-  userId,
-  postId,
-  currentUserID,
-  onOpenComments,
 }) => {
-  const [isLiked, setIsLiked] = useState(likes.includes(currentUserID));
-  const [islikeCount, setIsLikeCount] = useState(likes.length);
-
-  const colors = useThemeColors();
-  const { isDarkMode } = useTheme();
-  const styles = postComponentStyle(colors);
-
+  const colorScheme = useColorScheme();
   const postCreationDateTime = moment(date, 'MM/DD/YYYY hh:mm:ss a');
   const calculatedDateTime = postCreationDateTime.fromNow();
+  const colors = useThemeColors();
+  const styles = postComponentStyle(colors);
 
-  const liked = async () => {
-    try {
-      await firestore()
-        .collection('UsersData')
-        .doc(userId)
-        .collection('PostData')
-        .doc(postId)
-        .update({ like: arrayUnion(currentUserID) })
-        .catch(err => {
-          throw err;
-        });
-      setIsLikeCount(prev => prev + 1);
-    } catch (error) {
-      showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
-        type: 'success',
-      });
-    }
-
-    console.log('Post Liked');
-  };
-
-  const disLiked = async () => {
-    try {
-      await firestore()
-        .collection('UsersData')
-        .doc(userId)
-        .collection('PostData')
-        .doc(postId)
-        .update({ like: arrayRemove(currentUserID) })
-        .catch(err => {
-          throw err;
-        });
-      setIsLikeCount(prev => prev - 1);
-    } catch (error) {
-      showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
-        type: 'success',
-      });
-    }
-  };
   return (
     <View style={styles.mainLayoutStyle}>
       <View style={styles.modalStyle}>
@@ -117,6 +57,9 @@ const PostComponent: React.FC<PostProp> = ({
                 <Text style={styles.nameStyle}>{userName}</Text>
                 <Text style={styles.textStyle}>{title}</Text>
               </View>
+            </View>
+            <View style={styles.moreBtnStyle}>
+              <More height={30} width={30} stroke={colors.text} />
             </View>
           </View>
         </View>
@@ -132,44 +75,35 @@ const PostComponent: React.FC<PostProp> = ({
       </View>
       <View style={styles.actionsStyle}>
         <View style={styles.actionBtnStyle}>
-          <TouchableOpacity
-            onPress={() => {
-              setIsLiked(!isLiked);
-              isLiked ? disLiked() : liked();
-            }}
-          >
-            {isDarkMode ? (
-              isLiked ? (
-                <LikedHeart height={24} width={24} />
-              ) : (
-                <HeartDark height={25} width={25} />
-              )
-            ) : isLiked ? (
-              <LikedHeart height={24} width={24} />
-            ) : (
-              <Heart />
-            )}
-          </TouchableOpacity>
-
+          {colorScheme === 'light' ? (
+            <Heart />
+          ) : (
+            <HeartDark height={25} width={25} />
+          )}
           <View style={styles.commentBtnStyle}>
-            <TouchableOpacity
-              onPress={() => {
-                onOpenComments();
-              }}
-            >
-              {isDarkMode ? (
-                <CommnetDark height={28} width={28} stroke={colors.text} />
-              ) : (
-                <Comment />
-              )}
-            </TouchableOpacity>
+            {colorScheme === 'light' ? (
+              <Comment />
+            ) : (
+              <CommnetDark height={28} width={28} stroke={colors.text} />
+            )}
           </View>
-          {isDarkMode ? <MessageDark height={25} width={25} /> : <Message />}
+          {colorScheme === 'light' ? (
+            <Message />
+          ) : (
+            <MessageDark height={25} width={25} />
+          )}
+        </View>
+        <View style={styles.saveBtnStyle}>
+          {colorScheme === 'light' ? (
+            <Save />
+          ) : (
+            <SaveDark height={30} width={30} />
+          )}
         </View>
       </View>
 
       <Text style={styles.likeStyle}>
-        {islikeCount + ' ' + t(LanguageConstant.likes)}
+        {likes + ' ' + t(LanguageConstant.likes)}
       </Text>
 
       {description && (
