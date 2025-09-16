@@ -1,14 +1,9 @@
 import React from 'react';
-import {
-  View,
-  TextInput,
-  StyleSheet,
-  useColorScheme,
-  TextInputFocusEvent,
-} from 'react-native';
+import { View, TextInput, StyleSheet, TextInputFocusEvent } from 'react-native';
 
 import { useThemeColors } from '../hooks/useThemeColors';
 import { ColorProps } from '../constants/color';
+import { useTheme } from '../hooks/useTheme';
 
 interface TextboxProp {
   value: string;
@@ -25,7 +20,7 @@ const InputText: React.FC<TextboxProp> = ({
   onBlur,
   isEditable,
 }) => {
-  const colorScheme = useColorScheme();
+  const { isDarkMode } = useTheme();
   const colors = useThemeColors();
   const styles = inputTextStyle(colors);
 
@@ -38,7 +33,7 @@ const InputText: React.FC<TextboxProp> = ({
         onChangeText={onChange}
         placeholder={placeholder}
         placeholderTextColor={colors.placeholderTextColor}
-        keyboardAppearance={colorScheme === 'dark' ? 'dark' : 'light'}
+        keyboardAppearance={isDarkMode ? 'dark' : 'light'}
         style={styles.inputText}
       />
     </View>

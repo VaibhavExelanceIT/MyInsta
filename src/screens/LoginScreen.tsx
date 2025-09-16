@@ -8,12 +8,12 @@ import {
   StyleSheet,
   I18nManager,
   TouchableOpacity,
-  useColorScheme,
+  ScrollView,
 } from 'react-native';
 
 import * as Yup from 'yup';
 import { t } from 'i18next';
-import { Formik } from 'formik';
+import { useFormik } from 'formik';
 import {
   getAuth,
   firebase,
@@ -26,8 +26,9 @@ import { useNavigation } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 import InputText from '../components/InputText';
 import i18n from '../constants/language/i18next';
@@ -37,8 +38,11 @@ import ButtonComponent from '../components/ButtonComponent';
 import { LanguageConstant } from '../constants/language_constants';
 import { instadark, instalight, googlelogo } from '../helper/images';
 import { fs } from '../helper/fontSize';
+import { CrossLight } from '../helper/icon';
+import LoaderComponent from '../components/LoaderComponent';
+import { useTheme } from '../hooks/useTheme';
 
-const validationSchema = Yup.object().shape({
+let validationSchema = Yup.object().shape({
   email: Yup.string()
     .required(t(LanguageConstant.email_required))
     .email(t(LanguageConstant.email_error)),
@@ -62,11 +66,15 @@ const LoginScreen = () => {
   ]);
   const [value, setValue] = useState<any>();
   const [isOpen, setIsOpen] = useState(false);
+
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { isDarkMode } = useTheme();
 
   const auth = getAuth();
   const colors = useThemeColors();
-  const colorScheme = useColorScheme() === 'dark';
+
   const navigation = useNavigation<any>();
   const styles = loginScreenStyle(colors);
 
@@ -84,7 +92,7 @@ const LoginScreen = () => {
     }
   }, []);
 
-  colorScheme
+  isDarkMode
     ? DropDownPicker.setTheme('DARK')
     : DropDownPicker.setTheme('LIGHT');
 
@@ -107,7 +115,8 @@ const LoginScreen = () => {
       await GoogleSignin.hasPlayServices({
         showPlayServicesUpdateDialog: true,
       });
-
+      setIsLoading(true);
+      setIsModalVisible(true);
       const signInResult = await GoogleSignin.signIn();
 
       let idToken: any = signInResult.data?.idToken;
@@ -131,8 +140,12 @@ const LoginScreen = () => {
         navigation.navigate('UserDetailsScreeen', { email: userEmail });
       }
 
+      setIsLoading(false);
+      setIsModalVisible(false);
       return signInWithCredential(getAuth(), googleCredential);
     } catch (error) {
+      setIsLoading(false);
+      setIsModalVisible(false);
       showMessage({
         message: t(LanguageConstant.error),
         description: `${t(LanguageConstant.error_message)} ${error}`,
@@ -169,7 +182,11 @@ const LoginScreen = () => {
         });
         navigation.navigate('UserDetailsScreeen', { email: values.email });
       }
+      setIsModalVisible(false);
+      setIsLoading(false);
     } catch (error) {
+      setIsModalVisible(false);
+      setIsLoading(false);
       showMessage({
         message: t(LanguageConstant.error),
         description: t(LanguageConstant.email_password_error),
@@ -192,8 +209,22 @@ const LoginScreen = () => {
     }
   };
 
+  const formik = useFormik({
+    initialValues: {
+      email: 'vai@gmail.com',
+      password: 'Vai@123456',
+    },
+
+    onSubmit: values => {
+      setIsLoading(true);
+      setIsModalVisible(true);
+      userSignIn(values);
+    },
+    validationSchema,
+  });
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View style={styles.dropDownView}>
         <DropDownPicker
           open={isOpen}
@@ -204,158 +235,142 @@ const LoginScreen = () => {
           setItems={setItems}
           showBadgeDot={true}
           itemSeparator={true}
-          placeholder={t(LanguageConstant.english)}
+          placeholder={t(LanguageConstant.selectedLanguage)}
           style={styles.dropDownStyle}
           onChangeValue={e => changeLanguage(e)}
           containerStyle={[styles.dropDownContainer]}
         />
       </View>
 
-      <View style={styles.logoView}>
-        <Image source={colorScheme ? instadark : instalight} />
-      </View>
-
-      <View style={styles.formView}>
-        <Formik
-          initialValues={{
-            email: 'vai@gmail.com',
-            password: 'Vai@123456',
-          }}
-          onSubmit={values => {
-            userSignIn(values);
-          }}
-          validationSchema={validationSchema}
-        >
-          {({
-            values,
-            errors,
-            touched,
-            handleBlur,
-            handleChange,
-            handleSubmit,
-          }) => (
-            <>
-              <InputText
-                value={values.email}
-                onBlur={handleBlur('email')}
-                onChange={handleChange('email')}
-                placeholder={t(LanguageConstant.email)}
-              />
-              {errors.email && touched.email && (
-                <Text style={styles.errorText}>{errors.email}</Text>
-              )}
-              <InputText
-                value={values.password}
-                onBlur={handleBlur('password')}
-                onChange={handleChange('password')}
-                placeholder={t(LanguageConstant.password)}
-              />
-              {errors.password && touched.password && (
-                <Text style={styles.errorText}>{errors.password}</Text>
-              )}
-              <TouchableOpacity
-                style={styles.forgetButtonStyle}
-                onPress={() => setIsModalVisible(true)}
-              >
-                <Text style={styles.forgetTextStyle}>
-                  {t(LanguageConstant.forgetPassword)}
-                </Text>
-              </TouchableOpacity>
-              <ButtonComponent
-                title={t(LanguageConstant.login)}
-                onClick={handleSubmit}
-                btnStyle={styles.btnStyle}
-                textStyle={styles.textStyle}
-              />
-            </>
-          )}
-        </Formik>
-
-        <View style={styles.signUpView}>
-          <Text style={styles.text}>
-            {t(LanguageConstant.doNotHaveAccount)}
-          </Text>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('SignupScreen');
-            }}
-          >
-            <Text style={styles.signUpStyle}>{t(LanguageConstant.signup)}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View style={styles.googleView}>
-        <View style={styles.dashStyle} />
-        <Text style={styles.orStyle}>{t(LanguageConstant.or)}</Text>
-        <View style={styles.dashStyle} />
-      </View>
-
-      <View style={styles.socialView}>
-        <View style={styles.socialLogoView}>
-          <TouchableOpacity onPress={() => googleSignIn()}>
-            <Image style={styles.socialLogo} source={googlelogo} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.textViewStyle}>
-          <Text style={styles.textStyleFrom}>{t(LanguageConstant.from)}</Text>
-          <Text style={styles.textStyleFacebook}>
-            {t(LanguageConstant.facebook)}
+      <ScrollView style={styles.scrollViewStyle}>
+        <View style={styles.logoView}>
+          <View style={styles.logoView}>
+            <Image source={isDarkMode ? instalight : instadark} />
+          </View>
+          <Text style={styles.textDarkStyle}>
+            {t(LanguageConstant.loginForm)}
           </Text>
         </View>
-      </View>
-      <Modal
-        transparent={true}
-        animationType="slide"
-        visible={isModalVisible}
-        onRequestClose={() => {
-          setIsModalVisible(false);
-        }}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Formik
-              initialValues={{
-                email: '',
-              }}
-              onSubmit={values => {
-                resetPassword(values.email);
-              }}
-              validationSchema={validationSchema}
+
+        <View style={styles.formView}>
+          <>
+            <InputText
+              value={formik.values.email}
+              onBlur={formik.handleBlur('email')}
+              onChange={formik.handleChange('email')}
+              placeholder={t(LanguageConstant.email)}
+            />
+            {formik.errors.email && formik.touched.email && (
+              <Text style={styles.errorText}>{formik.errors.email}</Text>
+            )}
+            <InputText
+              value={formik.values.password}
+              onBlur={formik.handleBlur('password')}
+              onChange={formik.handleChange('password')}
+              placeholder={t(LanguageConstant.password)}
+            />
+            {formik.errors.password && formik.touched.password && (
+              <Text style={styles.errorText}>{formik.errors.password}</Text>
+            )}
+            <TouchableOpacity
+              style={styles.forgetButtonStyle}
+              onPress={() => setIsModalVisible(true)}
             >
-              {({
-                values,
-                errors,
-                touched,
-                handleBlur,
-                handleSubmit,
-                handleChange,
-              }) => (
+              <Text style={styles.forgetTextStyle}>
+                {t(LanguageConstant.forgetPassword)}
+              </Text>
+            </TouchableOpacity>
+            <ButtonComponent
+              title={t(LanguageConstant.login)}
+              onClick={formik.handleSubmit}
+              btnStyle={styles.btnStyle}
+              textStyle={styles.textStyle}
+            />
+          </>
+
+          <View style={styles.signUpView}>
+            <Text style={styles.text}>
+              {t(LanguageConstant.doNotHaveAccount)}
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('SignupScreen');
+              }}
+            >
+              <Text style={styles.signUpStyle}>
+                {t(LanguageConstant.signup)}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.googleView}>
+          <View style={styles.dashStyle} />
+          <Text style={styles.orStyle}>{t(LanguageConstant.or)}</Text>
+          <View style={styles.dashStyle} />
+        </View>
+
+        <View style={styles.socialView}>
+          <View style={styles.socialLogoView}>
+            <TouchableOpacity onPress={() => googleSignIn()}>
+              <Image style={styles.socialLogo} source={googlelogo} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <Modal
+          transparent={true}
+          animationType="slide"
+          visible={isModalVisible}
+          onRequestClose={() => {
+            setIsModalVisible(false);
+          }}
+        >
+          {isLoading ? (
+            <LoaderComponent
+              isLoading={isLoading}
+              isModalVisible={isModalVisible}
+            />
+          ) : (
+            <View style={styles.centeredView}>
+              <View style={styles.modalView}>
                 <>
+                  <TouchableOpacity
+                    onPress={() => setIsModalVisible(false)}
+                    style={styles.btnCloseStyle}
+                  >
+                    <CrossLight height={20} width={20} />
+                  </TouchableOpacity>
                   <InputText
                     placeholder={t(LanguageConstant.email)}
-                    value={values.email}
-                    onChange={handleChange('email')}
-                    onBlur={handleBlur('email')}
+                    value={formik.values.email}
+                    onChange={formik.handleChange('email')}
+                    onBlur={formik.handleBlur('email')}
                   />
-                  {errors.email && touched.email && (
-                    <Text style={styles.errorText}>{errors.email}</Text>
+                  {formik.errors.email && formik.touched.email && (
+                    <Text style={styles.errorText}>{formik.errors.email}</Text>
                   )}
 
                   <TouchableOpacity
                     style={[styles.button]}
-                    onPress={() => handleSubmit()}
+                    onPress={() => formik.handleSubmit()}
                   >
                     <Text style={styles.textStyle}>
                       {t(LanguageConstant.submit)}
                     </Text>
                   </TouchableOpacity>
                 </>
-              )}
-            </Formik>
-          </View>
-        </View>
-      </Modal>
-    </View>
+              </View>
+            </View>
+          )}
+        </Modal>
+      </ScrollView>
+      <View style={styles.textViewStyle}>
+        <Text style={styles.textStyleFrom}>{t(LanguageConstant.from)}</Text>
+        <Text style={styles.textStyleFacebook}>
+          {t(LanguageConstant.facebook)}
+        </Text>
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -363,6 +378,9 @@ export default LoginScreen;
 
 const loginScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
+    scrollViewStyle: {
+      marginTop: 40,
+    },
     textStyleFrom: {
       fontSize: fs(14),
       fontWeight: '600',
@@ -373,7 +391,7 @@ const loginScreenStyle = (colors: ColorProps) =>
       fontWeight: '400',
       color: colors.text,
     },
-    textViewStyle: { margin: 20, alignItems: 'center' },
+    textViewStyle: { alignItems: 'center' },
     socialLogoView: {
       margin: 20,
       flexDirection: 'row',
@@ -393,7 +411,11 @@ const loginScreenStyle = (colors: ColorProps) =>
       borderWidth: 0.8,
       borderColor: colors.dashcolor,
     },
-    signUpView: { flexDirection: 'row', justifyContent: 'center' },
+    signUpView: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginVertical: 20,
+    },
     signUpStyle: { fontWeight: '700', color: colors.primaryblue },
     forgetTextStyle: {
       color: colors.primaryblue,
@@ -414,6 +436,7 @@ const loginScreenStyle = (colors: ColorProps) =>
     },
     logoView: {
       alignSelf: 'center',
+      marginBottom: 20,
     },
     dropDownContainer: {
       flex: 1,
@@ -422,10 +445,8 @@ const loginScreenStyle = (colors: ColorProps) =>
       alignSelf: 'center',
     },
     dropDownView: {
-      flex: 1,
-      padding: 20,
+      flex: 0.7,
       alignItems: 'center',
-      paddingHorizontal: 15,
     },
 
     container: {
@@ -437,7 +458,7 @@ const loginScreenStyle = (colors: ColorProps) =>
     },
     errorText: {
       color: 'red',
-      fontSize: fs(16),
+      fontSize: fs(13),
       fontWeight: '800',
     },
 
@@ -445,11 +466,13 @@ const loginScreenStyle = (colors: ColorProps) =>
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalView: {
       padding: 30,
       elevation: 5,
       width: '90%',
+      maxWidth: '90%',
       shadowRadius: 4,
       borderRadius: 20,
       shadowOpacity: 0.25,
@@ -482,5 +505,20 @@ const loginScreenStyle = (colors: ColorProps) =>
       padding: 10,
       borderRadius: 6,
       backgroundColor: colors.primaryblue,
+    },
+    textDarkStyle: {
+      fontSize: fs(30),
+      fontWeight: '600',
+      textAlign: 'center',
+      color: colors.text,
+      textDecorationLine: 'underline',
+      textDecorationColor: colors.text,
+    },
+    btnCloseStyle: {
+      borderWidth: 1,
+      borderRadius: 5,
+      alignSelf: 'flex-end',
+      borderColor: colors.listBackgroundColor,
+      backgroundColor: colors.commentTextStyle,
     },
   });

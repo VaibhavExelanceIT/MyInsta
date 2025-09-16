@@ -1,3 +1,5 @@
+import 'react-native-gesture-handler';
+import 'react-native-reanimated';
 import React from 'react';
 
 import {
@@ -5,27 +7,35 @@ import {
   DefaultTheme,
   NavigationContainer,
 } from '@react-navigation/native';
-import RootStack from './src/navigation/RootStack';
+
 import FlashMessage from 'react-native-flash-message';
+
 import { useColorScheme } from 'react-native';
-import { ThemeProvider } from './src/context/ThemeContext';
-import LoginScreen from './src/screens/LoginScreen';
-import i18n from './src/constants/language/i18next';
 import { I18nextProvider } from 'react-i18next';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+import RootStack from './src/navigation/RootStack';
+import { ThemeProvider } from './src/context/ThemeContext';
+import i18n from './src/constants/language/i18next';
 
 const App = () => {
   const scheme = useColorScheme();
   const MyTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
   return (
-    <ThemeProvider>
-      <I18nextProvider i18n={i18n}>
-        <NavigationContainer theme={MyTheme}>
-          <FlashMessage position="top" />
-          {/* <LoginScreen /> */}
-          <RootStack />
-        </NavigationContainer>
-      </I18nextProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <I18nextProvider i18n={i18n}>
+          <SafeAreaProvider>
+            <NavigationContainer theme={MyTheme}>
+              <FlashMessage position="top" />
+              <RootStack />
+            </NavigationContainer>
+          </SafeAreaProvider>
+        </I18nextProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 };
 

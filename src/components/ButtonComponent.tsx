@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { SvgProps } from 'react-native-svg';
+
 import { fs } from '../helper/fontSize';
 
 interface ButtonProp {
@@ -33,11 +34,7 @@ const ButtonComponent: React.FC<ButtonProp> = ({
     <View style={styles.containerStyle}>
       <TouchableOpacity style={btnStyle} onPress={onClick}>
         <View style={{ flex: 1, alignSelf: 'center' }}>
-          {IconComponent ? (
-            <IconComponent height={fs(20)} width={fs(20)} />
-          ) : (
-            <></>
-          )}
+          {IconComponent && <IconComponent height={fs(20)} width={fs(20)} />}
         </View>
 
         <Text style={[styles.text, textStyle]}>{title}</Text>

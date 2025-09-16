@@ -8,7 +8,6 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  useColorScheme,
 } from 'react-native';
 
 import * as Yup from 'yup';
@@ -19,6 +18,7 @@ import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ArrayUrl } from '../helper/imagesUrl';
 import { ColorProps } from '../constants/color';
@@ -29,9 +29,10 @@ import {
   SettingMenu,
   SettingMenuDark,
 } from '../helper/icon';
+import { fs } from '../helper/fontSize';
+import { useTheme } from '../hooks/useTheme';
 import { instadark, instalight } from '../helper/images';
 import { LanguageConstant } from '../constants/language_constants';
-import { fs } from '../helper/fontSize';
 
 const validationSchema = Yup.object().shape({
   title: Yup.string().required(t(LanguageConstant.titleRequired)),
@@ -44,13 +45,12 @@ interface PostType {
 
 const AddPostScreen = () => {
   const [uri, setUri] = useState<string[]>([]);
-  const [isChanges, setIsChanges] = useState(false);
 
-  const navigation = useNavigation<any>();
-  const colorScheme = useColorScheme();
   const { t } = useTranslation();
-
   const colors = useThemeColors();
+  const { isDarkMode } = useTheme();
+  const navigation = useNavigation<any>();
+
   const styles = addPostScreenScreen(colors);
 
   const currentDate = new Date();
@@ -61,11 +61,7 @@ const AddPostScreen = () => {
   const currentUser = auth().currentUser;
   const userId = currentUser ? currentUser.uid : null;
 
-  useEffect(() => {
-    setUri([]);
-  }, [isChanges]);
-
-  const submitHandler = (value: PostType) => {
+  const submitHandler = (value: PostType, resetForm: () => void) => {
     if (userId !== null) {
       const usersCollection = firestore()
         .collection('UsersData')
@@ -78,8 +74,8 @@ const AddPostScreen = () => {
           description: value.description,
           postURL: uri,
           dateAndTime: dateTime,
-          like: 0,
-          comment: 0,
+          like: [],
+          comment: [],
         })
         .then(() => {
           showMessage({
@@ -87,10 +83,12 @@ const AddPostScreen = () => {
             description: t(LanguageConstant.postCreatedSuccesfull),
             type: 'success',
           });
-          setIsChanges(!isChanges);
+          setUri([]);
+          resetForm();
+
           navigation.navigate('MyTab', { screen: 'HomeScreen' });
         })
-        .catch(error => {
+        .catch(() => {
           showMessage({
             type: 'danger',
             message: t(LanguageConstant.error),
@@ -115,21 +113,21 @@ const AddPostScreen = () => {
   };
 
   return (
-    <View style={styles.mainLayout}>
+    <SafeAreaView style={styles.mainLayout} edges={['top', 'left', 'right']}>
       <View style={styles.sortStyle}>
         <View style={styles.userIcon}>
           <TouchableOpacity onPress={openDrawer} style={styles.userIcon}>
-            {colorScheme === 'light' ? (
-              <SettingMenu height={30} width={30} />
-            ) : (
+            {isDarkMode ? (
               <SettingMenuDark height={30} width={30} />
+            ) : (
+              <SettingMenu height={30} width={30} />
             )}
           </TouchableOpacity>
         </View>
         <View style={styles.logoView}>
           <Image
             style={styles.imageStyle}
-            source={colorScheme === 'light' ? instadark : instalight}
+            source={isDarkMode ? instalight : instadark}
           />
         </View>
       </View>
@@ -155,10 +153,10 @@ const AddPostScreen = () => {
               />
             ) : (
               <TouchableOpacity style={styles.imagePost} onPress={imageGallery}>
-                {colorScheme === 'light' ? (
-                  <AddOutline height={70} width={70} />
-                ) : (
+                {isDarkMode ? (
                   <AddDark height={70} width={70} />
+                ) : (
+                  <AddOutline height={70} width={70} />
                 )}
                 <Text style={styles.textStyle}>
                   {t(LanguageConstant.add_image)}
@@ -171,8 +169,8 @@ const AddPostScreen = () => {
               title: '',
               description: '',
             }}
-            onSubmit={values => {
-              submitHandler(values);
+            onSubmit={(values, { resetForm }) => {
+              submitHandler(values, resetForm);
             }}
             validationSchema={validationSchema}
           >
@@ -223,7 +221,7 @@ const AddPostScreen = () => {
           </Formik>
         </ScrollView>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -231,7 +229,9 @@ export default AddPostScreen;
 
 const addPostScreenScreen = (colors: ColorProps) =>
   StyleSheet.create({
-    viewStyle: { flex: 1 },
+    viewStyle: {
+      flex: 2,
+    },
     imageStyle: {
       alignSelf: 'center',
     },
@@ -260,7 +260,6 @@ const addPostScreenScreen = (colors: ColorProps) =>
       borderWidth: 0.5,
       borderRadius: 30,
       paddingLeft: 20,
-      padding: 20,
       marginVertical: 10,
     },
     postUploadStyle: {
@@ -289,7 +288,7 @@ const addPostScreenScreen = (colors: ColorProps) =>
     },
     sortStyle: {
       flexDirection: 'row',
-      paddingTop: 30,
+      paddingTop: 10,
       paddingBottom: 10,
       paddingHorizontal: 10,
       justifyContent: 'space-between',

@@ -37,6 +37,10 @@ import BellFillDark from '../assets/icons/BellFillDark.svg';
 import BellFillLight from '../assets/icons/BellFillLight.svg';
 import BellOutlineLight from '../assets/icons/BellOutlineLight.svg';
 import BellOutlineDark from '../assets/icons/BellOutlineDark.svg';
+import BackArrowLight from '../assets/icons/BackArrowLight.svg';
+import BackArrowDark from '../assets/icons/BackArrowDark.svg';
+
+import LikedHeart from '../assets/icons/LikedHeart.svg';
 
 export {
   HomeFill,
@@ -77,4 +81,7 @@ export {
   BellFillLight,
   BellOutlineDark,
   BellOutlineLight,
+  BackArrowDark,
+  BackArrowLight,
+  LikedHeart,
 };
