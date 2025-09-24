@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Text,
   View,
   Image,
   FlatList,
@@ -7,25 +8,25 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
+  TouchableWithoutFeedback,
 } from 'react-native';
 
-import { t } from 'i18next';
 import auth from '@react-native-firebase/auth';
 import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { SettingMenu, SettingMenuDark } from '../helper/icon';
+import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
 import PostComponent from '../components/PostComponent';
-import { instadark, instalight } from '../helper/images';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { LanguageConstant } from '../constants/language_constants';
-import { useTheme } from '../hooks/useTheme';
+import { instadark, instalight, personAdd } from '../helper/images';
+import { SettingMenu, SettingMenuDark } from '../helper/icon';
 import BottomSheetComponent, {
-  BottomSheetHandler,
   CommentType,
+  BottomSheetHandler,
 } from '../components/BottomSheetComponent';
+import { getText } from '../constants/language/i18next';
 
 interface Post {
   name: string;
@@ -34,11 +35,11 @@ interface Post {
   postId: string;
   like: Array<string>;
   title: string;
-  comment: Array<CommentType>;
   dateAndTime: string;
   description: string;
-  postURL: Array<string>;
   currentUserID: string;
+  postURL: Array<string>;
+  comment: Array<CommentType>;
 }
 
 interface userData {
@@ -53,20 +54,33 @@ const HomeScreen = ({ navigation }: any) => {
   const [isloading, setIsLoading] = useState(true);
   const [isrefreshing, setIsRefreshing] = useState(false);
   const [currentUserImage, setCurrentUserImage] = useState<string>('');
+  const [postID, setPostID] = useState<string>('');
+  const [initializing, setInitializing] = useState(true);
+  const [postUserID, setPostUserID] = useState<string>('');
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const { isDarkMode } = useTheme();
   const colors = useThemeColors();
   const styles = homeScreenStyle(colors);
-
-  const currentUser = auth().currentUser;
 
   const userId = currentUser ? currentUser.uid : '';
 
   const bottomSheetRef = useRef<BottomSheetHandler>(null);
   const [selectedComments, setSelectedComments] = useState<CommentType[]>([]);
 
-  const [postID, setPostID] = useState<string>('');
-  const [postUserID, setPostUserID] = useState<string>('');
+  useEffect(() => {
+    setIsLoading(true);
+    const unsubscribe = auth().onAuthStateChanged(user => {
+      setCurrentUser(user);
+      if (initializing) setInitializing(false);
+    });
+
+    return unsubscribe;
+  }, [initializing]);
+
+  useEffect(() => {
+    getPost();
+  }, [currentUser]);
 
   const handleOpenBottomSheet = (
     comments: CommentType[],
@@ -80,6 +94,7 @@ const HomeScreen = ({ navigation }: any) => {
   };
 
   const onRefresh = () => {
+    setIsLoading(true);
     setIsRefreshing(true);
     getPost();
     setTimeout(() => {
@@ -88,28 +103,32 @@ const HomeScreen = ({ navigation }: any) => {
   };
 
   const getData = async (id: string, name: string, userImage: string) => {
-    const data = await firestore()
-      .collection('UsersData')
-      .doc(id)
-      .collection('PostData')
-      .get();
+    try {
+      const data = await firestore()
+        .collection('UsersData')
+        .doc(id)
+        .collection('PostData')
+        .get();
 
-    data.docs.forEach(item => {
-      setPost(prevState => [
-        ...prevState,
-        {
-          name: name,
-          userImage: userImage,
-          userId: id,
-          postId: item.id,
-          currentUserID: userId,
-          ...item.data(),
-        } as Post,
-      ]);
-      console.log(item.data());
-    });
-    setIsLoading(false);
-    return data.docs;
+      data.docs.forEach(item => {
+        setPost(prevState => [
+          ...prevState,
+          {
+            name: name,
+            userImage: userImage,
+            userId: id,
+            postId: item.id,
+            currentUserID: userId,
+            ...item.data(),
+          } as Post,
+        ]);
+      });
+      setIsLoading(false);
+      return data.docs;
+    } catch (error) {
+      setIsLoading(false);
+      return;
+    }
   };
 
   const getPost = async () => {
@@ -131,10 +150,12 @@ const HomeScreen = ({ navigation }: any) => {
             setCurrentUserImage(currentUserImage);
           }
         });
+      setIsLoading(false);
     } catch (error) {
+      setIsLoading(false);
       showMessage({
-        message: t(LanguageConstant.error),
-        description: `${t(LanguageConstant.error_message)} `,
+        message: getText('error'),
+        description: `${getText('error_message')} `,
         type: 'danger',
       });
     }
@@ -158,18 +179,17 @@ const HomeScreen = ({ navigation }: any) => {
           userImage: ele.data().userImage,
         }));
 
+      setIsLoading(false);
       return filteredUsers;
     } catch (error) {
+      setIsLoading(false);
       showMessage({
-        message: t(LanguageConstant.error),
-        description: `${t(LanguageConstant.error_message)} `,
+        message: getText('error'),
+        description: `${getText('error_message')} `,
         type: 'danger',
       });
     }
   };
-  useEffect(() => {
-    getPost();
-  }, [isDarkMode]);
 
   const openDrawer = () => {
     navigation.openDrawer();
@@ -196,6 +216,17 @@ const HomeScreen = ({ navigation }: any) => {
       </View>
       {isloading ? (
         <ActivityIndicator size={'large'} />
+      ) : post.length == 0 ? (
+        <View style={styles.noPostView}>
+          <TouchableWithoutFeedback
+            onPress={() => {
+              navigation.navigate('MyTab', { screen: 'SearchScreen' });
+            }}
+          >
+            <Image source={personAdd} style={styles.addImageStyle} />
+          </TouchableWithoutFeedback>
+          <Text>Please Follow Other User to see post.</Text>
+        </View>
       ) : (
         <FlatList
           refreshControl={
@@ -244,6 +275,11 @@ export default HomeScreen;
 
 const homeScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
+    addImageStyle: {
+      height: 50,
+      width: 50,
+    },
+    noPostView: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     imageStyle: { alignSelf: 'center' },
     mainLayout: {
       flex: 1,

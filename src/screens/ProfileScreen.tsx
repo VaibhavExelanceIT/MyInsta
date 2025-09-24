@@ -10,7 +10,6 @@ import {
   ScrollView,
 } from 'react-native';
 
-import { t } from 'i18next';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
@@ -23,8 +22,8 @@ import { ColorProps } from '../constants/color';
 import { useThemeColors } from '../hooks/useThemeColors';
 import ProfilePostItem from '../components/ProfilePostItem';
 import { SettingMenu, SettingMenuDark } from '../helper/icon';
-import { LanguageConstant } from '../constants/language_constants';
 import ProfileTopComponent from '../components/ProfileTopComponent';
+import { getText } from '../constants/language/i18next';
 
 interface Post {
   id: string;
@@ -67,25 +66,23 @@ const ProfileScreen = () => {
   const colors = useThemeColors();
   const styles = profileScreenStyle(colors);
 
-  const getPostData = async (id: string) => {
+  const getPostData = (id: string) => {
     try {
-      const data = await firestore()
+      firestore()
         .collection('UsersData')
         .doc(id)
         .collection('PostData')
-        .get();
-
-      data.docs.forEach(item => {
-        setPost(prevState => [...prevState, item.data() as Post]);
-      });
-
-      setIsLoading(false);
-
-      return data.docs;
+        .onSnapshot(documentSnapshot => {
+          documentSnapshot.docs.forEach(item => {
+            setPost(prevState => [...prevState, item.data() as Post]);
+            setIsLoading(false);
+            return documentSnapshot.docs;
+          });
+        });
     } catch (error) {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
+        message: getText('error'),
+        description: getText('error_message'),
         type: 'danger',
       });
     }
@@ -99,7 +96,7 @@ const ProfileScreen = () => {
   };
 
   const userData = async () => {
-    return await getAllUsersDataFirestore();
+    return getAllUsersDataFirestore();
   };
   useEffect(() => {
     userData();
@@ -108,36 +105,36 @@ const ProfileScreen = () => {
   useEffect(() => {
     setPost([]);
     const getData = async (id: string) => {
-      usersData?.id ? await getPostData(id) : '';
+      usersData?.id ? getPostData(id) : '';
     };
     usersData?.id ? getData(usersData?.id) : '';
   }, [usersData]);
 
-  const getAllUsersDataFirestore = async () => {
+  const getAllUsersDataFirestore = () => {
     try {
-      const usersCollection = await firestore()
+      firestore()
         .collection('UsersData')
         .where('email', '==', currentUser?.email)
-        .get();
-
-      const documentSnapshot = usersCollection.docs[0].data();
-      const data: User = {
-        DOB: documentSnapshot.DOB,
-        email: documentSnapshot.email,
-        id: usersCollection.docs[0].id,
-        gender: documentSnapshot.gender,
-        mobileNo: documentSnapshot.mobileNo,
-        lastName: documentSnapshot.lastName,
-        imageUrl: documentSnapshot.userImage,
-        followers: documentSnapshot.follower,
-        following: documentSnapshot.following,
-        firstName: documentSnapshot.firstName,
-      };
-      setUserData(data);
+        .onSnapshot(ds => {
+          const documentSnapshot = ds.docs[0].data();
+          const data: User = {
+            DOB: documentSnapshot.DOB,
+            email: documentSnapshot.email,
+            id: ds.docs[0].id,
+            gender: documentSnapshot.gender,
+            mobileNo: documentSnapshot.mobileNo,
+            lastName: documentSnapshot.lastName,
+            imageUrl: documentSnapshot.userImage,
+            followers: documentSnapshot.follower,
+            following: documentSnapshot.following,
+            firstName: documentSnapshot.firstName,
+          };
+          setUserData(data);
+        });
     } catch (error) {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
+        message: getText('error'),
+        description: getText('error_message'),
         type: 'danger',
       });
     }
@@ -159,9 +156,7 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.logoView}>
-          <Text style={styles.profileTextStyle}>
-            {t(LanguageConstant.profile)}
-          </Text>
+          <Text style={styles.profileTextStyle}>{getText('profile')}</Text>
         </View>
       </View>
       <ScrollView
@@ -218,9 +213,7 @@ const ProfileScreen = () => {
           </View>
         ) : (
           <View style={styles.postStyle}>
-            <Text style={styles.textStyle}>
-              {t(LanguageConstant.noPostTxt)}
-            </Text>
+            <Text style={styles.textStyle}>{getText('noPostTxt')}</Text>
           </View>
         )}
       </ScrollView>

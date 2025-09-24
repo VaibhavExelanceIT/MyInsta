@@ -1,7 +1,6 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-import { t } from 'i18next';
 import firestore, {
   arrayRemove,
   arrayUnion,
@@ -13,7 +12,8 @@ import { ColorProps } from '../constants/color';
 import ButtonComponent from './ButtonComponent';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { CorrectLight, CrossLight } from '../helper/icon';
-import { LanguageConstant } from '../constants/language_constants';
+
+import { getText } from '../constants/language/i18next';
 
 interface UserRequestListProp {
   userId: string;
@@ -50,13 +50,13 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
       removeRequest();
 
       showMessage({
-        message: `${t(LanguageConstant.youFollowed)}` + userName,
+        message: `${getText('youFollowed')}` + userName,
         type: 'success',
       });
     } catch (error) {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
+        message: getText('error'),
+        description: getText('error_message'),
         type: 'success',
       });
     }
@@ -79,13 +79,13 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
         });
 
       showMessage({
-        message: t(LanguageConstant.cancelFollowRequest),
+        message: getText('cancelFollowRequest'),
         type: 'success',
       });
     } catch (error) {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
+        message: getText('error'),
+        description: getText('error_message'),
         type: 'success',
       });
     }
@@ -103,7 +103,7 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
           <>
             <View style={styles.buttonStyle}>
               <ButtonComponent
-                title={t(LanguageConstant.decline)}
+                title={getText('decline')}
                 onClick={removeRequest}
                 btnStyle={styles.btnDeclineStyle}
                 textStyle={styles.txtDeclineStyle}
@@ -112,7 +112,7 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
             </View>
             <View style={styles.buttonStyle}>
               <ButtonComponent
-                title={t(LanguageConstant.accept)}
+                title={getText('accept')}
                 onClick={acceptRequest}
                 btnStyle={styles.btnAcceptStyle}
                 textStyle={styles.txtAcceptStyle}

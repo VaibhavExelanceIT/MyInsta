@@ -10,7 +10,6 @@ import {
   Alert,
 } from 'react-native';
 
-import { t } from 'i18next';
 import {
   DrawerItem,
   createDrawerNavigator,
@@ -18,6 +17,7 @@ import {
 } from '@react-navigation/drawer';
 import RNRestart from 'react-native-restart';
 import auth from '@react-native-firebase/auth';
+import { useTranslation } from 'react-i18next';
 import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -26,49 +26,58 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 import { ColorProps } from '../constants/color';
-import i18n from '../constants/language/i18next';
 import ThemeSwitch from '../components/ThemeSwitch';
 import BottomTabNavigation from './BottomTabNavigation';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { LanguageConstant } from '../constants/language_constants';
+
+import { useTheme } from '../hooks/useTheme';
+import { getText } from '../constants/language/i18next';
 
 const Drawer = createDrawerNavigator();
 
 const DrawerNavigation = ({ navigation }: any) => {
   const [items, setItems] = useState([
-    { label: t(LanguageConstant.english), value: 'en' },
-    { label: t(LanguageConstant.hindi), value: 'hi' },
-    { label: t(LanguageConstant.urdu), value: 'ar' },
+    { label: getText('english'), value: 'en' },
+    { label: getText('hindi'), value: 'hi' },
+    { label: getText('urdu'), value: 'ar' },
   ]);
+
   const [uri, setUri] = useState<string>();
   const [isOpen, setIsOpen] = useState(false);
   const [value, setValue] = useState<string>('en');
   const [userEmail, setEmail] = useState<string>('');
   const [focused, setFocused] = useState('HomeScreen');
 
+  const { i18n } = useTranslation();
   const colors = useThemeColors();
   const dimensions = useWindowDimensions();
-
   const styles = drawerNavigationStyle(colors);
-
+  const { isDarkMode } = useTheme();
+  isDarkMode
+    ? DropDownPicker.setTheme('DARK')
+    : DropDownPicker.setTheme('LIGHT');
   const navigationData = [
-    { name: 'HomeScreen', label: t(LanguageConstant.home) },
-    { name: 'SearchScreen', label: t(LanguageConstant.search) },
-    { name: 'AddPostScreen', label: t(LanguageConstant.addPost) },
+    { name: 'HomeScreen', label: getText('home') },
+    { name: 'SearchScreen', label: getText('search') },
+    { name: 'AddPostScreen', label: getText('addPost') },
     {
       name: 'NotificationScreen',
-      label: t(LanguageConstant.notification),
+      label: getText('notification'),
     },
-    { name: 'ProfileScreen', label: t(LanguageConstant.profile) },
+    { name: 'ProfileScreen', label: getText('profile') },
   ];
+  const user = auth().currentUser;
 
-  const getData = async (email: string) => {
-    const users = await firestore()
+  const getData = (email: string) => {
+    firestore()
       .collection('UsersData')
       .where('email', '==', email)
-      .get();
-
-    setUri(users.docs[0].data().userImage);
+      .onSnapshot(documentSnapshot => {
+        documentSnapshot.forEach(doc => {
+          console.log('User data: ', doc.data());
+          setUri(doc.data().userImage);
+        });
+      });
   };
 
   useEffect(() => {
@@ -78,10 +87,7 @@ const DrawerNavigation = ({ navigation }: any) => {
         getData(user.email);
       }
     });
-    return unsubscribeAuth;
-  }, []);
 
-  useEffect(() => {
     const unsubscribe = navigation.addListener('state', () => {
       const state = navigation.getState();
 
@@ -108,40 +114,42 @@ const DrawerNavigation = ({ navigation }: any) => {
         setFocused(currentRoute);
       }
     });
-    return unsubscribe;
+
+    return unsubscribe && unsubscribeAuth;
   }, []);
 
   const signOutGoogle = async () => {
     try {
-      const currentUser = GoogleSignin.getCurrentUser();
-      if (currentUser) {
+      const user = auth().currentUser;
+      if (!user) return;
+
+      const providerId = user.providerData[0]?.providerId;
+
+      if (providerId === 'google.com') {
         await GoogleSignin.revokeAccess();
-        await GoogleSignin.signOut();
-        showMessage({
-          message: t(LanguageConstant.success),
-          description: t(LanguageConstant.user_signout_message),
-          type: 'success',
-        });
-        navigation.popToTop();
-      } else {
-        await auth().signOut();
-        showMessage({
-          message: t(LanguageConstant.success),
-          description: t(LanguageConstant.user_signout_message),
-          type: 'success',
-        });
-        navigation.popToTop();
+        await GoogleSignin.signOut(); // Google SDK sign out
       }
+
+      await auth().signOut();
+      showMessage({
+        message: getText('success'),
+        description: getText('user_signout_message'),
+        type: 'success',
+      });
+
+      navigation.reset({ index: 0, routes: [{ name: 'loginScreen' }] });
     } catch (error) {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_signin_out),
+        message: getText('error'),
+        description: getText('error_signin_out'),
         type: 'danger',
       });
     }
   };
 
   const changeLanguage = async (language: string) => {
+    console.log('🚀 ~ changeLanguage ~ language:', language);
+
     try {
       await i18n.changeLanguage(language);
       await AsyncStorage.setItem('user-language', language);
@@ -149,8 +157,8 @@ const DrawerNavigation = ({ navigation }: any) => {
       const isRTL = language === 'ar';
       if (I18nManager.isRTL !== isRTL) {
         I18nManager.forceRTL(isRTL);
+        RNRestart.Restart();
       }
-      RNRestart.Restart();
     } catch (error) {
       Alert.alert('Error while changing language');
     }
@@ -163,9 +171,9 @@ const DrawerNavigation = ({ navigation }: any) => {
         headerShown: false,
         overlayColor: 'transparent',
         drawerStyle: {
-          backgroundColor: colors.background,
           borderRightWidth: 1,
           borderColor: colors.darwerTint,
+          backgroundColor: colors.background,
         },
         drawerType: dimensions.width >= 768 ? 'permanent' : 'front',
       }}
@@ -182,7 +190,7 @@ const DrawerNavigation = ({ navigation }: any) => {
                 setItems={setItems}
                 showBadgeDot={true}
                 itemSeparator={true}
-                placeholder={t(LanguageConstant.selectedLanguage)}
+                placeholder={getText('selectedLanguage')}
                 style={styles.dropDownStyle}
                 onChangeValue={e => e && changeLanguage(e)}
                 containerStyle={[styles.dropDownContainer]}
@@ -237,13 +245,12 @@ const DrawerNavigation = ({ navigation }: any) => {
             <View style={styles.logoutView}>
               <TouchableOpacity
                 onPress={() => {
+                  const providerIds = user?.providerData.map(p => p.providerId);
+                  console.log('🚀 ~ providerIds:', providerIds);
                   signOutGoogle();
-                  props.navigation.navigate('loginScreen');
                 }}
               >
-                <Text style={styles.textStyle}>
-                  {t(LanguageConstant.logout)}
-                </Text>
+                <Text style={styles.textStyle}>{getText('logout')}</Text>
               </TouchableOpacity>
             </View>
           </SafeAreaView>

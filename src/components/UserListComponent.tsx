@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-import { t } from 'i18next';
 import firestore, {
   arrayRemove,
   arrayUnion,
@@ -12,7 +11,8 @@ import { fs } from '../helper/fontSize';
 import ButtonComponent from './ButtonComponent';
 import { ColorProps } from '../constants/color';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { LanguageConstant } from '../constants/language_constants';
+import { sendNotification } from '../api/followNotification';
+import { getText } from '../constants/language/i18next';
 
 interface UserListProp {
   userId?: string;
@@ -39,15 +39,19 @@ const UserListComponent: React.FC<UserListProp> = ({
   const styles = userListComponentStyle(colors);
   const database = firestore().collection('UsersData');
 
+  const getToken = async () => {
+    const data = await firestore().collection('UsersData').doc(userId).get();
+    return data.data()?.token;
+  };
   const followRequest = async () => {
     try {
+      const token: string = await getToken();
       await database
         .doc(currentUserId)
         .update({ requestSent: arrayUnion(userId) })
         .catch(err => {
           throw err;
         });
-
       await database
         .doc(userId)
         .update({ requestCome: arrayUnion(currentUserId) })
@@ -55,15 +59,25 @@ const UserListComponent: React.FC<UserListProp> = ({
           throw err;
         });
 
+      sendNotification(
+        token,
+        'You have new follow request',
+        `vaibhav sent you a followed Request`,
+        'NotificationScreen',
+      );
+
+      console.log('🚀 ~ followRequest ~ currentUserId:', currentUserId);
+      console.log('🚀 ~ followRequest ~ userId:', userId);
       showMessage({
-        message: t(LanguageConstant.followRequestSent),
+        message: getText('followRequestSent'),
         type: 'success',
       });
       onActionComplete();
     } catch (error) {
+      console.log('🚀 ~ followRequest ~ error:', error);
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
+        message: getText('error'),
+        description: getText('error_message'),
         type: 'danger',
       });
     }
@@ -86,15 +100,16 @@ const UserListComponent: React.FC<UserListProp> = ({
         });
 
       showMessage({
-        message: t(LanguageConstant.cancelFollowRequest),
+        message: getText('cancelFollowRequest'),
         type: 'success',
       });
       onActionComplete();
     } catch (error) {
+      console.log('🚀 ~ removeRequest ~ error:', error);
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
-        type: 'success',
+        message: getText('error'),
+        description: getText('error_message'),
+        type: 'danger',
       });
     }
   };
@@ -116,14 +131,15 @@ const UserListComponent: React.FC<UserListProp> = ({
         });
 
       showMessage({
-        message: `${t(LanguageConstant.youUnFollowed)} ` + firstName,
+        message: `${getText('youUnFollowed')} ` + firstName,
         type: 'success',
       });
       onActionComplete();
     } catch (error) {
+      console.log('🚀 ~ onUnfollow ~ error:', error);
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
+        message: getText('error'),
+        description: getText('error_message'),
         type: 'danger',
       });
     }
@@ -138,7 +154,7 @@ const UserListComponent: React.FC<UserListProp> = ({
         {isRequested ? (
           <View style={styles.buttonStyle}>
             <ButtonComponent
-              title={t(LanguageConstant.cancelRequest)}
+              title={getText('cancelRequest')}
               onClick={removeRequest}
               btnStyle={styles.btnUnfollowStyle}
               textStyle={styles.txtUnfollowStyle}
@@ -147,7 +163,7 @@ const UserListComponent: React.FC<UserListProp> = ({
         ) : isFollowed ? (
           <View style={styles.buttonStyle}>
             <ButtonComponent
-              title={t(LanguageConstant.unFollow)}
+              title={getText('unFollow')}
               onClick={onUnfollow}
               btnStyle={styles.btnUnfollowStyle}
               textStyle={styles.txtUnfollowStyle}
@@ -156,7 +172,7 @@ const UserListComponent: React.FC<UserListProp> = ({
         ) : (
           <View style={styles.buttonStyle}>
             <ButtonComponent
-              title={t(LanguageConstant.follow)}
+              title={getText('follow')}
               onClick={followRequest}
               btnStyle={styles.btnStyle}
               textStyle={styles.textStyle}

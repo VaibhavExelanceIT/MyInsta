@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Text,
   View,
@@ -6,11 +6,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  I18nManager,
 } from 'react-native';
 
 import * as Yup from 'yup';
-import { t } from 'i18next';
-import { Formik } from 'formik';
+
+import { useFormik } from 'formik';
 import {
   getAuth,
   GoogleAuthProvider,
@@ -27,39 +28,17 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
+import { useTranslation } from 'react-i18next';
 import InputText from '../components/InputText';
 import { ColorProps } from '../constants/color';
+import { useFCMToken } from '../hooks/useFCMToken';
+import { getText } from '../constants/language/i18next';
 import { useThemeColors } from '../hooks/useThemeColors';
 import LoaderComponent from '../components/LoaderComponent';
 import ButtonComponent from '../components/ButtonComponent';
 import { BackArrowDark, BackArrowLight } from '../helper/icon';
-import { LanguageConstant } from '../constants/language_constants';
 import { instadark, instalight, googlelogo } from '../helper/images';
 import RadioButtonComponent from '../components/RadioButtonComponent';
-
-const validationSchema = Yup.object().shape({
-  firstName: Yup.string().required(t(LanguageConstant.firstNameRequiredError)),
-  lastName: Yup.string().required(t(LanguageConstant.lastNameRequiredError)),
-  gender: Yup.string().required(t(LanguageConstant.genderRequiredError)),
-  mobileNo: Yup.string()
-    .required(t(LanguageConstant.mobileNoRequiredError))
-    .max(10)
-    .min(10),
-  DOB: Yup.string().required(t(LanguageConstant.dobRequired)),
-  email: Yup.string()
-    .required(t(LanguageConstant.email_required))
-    .email(t(LanguageConstant.email_error)),
-  password: Yup.string()
-    .label(t(LanguageConstant.password))
-    .required(t(LanguageConstant.password_required))
-    .matches(/\d/, t(LanguageConstant.password_must_number))
-    .matches(/\w*[a-z]\w*/, t(LanguageConstant.password_must_small))
-    .matches(/\w*[A-Z]\w*/, t(LanguageConstant.password_must_capital)),
-
-  confirmPassword: Yup.string()
-    .required(t(LanguageConstant.confirmPasswordRequired))
-    .oneOf([Yup.ref('password')], t(LanguageConstant.confirmPasswordMatch)),
-});
 
 interface userData {
   DOB: string;
@@ -77,24 +56,99 @@ interface userData {
   requestCome: Array<string>;
 }
 
+const getSchemas = () => {
+  const firstName = Yup.string().required(getText('firstNameRequiredError'));
+  const lastName = Yup.string().required(getText('lastNameRequiredError'));
+  const gender = Yup.string().required(getText('genderRequiredError'));
+  const mobileNo = Yup.string()
+    .required(getText('mobileNoRequiredError'))
+    .matches(/^[0-9]+$/, getText('mobileNoDigitOnly'))
+    .max(10)
+    .min(10);
+  const DOB = Yup.string().required(getText('dobRequired'));
+  const email = Yup.string()
+    .required(getText('email_required'))
+    .email(getText('email_error'));
+  const password = Yup.string()
+    .label(getText('password'))
+    .required(getText('password_required'))
+    .matches(/\d/, getText('password_must_number'))
+    .matches(/[a-z]/, getText('password_must_small'))
+    .matches(/[A-Z]/, getText('password_must_capital'));
+
+  const confirmPassword = Yup.string()
+    .required(getText('confirmPasswordRequired'))
+    .oneOf([Yup.ref('password')], getText('confirmPasswordMatch'));
+
+  return {
+    registerValidationSchema: Yup.object({
+      DOB,
+      email,
+      gender,
+      password,
+      lastName,
+      mobileNo,
+      firstName,
+      confirmPassword,
+    }),
+  };
+};
+
 const SignupScreen = () => {
   const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
-
+  const [schemas, setSchemas] = useState(getSchemas());
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const currentDate = new Date();
-
   const navigation = useNavigation<any>();
   const { isDarkMode } = useTheme();
 
   const colors = useThemeColors();
   const styles = signupScreenStyle(colors);
+  const token = useFCMToken();
+
+  const { i18n } = useTranslation();
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      const newSchemas = getSchemas();
+      setSchemas(newSchemas);
+
+      formik.resetForm({ values: formik.values });
+    };
+
+    i18n.on('languageChanged', handleLanguageChange);
+    return () => i18n.off('languageChanged', handleLanguageChange);
+  }, []);
+
+  const formik = useFormik({
+    initialValues: {
+      DOB: '',
+      email: '',
+      gender: '',
+      lastName: '',
+      password: '',
+      mobileNo: '',
+      firstName: '',
+      follower: [],
+      following: [],
+      requestSent: [],
+      requestCome: [],
+      confirmPassword: '',
+    },
+    onSubmit: values => {
+      setIsLoading(true);
+      setIsModalVisible(true);
+      writeFirestore(values);
+    },
+    validationSchema: schemas.registerValidationSchema,
+  });
 
   const googleSignIn = async () => {
     try {
       await GoogleSignin.hasPlayServices({
         showPlayServicesUpdateDialog: true,
       });
+
       setIsLoading(true);
       setIsModalVisible(true);
       const signInResult = await GoogleSignin.signIn();
@@ -125,8 +179,8 @@ const SignupScreen = () => {
       setIsLoading(false);
       setIsModalVisible(false);
       showMessage({
-        message: t(LanguageConstant.error),
-        description: `${t(LanguageConstant.error_message)} ${error}`,
+        message: getText('error'),
+        description: `${getText('error_message')} ${error}`,
         type: 'danger',
       });
     }
@@ -175,35 +229,34 @@ const SignupScreen = () => {
               following: [],
               requestSent: [],
               requestCome: [],
+              token: token,
             })
             .then(() => {
               showMessage({
-                message: t(LanguageConstant.success),
-                description: `${t(LanguageConstant.logged_in_message)}`,
+                message: getText('success'),
+                description: `${getText('logged_in_message')}`,
                 type: 'success',
               });
               navigation.navigate('DrawerNavigation', { email: values.email });
             })
             .catch(error => {
               showMessage({
-                message: t(LanguageConstant.error),
-                description: `${t(
-                  LanguageConstant.dataErrorMessage,
-                )}  ${error}`,
+                message: getText(error),
+                description: `${getText('dataErrorMessage')}  ${error}`,
                 type: 'danger',
               });
             });
         } else {
           showMessage({
-            message: t(LanguageConstant.error),
-            description: `${t(LanguageConstant.dataErrorMessage)}`,
+            message: getText('error'),
+            description: `${getText('dataErrorMessage')}`,
             type: 'danger',
           });
         }
       } else {
         showMessage({
-          message: t(LanguageConstant.error),
-          description: `${t(LanguageConstant.dataErrorMessage)}`,
+          message: getText('error'),
+          description: `${getText('dataErrorMessage')}`,
           type: 'danger',
         });
       }
@@ -214,8 +267,8 @@ const SignupScreen = () => {
       setIsModalVisible(false);
       setIsLoading(false);
       showMessage({
-        message: t(LanguageConstant.error),
-        description: `${t(LanguageConstant.dataErrorMessage)}  ${error}`,
+        message: getText('error'),
+        description: `${getText('dataErrorMessage')}  ${error}`,
         type: 'danger',
       });
     }
@@ -224,15 +277,23 @@ const SignupScreen = () => {
   const goBack = () => {
     navigation.goBack();
   };
-
+  const isRTL = I18nManager.isRTL;
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View>
         <TouchableOpacity onPress={goBack}>
           {isDarkMode ? (
-            <BackArrowLight height={20} width={20} />
+            <BackArrowLight
+              height={20}
+              width={20}
+              style={isRTL && styles.backRTLStyle}
+            />
           ) : (
-            <BackArrowDark height={20} width={20} />
+            <BackArrowDark
+              height={20}
+              width={20}
+              style={isRTL && styles.backRTLStyle}
+            />
           )}
         </TouchableOpacity>
       </View>
@@ -240,142 +301,115 @@ const SignupScreen = () => {
         <View style={styles.logoView}>
           <Image source={isDarkMode ? instalight : instadark} />
         </View>
-        <Text style={styles.textDarkStyle}>
-          {t(LanguageConstant.signupForm)}
-        </Text>
-        <Formik
-          initialValues={{
-            DOB: '',
-            email: '',
-            gender: '',
-            lastName: '',
-            password: '',
-            mobileNo: '',
-            firstName: '',
-            follower: [],
-            following: [],
-            requestSent: [],
-            requestCome: [],
-            confirmPassword: '',
-          }}
-          onSubmit={values => {
-            setIsLoading(true);
-            setIsModalVisible(true);
-            writeFirestore(values);
-          }}
-          validationSchema={validationSchema}
-        >
-          {({
-            values,
-            errors,
-            touched,
-            handleBlur,
-            handleChange,
-            handleSubmit,
-            setFieldValue,
-          }) => (
-            <>
-              <InputText
-                value={values.firstName}
-                onBlur={handleBlur('firstName')}
-                onChange={handleChange('firstName')}
-                placeholder={t(LanguageConstant.firstname)}
-              />
-              {errors.firstName && touched.firstName && (
-                <Text style={styles.errorText}>{errors.firstName}</Text>
-              )}
+        <Text style={styles.textDarkStyle}>{getText('signupForm')}</Text>
 
-              <InputText
-                value={values.lastName}
-                onBlur={handleBlur('lastName')}
-                onChange={handleChange('lastName')}
-                placeholder={t(LanguageConstant.lastname)}
-              />
-              {errors.lastName && touched.lastName && (
-                <Text style={styles.errorText}>{errors.lastName}</Text>
-              )}
-
-              <RadioButtonComponent
-                value={values.gender}
-                onChange={handleChange('gender')}
-              />
-              {errors.gender && touched.gender && (
-                <Text style={styles.errorText}>{errors.gender}</Text>
-              )}
-              <InputText
-                value={values.mobileNo}
-                onBlur={handleBlur('mobileNo')}
-                onChange={handleChange('mobileNo')}
-                placeholder={t(LanguageConstant.mobile_no)}
-              />
-              {errors.mobileNo && touched.mobileNo && (
-                <Text style={styles.errorText}>{errors.mobileNo}</Text>
-              )}
-
-              <TouchableOpacity onPress={showDatePicker}>
-                <InputText
-                  isEditable={false}
-                  onBlur={handleBlur('DOB')}
-                  value={values.DOB.toString()}
-                  onChange={handleChange('DOB')}
-                  placeholder={t(LanguageConstant.DOB)}
-                />
-              </TouchableOpacity>
-
-              <DateTimePickerModal
-                isVisible={isDatePickerVisible}
-                maximumDate={currentDate}
-                mode="date"
-                onConfirm={date => {
-                  hideDatePicker();
-
-                  handleChange(setFieldValue('DOB', date.toDateString()));
-                }}
-                onCancel={hideDatePicker}
-              />
-
-              {errors.DOB && touched.DOB && (
-                <Text style={styles.errorText}>{errors.DOB}</Text>
-              )}
-
-              <InputText
-                value={values.email}
-                onBlur={handleBlur('email')}
-                onChange={handleChange('email')}
-                placeholder={t(LanguageConstant.email)}
-              />
-              {errors.email && touched.email && (
-                <Text style={styles.errorText}>{errors.email}</Text>
-              )}
-              <InputText
-                value={values.password}
-                onBlur={handleBlur('password')}
-                onChange={handleChange('password')}
-                placeholder={t(LanguageConstant.password)}
-              />
-              {errors.password && touched.password && (
-                <Text style={styles.errorText}>{errors.password}</Text>
-              )}
-
-              <InputText
-                value={values.confirmPassword}
-                onBlur={handleBlur('confirmPassword')}
-                onChange={handleChange('confirmPassword')}
-                placeholder={t(LanguageConstant.confirm_password)}
-              />
-              {errors.confirmPassword && touched.confirmPassword && (
-                <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-              )}
-
-              <ButtonComponent
-                btnStyle={styles.btnStyle}
-                textStyle={styles.textStyle}
-                onClick={handleSubmit}
-                title={t(LanguageConstant.signup)}
-              />
-            </>
+        <>
+          <InputText
+            value={formik.values.firstName}
+            onBlur={formik.handleBlur('firstName')}
+            onChange={formik.handleChange('firstName')}
+            placeholder={getText('firstname')}
+          />
+          {formik.errors.firstName && formik.touched.firstName && (
+            <Text style={styles.errorText}>{formik.errors.firstName}</Text>
           )}
-        </Formik>
+
+          <InputText
+            value={formik.values.lastName}
+            onBlur={formik.handleBlur('lastName')}
+            onChange={formik.handleChange('lastName')}
+            placeholder={getText('lastname')}
+          />
+          {formik.errors.lastName && formik.touched.lastName && (
+            <Text style={styles.errorText}>{formik.errors.lastName}</Text>
+          )}
+
+          <RadioButtonComponent
+            value={formik.values.gender}
+            onChange={formik.handleChange('gender')}
+          />
+          {formik.errors.gender && formik.touched.gender && (
+            <Text style={styles.errorText}>{formik.errors.gender}</Text>
+          )}
+          <InputText
+            value={formik.values.mobileNo}
+            onBlur={formik.handleBlur('mobileNo')}
+            onChange={formik.handleChange('mobileNo')}
+            placeholder={getText('mobile_no')}
+            isMobileNo={true}
+          />
+          {formik.errors.mobileNo && formik.touched.mobileNo && (
+            <Text style={styles.errorText}>{formik.errors.mobileNo}</Text>
+          )}
+
+          <TouchableOpacity onPress={showDatePicker}>
+            <InputText
+              isEditable={false}
+              onBlur={formik.handleBlur('DOB')}
+              value={formik.values.DOB.toString()}
+              onChange={formik.handleChange('DOB')}
+              placeholder={getText('DOB')}
+            />
+          </TouchableOpacity>
+
+          <DateTimePickerModal
+            isVisible={isDatePickerVisible}
+            maximumDate={currentDate}
+            mode="date"
+            onConfirm={date => {
+              hideDatePicker();
+
+              formik.handleChange(
+                formik.setFieldValue('DOB', date.toDateString()),
+              );
+            }}
+            onCancel={hideDatePicker}
+          />
+
+          {formik.errors.DOB && formik.touched.DOB && (
+            <Text style={styles.errorText}>{formik.errors.DOB}</Text>
+          )}
+
+          <InputText
+            value={formik.values.email}
+            onBlur={formik.handleBlur('email')}
+            onChange={formik.handleChange('email')}
+            placeholder={getText('email')}
+          />
+          {formik.errors.email && formik.touched.email && (
+            <Text style={styles.errorText}>{formik.errors.email}</Text>
+          )}
+          <InputText
+            value={formik.values.password}
+            onBlur={formik.handleBlur('password')}
+            onChange={formik.handleChange('password')}
+            placeholder={getText('password')}
+            isPassword={true}
+          />
+          {formik.errors.password && formik.touched.password && (
+            <Text style={styles.errorText}>{formik.errors.password}</Text>
+          )}
+
+          <InputText
+            value={formik.values.confirmPassword}
+            onBlur={formik.handleBlur('confirmPassword')}
+            onChange={formik.handleChange('confirmPassword')}
+            placeholder={getText('confirm_password')}
+            isPassword={true}
+          />
+          {formik.errors.confirmPassword && formik.touched.confirmPassword && (
+            <Text style={styles.errorText}>
+              {formik.errors.confirmPassword}
+            </Text>
+          )}
+
+          <ButtonComponent
+            btnStyle={styles.btnStyle}
+            textStyle={styles.textStyle}
+            onClick={formik.handleSubmit}
+            title={getText('signup')}
+          />
+        </>
 
         {isLoading && (
           <LoaderComponent
@@ -386,7 +420,7 @@ const SignupScreen = () => {
 
         <View style={styles.googleView}>
           <View style={styles.dashStyle} />
-          <Text style={styles.orStyle}>{t(LanguageConstant.or)}</Text>
+          <Text style={styles.orStyle}>{getText('or')}</Text>
           <View style={styles.dashStyle} />
         </View>
         <View style={styles.socialView}>
@@ -398,10 +432,8 @@ const SignupScreen = () => {
         </View>
       </ScrollView>
       <View style={styles.textViewStyle}>
-        <Text style={styles.textStyleFrom}>{t(LanguageConstant.from)}</Text>
-        <Text style={styles.textStyleFacebook}>
-          {t(LanguageConstant.facebook)}
-        </Text>
+        <Text style={styles.textStyleFrom}>{getText('from')}</Text>
+        <Text style={styles.textStyleFacebook}>{getText('facebook')}</Text>
       </View>
     </SafeAreaView>
   );
@@ -411,6 +443,7 @@ export default SignupScreen;
 
 const signupScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
+    backRTLStyle: { transform: [{ rotate: '180deg' }] },
     btnStyle: {
       padding: 10,
       borderRadius: 6,
@@ -435,7 +468,7 @@ const signupScreenStyle = (colors: ColorProps) =>
       backgroundColor: colors.background,
     },
     errorText: {
-      color: 'red',
+      color: colors.declineBtnStyle,
       fontSize: fs(15),
       fontWeight: '800',
     },

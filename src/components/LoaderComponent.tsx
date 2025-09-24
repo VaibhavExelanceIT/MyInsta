@@ -1,13 +1,12 @@
 import React from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 
-import { t } from 'i18next';
 import { ActivityIndicator } from 'react-native-paper';
 
 import { fs } from '../helper/fontSize';
 import { ColorProps } from '../constants/color';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { LanguageConstant } from '../constants/language_constants';
+import { getText } from '../constants/language/i18next';
 
 interface LoaderProps {
   isLoading: boolean;
@@ -33,9 +32,7 @@ const LoaderComponent: React.FC<LoaderProps> = ({
                 color={colors.primaryblue}
                 size={'large'}
               />
-              <Text style={styles.textStyle}>
-                {t(LanguageConstant.loaderMessage)}
-              </Text>
+              <Text style={styles.textStyle}>{getText('loaderMessage')}</Text>
             </>
           )}
         </View>

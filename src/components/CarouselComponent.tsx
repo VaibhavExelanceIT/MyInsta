@@ -10,24 +10,24 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ColorProps } from '../constants/color';
-import { screenWidth, useThemeColors } from '../hooks/useThemeColors';
-import RenderImageComponent from './RenderImageComponent';
 import PostCarouselComponent from './PostModalComponent';
+import RenderImageComponent from './RenderImageComponent';
+import { screenWidth, useThemeColors } from '../hooks/useThemeColors';
 
 interface CarouselProp {
-  imagePost: Array<string>;
-  reSizeMethod: 'auto' | 'resize' | 'scale' | 'none' | undefined;
-  reSizeMode: ImageResizeMode | undefined;
   height: number;
   clickEnable: boolean;
+  imagePost: Array<string>;
+  reSizeMode: ImageResizeMode | undefined;
+  reSizeMethod: 'auto' | 'resize' | 'scale' | 'none' | undefined;
 }
 
 const CarouselComponent: React.FC<CarouselProp> = ({
-  imagePost,
-  reSizeMethod,
-  reSizeMode,
   height,
+  imagePost,
+  reSizeMode,
   clickEnable,
+  reSizeMethod,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);

@@ -27,7 +27,6 @@ const ButtonComponent: React.FC<ButtonProp> = ({
   onClick,
   btnStyle,
   textStyle,
-
   IconComponent,
 }) => {
   return (

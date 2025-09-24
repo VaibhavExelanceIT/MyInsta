@@ -8,6 +8,9 @@ import React, {
 import { useColorScheme } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { showMessage } from 'react-native-flash-message';
+import { LanguageConstant } from '../constants/language_constants';
+import { t } from 'i18next';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -35,7 +38,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     const loadTheme = async () => {
       try {
         const savedTheme = await AsyncStorage.getItem('theme');
-        console.log('🚀 ~ loadTheme ~ savedTheme:', savedTheme);
+
         if (
           savedTheme === 'light' ||
           savedTheme === 'dark' ||
@@ -44,18 +47,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
           setTheme(savedTheme);
         }
       } catch (error) {
-        console.log('some thing went wrong');
-        console.log('Error loading theme:', error);
+        showMessage({
+          message: t(LanguageConstant.error),
+          description: t(LanguageConstant.failedloadThemePreference),
+          type: 'danger',
+        });
       }
     };
     loadTheme();
   }, []);
 
   useEffect(() => {
-    console.log('🚀 ~ ThemeContext ~ theme:', theme);
-
     AsyncStorage.setItem('theme', theme).catch(err =>
-      console.log('Error saving theme:', err),
+      showMessage({
+        message: t(LanguageConstant.error),
+        description: t(LanguageConstant.failedSaveThemePreference),
+        type: 'danger',
+      }),
     );
   }, [theme]);
 

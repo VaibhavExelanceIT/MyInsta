@@ -1,8 +1,8 @@
 {
     "change_language": "भाषा बदलें",
-    "english": "अंग्रेज़ी",
+    "english": "English",
     "hindi": "हिन्दी",
-    "urdu":"अरबी / उर्दू",
+    "urdu":"العربية / الأردية",
     "home": "होम",
     "search": "सर्च",
     "addPost": "ऐड पोस्ट",
@@ -42,7 +42,7 @@
       "title_placeholder": "यहां शीर्षक दर्ज करें",
       "description_placeHolder": "यहां विवरण दर्ज करें",
       "submit": "जमा करना",
-      "user_signout_message": "उपयोगकर्ता ने Google से सफलतापूर्वक साइन आउट कर लिया!",
+      "user_signout_message": "उपयोगकर्ता ने Application से सफलतापूर्वक साइन आउट कर लिया!",
       "error_signin_out" :"साइन आउट करते समय त्रुटि हुई!",
       "or":"या",
       "signupForm" : "साइनअप फॉर्म",
@@ -86,6 +86,15 @@
   "commentNotEmpty":"कमेन्ट खाली नहीं हो सकता",
   "emptyCommentMessage":"कोई कमेन्ट नहीं है",
   "enterComment":"कमेन्ट दर्ज करें",
-  "loading": "लोड हो रहा है...."
-
+  "loading": "लोड हो रहा है....",
+  "failedloadThemePreference": "थीम प्राथमिकता लोड करने में असफ़ल",
+  "failedSaveThemePreference": "थीम प्राथमिकता सहेजने में असफ़ल",
+  "profileUpdated": "प्रोफ़ाइल सफलतापूर्वक अपडेट हो गई है",
+  "userDetails": "उपयोगकर्ता विवरण",
+  "updateUserDetails": "उपयोगकर्ता विवरण अपडेट करें",
+  "emailSendMessage": "पासवर्ड रीसेट लिंक भेजा गया...",
+  "noEmailFound":"इस ईमेल पते से संबंधित कोई उपयोगकर्ता नहीं है.",
+  "noNotification":"कोई सूचना नहीं",
+   "mobileNoDigitOnly":"मोबाइल नंबर में केवल अंक ही होते हैं",
+   "userRegisterMessage": "यूसर को रजिस्टर करें..."
   } 

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Text,
   View,
@@ -10,9 +10,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
-import { t } from 'i18next';
 import { Searchbar } from 'react-native-paper';
 import auth from '@react-native-firebase/auth';
+import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -30,7 +30,9 @@ import { ColorProps } from '../constants/color';
 import { instadark, instalight } from '../helper/images';
 import { useThemeColors } from '../hooks/useThemeColors';
 import UserListComponent from '../components/UserListComponent';
-import { LanguageConstant } from '../constants/language_constants';
+
+import { useTranslation } from 'react-i18next';
+import { getText } from '../constants/language/i18next';
 
 interface userData {
   id: string;
@@ -46,14 +48,17 @@ const SearchScreen = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [usersData, setUserData] = useState<userData[]>([]);
-
+  const [allUserData, setAllUserData] = useState<userData[]>([]);
+  const { t } = useTranslation();
   const colors = useThemeColors();
 
   const { isDarkMode } = useTheme();
 
   const currentUser = auth().currentUser;
   const styles = searchScreenStyle(colors);
+
   const userId: string = currentUser?.uid ? currentUser?.uid : '';
+  console.log('🚀 ~ SearchScreen ~ userId:', userId);
 
   const handleActionComplete = () => {
     dSearch(searchQuery);
@@ -155,6 +160,34 @@ const SearchScreen = ({ navigation }: any) => {
 
   const dSearch = useMemo(() => debounce(userSearch, 1000), []);
 
+  const Userdata = () => {
+    try {
+      const unsubscribe = firestore()
+        .collection('UsersData')
+        .onSnapshot(snapshot => {
+          const users: userData[] = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          })) as userData[];
+
+          setAllUserData(users);
+          setIsLoading(false);
+        });
+
+      return () => unsubscribe();
+    } catch (error) {
+      showMessage({
+        message: getText('error'),
+        description: getText('error_message'),
+        type: 'danger',
+      });
+    }
+  };
+
+  useEffect(() => {
+    Userdata();
+  }, []);
+
   return (
     <SafeAreaView style={styles.mainLayout} edges={['top', 'left', 'right']}>
       <View style={styles.sortStyle}>
@@ -178,7 +211,7 @@ const SearchScreen = ({ navigation }: any) => {
         <Searchbar
           mode="bar"
           inputStyle={{ color: colors.text }}
-          placeholder={t(LanguageConstant.search)}
+          placeholder={getText('search')}
           onChangeText={e => {
             setIsLoading(true);
             handleSearch(e);
@@ -232,7 +265,37 @@ const SearchScreen = ({ navigation }: any) => {
         />
       ) : (
         <View style={styles.txtViewStyle}>
-          <Text style={styles.textStyle}>{t(LanguageConstant.noPostTxt)}</Text>
+          <Text
+            style={{
+              marginHorizontal: 20,
+              marginVertical: 10,
+            }}
+          >
+            Suggested Account
+          </Text>
+          <FlatList
+            refreshControl={
+              <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+            }
+            data={allUserData}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => {
+              return (
+                <View>
+                  <UserListComponent
+                    isFollowed={item.follower.includes(userId)}
+                    isRequested={item.requestCome.includes(userId)}
+                    userId={item.id}
+                    currentUserId={userId}
+                    imageUrl={item.userImage}
+                    firstName={item.firstName}
+                    lastName={item.lastName}
+                    onActionComplete={handleActionComplete}
+                  />
+                </View>
+              );
+            }}
+          />
         </View>
       )}
     </SafeAreaView>
@@ -279,8 +342,9 @@ const searchScreenStyle = (colors: ColorProps) =>
     searchBarStyle: { padding: 10 },
     txtViewStyle: {
       flex: 1,
-      justifyContent: 'center',
-      alignSelf: 'center',
+      backgroundColor: colors.background,
+      borderRadius: 10,
+      marginHorizontal: 5,
     },
     textStyle: {
       fontSize: fs(16),

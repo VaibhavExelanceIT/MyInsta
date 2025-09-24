@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 
 import * as Yup from 'yup';
-import { t } from 'i18next';
+
 import { Formik } from 'formik';
 import { useTranslation } from 'react-i18next';
 import auth from '@react-native-firebase/auth';
@@ -33,10 +33,7 @@ import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
 import { instadark, instalight } from '../helper/images';
 import { LanguageConstant } from '../constants/language_constants';
-
-const validationSchema = Yup.object().shape({
-  title: Yup.string().required(t(LanguageConstant.titleRequired)),
-});
+import { getText } from '../constants/language/i18next';
 
 interface PostType {
   title: string;
@@ -46,7 +43,6 @@ interface PostType {
 const AddPostScreen = () => {
   const [uri, setUri] = useState<string[]>([]);
 
-  const { t } = useTranslation();
   const colors = useThemeColors();
   const { isDarkMode } = useTheme();
   const navigation = useNavigation<any>();
@@ -60,6 +56,13 @@ const AddPostScreen = () => {
 
   const currentUser = auth().currentUser;
   const userId = currentUser ? currentUser.uid : null;
+
+  const validationSchema = Yup.object().shape({
+    title: Yup.string().required(getText('titleRequired')),
+    images: Yup.array()
+      .min(1, 'Please select at least one image')
+      .required('Please select at least one image'),
+  });
 
   const submitHandler = (value: PostType, resetForm: () => void) => {
     if (userId !== null) {
@@ -79,8 +82,8 @@ const AddPostScreen = () => {
         })
         .then(() => {
           showMessage({
-            message: t(LanguageConstant.success),
-            description: t(LanguageConstant.postCreatedSuccesfull),
+            message: getText('success'),
+            description: getText('postCreatedSuccesfull'),
             type: 'success',
           });
           setUri([]);
@@ -91,14 +94,14 @@ const AddPostScreen = () => {
         .catch(() => {
           showMessage({
             type: 'danger',
-            message: t(LanguageConstant.error),
-            description: t(LanguageConstant.error_message),
+            message: getText('error'),
+            description: getText('error_message'),
           });
         });
     } else {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.user_not_found),
+        message: getText('error'),
+        description: getText('user_not_found'),
         type: 'danger',
       });
     }
@@ -133,9 +136,7 @@ const AddPostScreen = () => {
       </View>
       <View style={styles.viewStyle}>
         <ScrollView style={styles.scrollView}>
-          <Text style={styles.addPostScreen}>
-            {t(LanguageConstant.create_post)}
-          </Text>
+          <Text style={styles.addPostScreen}>{getText('create_post')}</Text>
           <View style={styles.postUploadStyle}>
             {uri.length > 0 ? (
               <FlatList
@@ -158,12 +159,16 @@ const AddPostScreen = () => {
                 ) : (
                   <AddOutline height={70} width={70} />
                 )}
-                <Text style={styles.textStyle}>
-                  {t(LanguageConstant.add_image)}
-                </Text>
+                <Text style={styles.textStyle}>{getText('add_image')}</Text>
               </TouchableOpacity>
             )}
           </View>
+          {uri.length == 0 && (
+            <Text style={styles.errorText}>
+              {'Atleast One Image should be selected'}
+            </Text>
+          )}
+
           <Formik
             initialValues={{
               title: '',
@@ -184,7 +189,7 @@ const AddPostScreen = () => {
             }) => (
               <>
                 <TextInput
-                  placeholder={t(LanguageConstant.title_placeholder)}
+                  placeholder={getText('title_placeholder')}
                   style={styles.textInputStyle}
                   value={values.title}
                   onBlur={handleBlur('title')}
@@ -198,7 +203,7 @@ const AddPostScreen = () => {
                 )}
 
                 <TextInput
-                  placeholder={t(LanguageConstant.description_placeHolder)}
+                  placeholder={getText('description_placeHolder')}
                   style={styles.textInputStyle}
                   value={values.description}
                   onBlur={handleBlur('description')}
@@ -212,9 +217,7 @@ const AddPostScreen = () => {
                   style={styles.btnStyle}
                   onPress={() => handleSubmit()}
                 >
-                  <Text style={[styles.textStyle]}>
-                    {t(LanguageConstant.submit)}
-                  </Text>
+                  <Text style={[styles.textStyle]}>{getText('submit')}</Text>
                 </TouchableOpacity>
               </>
             )}

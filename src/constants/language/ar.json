@@ -1,7 +1,7 @@
 {
     "change_language": "تغيير اللغة",
-    "english": "إنجليزي",
-    "hindi": "الهندية",
+    "english": "English",
+    "hindi": "हिन्दी",
     "urdu":"العربية / الأردية",
     "home": "هم",
     "search": "سيرش",
@@ -41,7 +41,7 @@
      "title_placeholder": "أدخل العنوان هنا",
      "description_placeHolder": "أدخل الوصف هنا",
      "submit": "يُقدِّم",
-      "user_signout_message": "تم تسجيل خروج المستخدم من Google بنجاح!",
+      "user_signout_message": "تم تسجيل خروج المستخدم من Application بنجاح!",
       "error_signin_out" :"خطأ في تسجيل الخروج!",
       "or":"أو",
       "signupForm" :"نموذج التسجيل",
@@ -86,7 +86,16 @@
  "emptyCommentMessage":"لا يمكن أن يكون التعليق فارغًا",
  "comment":"تعليق",
  "enterComment":"أدخل التعليق",
- "loading": "جار التحميل...."
-
+ "loading": "جار التحميل....",
+  "failedloadThemePreference": "فشل تحميل تفضيل السمة",
+  "failedSaveThemePreference": "فشل حفظ تفضيل السمة",
+  "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
+  "userDetails": "تفاصيل المستخدم",
+  "updateUserDetails": "تحديث تفاصيل المستخدم",
+  "emailSendMessage":"تم إرسال رابط إعادة تعيين كلمة المرور",
+  "noEmailFound":"لا يوجد مستخدم يتوافق مع عنوان البريد الإلكتروني هذا.",
+  "noNotification":"لا إخطارات",
+   "mobileNoDigitOnly":"رقم الجوال يحتوي على أرقام فقط",
+    "userRegisterMessage": "تسجيل المستخدم..."
   
 } 

@@ -19,16 +19,28 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import RootStack from './src/navigation/RootStack';
 import { ThemeProvider } from './src/context/ThemeContext';
 import i18n from './src/constants/language/i18next';
+import {
+  navigationRef,
+  processPendingActions,
+} from './src/services/navigationService';
 
+export let pendingAction: { screen: string } | null = null;
 const App = () => {
   const scheme = useColorScheme();
   const MyTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
         <I18nextProvider i18n={i18n}>
           <SafeAreaProvider>
-            <NavigationContainer theme={MyTheme}>
+            <NavigationContainer
+              ref={navigationRef}
+              onReady={() => {
+                processPendingActions();
+              }}
+              theme={MyTheme}
+            >
               <FlashMessage position="top" />
               <RootStack />
             </NavigationContainer>
