@@ -98,4 +98,6 @@ export const LanguageConstant = {
   noNotification: 'noNotification',
   mobileNoDigitOnly: 'mobileNoDigitOnly',
   userRegisterMessage: 'userRegisterMessage',
+  noPostText: 'noPostText',
+  suggestAccount: 'suggestAccount',
 };

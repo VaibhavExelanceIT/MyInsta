@@ -24,8 +24,8 @@ import ButtonComponent from './ButtonComponent';
 import { ColorProps } from '../constants/color';
 import CommentComponent from './CommentComponent';
 import { Message, MessageDark } from '../helper/icon';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { getText } from '../constants/language/i18next';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 export interface BottomSheetHandler {
   open: () => void;
@@ -53,10 +53,14 @@ const BottomSheetComponent = forwardRef<
   const [isImage, setIsImage] = useState(currentUserImage);
   const [textInputValue, setTextInputValue] = useState('');
 
-  const { isDarkMode } = useTheme();
-
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['20%', '70%'], []);
+  const snapPoints = useMemo(() => ['70%'], []);
+  const handleSheetChanges = useCallback((index: number) => {
+    setIsOpen(index !== -1);
+  }, []);
+  const colors = useThemeColors();
+  const { isDarkMode } = useTheme();
+  const styles = BottomSheetComponentStyle(colors);
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -68,12 +72,6 @@ const BottomSheetComponent = forwardRef<
   useEffect(() => {
     setIsImage(currentUserImage);
   }, [currentUserImage]);
-
-  const colors = useThemeColors();
-  const styles = BottomSheetComponentStyle(colors);
-  const handleSheetChanges = useCallback((index: number) => {
-    setIsOpen(index !== -1);
-  }, []);
 
   const addComment = async (comment: string) => {
     try {
@@ -113,7 +111,6 @@ const BottomSheetComponent = forwardRef<
     }
     addComment(textInputValue);
     sheetRef.current?.close();
-
     setTextInputValue('');
   };
 
@@ -153,17 +150,24 @@ const BottomSheetComponent = forwardRef<
     <BottomSheet
       index={-1}
       ref={sheetRef}
-      onChange={handleSheetChanges}
+      enablePanDownToClose
       snapPoints={snapPoints}
       handleStyle={styles.handle}
-      handleIndicatorStyle={styles.handleIndicator}
-      // containerStyle={styles.sheetContainer}
-      keyboardBehavior="interactive"
-      keyboardBlurBehavior="none"
-      enablePanDownToClose
-      android_keyboardInputMode="adjustResize"
-      backdropComponent={BottomSheetBackdrop}
       enableDynamicSizing={false}
+      keyboardBlurBehavior="none"
+      onChange={handleSheetChanges}
+      keyboardBehavior="interactive"
+      android_keyboardInputMode="adjustResize"
+      backdropComponent={props => (
+        <BottomSheetBackdrop
+          {...props}
+          // opacity={0.5}
+          pressBehavior={'close'}
+          appearsOnIndex={0}
+          disappearsOnIndex={-1}
+        />
+      )}
+      handleIndicatorStyle={styles.handleIndicator}
     >
       <BottomSheetScrollView style={styles.content}>
         <View style={{ flex: 1 }}>
@@ -206,8 +210,7 @@ const BottomSheetComponentStyle = (colors: ColorProps) =>
       flexDirection: 'row',
       backgroundColor: 'green',
     },
-    // sheetContainer: {
-    // },
+
     handle: {
       height: 30,
       borderTopEndRadius: 15,

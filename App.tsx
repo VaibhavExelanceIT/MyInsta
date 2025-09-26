@@ -11,7 +11,7 @@ import {
 import FlashMessage from 'react-native-flash-message';
 
 import { useColorScheme } from 'react-native';
-import { I18nextProvider } from 'react-i18next';
+import { I18nextProvider, useTranslation } from 'react-i18next';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -26,6 +26,7 @@ import {
 
 export let pendingAction: { screen: string } | null = null;
 const App = () => {
+  useTranslation();
   const scheme = useColorScheme();
   const MyTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
 

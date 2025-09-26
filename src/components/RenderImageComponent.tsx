@@ -7,6 +7,7 @@ interface RenderImageProp {
   reSizeMethod: 'auto' | 'resize' | 'scale' | 'none' | undefined;
   reSizeMode: ImageResizeMode | undefined;
   height: number;
+  isModalOpen: boolean;
 }
 
 const RenderImageComponent: React.FC<RenderImageProp> = ({
@@ -15,6 +16,7 @@ const RenderImageComponent: React.FC<RenderImageProp> = ({
   imageUri,
   reSizeMode,
   reSizeMethod,
+  isModalOpen,
 }) => {
   return (
     <View>
@@ -23,7 +25,7 @@ const RenderImageComponent: React.FC<RenderImageProp> = ({
         resizeMode={reSizeMode}
         source={{
           uri: imageUri,
-          width: width,
+          width: isModalOpen ? width - 10 : width,
           height: height,
         }}
       />

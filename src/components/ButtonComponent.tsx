@@ -18,7 +18,6 @@ interface ButtonProp {
   onClick: () => void;
   btnStyle: StyleProp<ViewStyle>;
   textStyle: StyleProp<TextStyle>;
-
   IconComponent?: React.FC<SvgProps> | undefined;
 }
 
@@ -32,7 +31,7 @@ const ButtonComponent: React.FC<ButtonProp> = ({
   return (
     <View style={styles.containerStyle}>
       <TouchableOpacity style={btnStyle} onPress={onClick}>
-        <View style={{ flex: 1, alignSelf: 'center' }}>
+        <View style={styles.iconViewStyle}>
           {IconComponent && <IconComponent height={fs(20)} width={fs(20)} />}
         </View>
 
@@ -43,6 +42,10 @@ const ButtonComponent: React.FC<ButtonProp> = ({
 };
 
 const styles = StyleSheet.create({
+  iconViewStyle: {
+    flex: 1,
+    alignSelf: 'center',
+  },
   text: {
     textAlign: 'center',
   },

@@ -1,23 +1,24 @@
 import React, { useState } from 'react';
 import {
   View,
+  Image,
   TextInput,
   StyleSheet,
-  TextInputFocusEvent,
-  TouchableOpacity,
-  Image,
   I18nManager,
+  TouchableOpacity,
+  TextInputFocusEvent,
 } from 'react-native';
 
 import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { closeEye, openEye } from '../helper/images';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 interface TextboxProp {
   value: string;
   placeholder: string;
   isEditable?: boolean;
+
   onChange?: (value: string) => void;
   onBlur?: (e: TextInputFocusEvent) => void;
   isMobileNo?: boolean;
@@ -30,8 +31,8 @@ const InputText: React.FC<TextboxProp> = ({
   onChange,
   isEditable,
   isMobileNo,
-  placeholder,
   isPassword,
+  placeholder,
 }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -65,7 +66,7 @@ const InputText: React.FC<TextboxProp> = ({
         >
           <Image
             source={isPasswordVisible ? openEye : closeEye}
-            style={{ width: 20, height: 20 }}
+            style={styles.imageStyle}
           />
         </TouchableOpacity>
       )}
@@ -75,23 +76,23 @@ const InputText: React.FC<TextboxProp> = ({
 
 const inputTextStyle = (colors: ColorProps, isRTL: boolean) =>
   StyleSheet.create({
+    imageStyle: { width: 20, height: 20 },
     passwordContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderRadius: 8,
       marginTop: 20,
       borderWidth: 2,
-
+      borderRadius: 8,
       marginBottom: 10,
+      alignItems: 'center',
+      flexDirection: 'row',
       paddingHorizontal: 10,
       borderColor: colors.inputTextBorder,
       backgroundColor: colors.inputTextBackground,
     },
     inputText: {
-      textAlign: isRTL ? 'right' : 'left',
       flex: 1,
       color: colors.placeholderTextColor,
       borderColor: colors.inputTextBorder,
+      textAlign: isRTL ? 'right' : 'left',
       backgroundColor: colors.inputTextBackground,
     },
     eyeIcon: {

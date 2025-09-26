@@ -53,8 +53,8 @@ const PostComponent: React.FC<PostProp> = ({
   currentUserID,
   onOpenComments,
 }) => {
-  const [isLiked, setIsLiked] = useState(likes.includes(currentUserID));
   const [likeCount, setLikeCount] = useState(likes.length);
+  const [isLiked, setIsLiked] = useState(likes.includes(currentUserID));
 
   const colors = useThemeColors();
   const { isDarkMode } = useTheme();

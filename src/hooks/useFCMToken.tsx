@@ -8,7 +8,6 @@ export function useFCMToken() {
   useEffect(() => {
     const getToken = async () => {
       try {
-        // ✅ iOS: Request permission
         if (Platform.OS === 'ios') {
           const authStatus = await messaging().requestPermission();
           const enabled =
@@ -24,7 +23,6 @@ export function useFCMToken() {
           }
         }
 
-        // ✅ Android 13+: Request POST_NOTIFICATIONS permission
         if (Platform.OS === 'android' && Platform.Version >= 33) {
           const granted = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
@@ -35,11 +33,9 @@ export function useFCMToken() {
           }
         }
 
-        // ✅ Get the token
         const token = await messaging().getToken();
         setFcmToken(token);
 
-        // ✅ Listen for token refresh
         return messaging().onTokenRefresh(newToken => {
           console.log('FCM Token refreshed:', newToken);
           setFcmToken(newToken);

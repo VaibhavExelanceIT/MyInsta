@@ -21,14 +21,10 @@ const ThemeSwitch = () => {
     const nextTheme = isDarkMode ? 'light' : 'dark';
     toggleTheme(nextTheme);
 
+    const offset = I18nManager.isRTL ? -20 : 20;
+
     Animated.timing(translateX, {
-      toValue: isDarkMode
-        ? I18nManager.isRTL
-          ? -20
-          : 0
-        : I18nManager.isRTL
-        ? 0
-        : 20,
+      toValue: isDarkMode ? 0 : offset,
       duration: 150,
       useNativeDriver: true,
     }).start();

@@ -29,8 +29,8 @@ const CarouselComponent: React.FC<CarouselProp> = ({
   clickEnable,
   reSizeMethod,
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const colors = useThemeColors();
   const styles = carouselComponentStyle(colors);
@@ -66,10 +66,11 @@ const CarouselComponent: React.FC<CarouselProp> = ({
               <TouchableOpacity disabled={!clickEnable} onPress={onImageClick}>
                 <RenderImageComponent
                   imageUri={item}
-                  width={screenWidth}
-                  reSizeMethod={reSizeMethod}
-                  reSizeMode={reSizeMode}
                   height={height}
+                  width={screenWidth}
+                  reSizeMode={reSizeMode}
+                  reSizeMethod={reSizeMethod}
+                  isModalOpen={!clickEnable}
                 />
               </TouchableOpacity>
             </GestureHandlerRootView>

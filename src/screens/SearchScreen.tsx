@@ -27,12 +27,10 @@ import {
 import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
+import { getText } from '../constants/language/i18next';
 import { instadark, instalight } from '../helper/images';
 import { useThemeColors } from '../hooks/useThemeColors';
 import UserListComponent from '../components/UserListComponent';
-
-import { useTranslation } from 'react-i18next';
-import { getText } from '../constants/language/i18next';
 
 interface userData {
   id: string;
@@ -49,7 +47,8 @@ const SearchScreen = ({ navigation }: any) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [usersData, setUserData] = useState<userData[]>([]);
   const [allUserData, setAllUserData] = useState<userData[]>([]);
-  const { t } = useTranslation();
+  const [hasSearched, setHasSearched] = useState(false);
+
   const colors = useThemeColors();
 
   const { isDarkMode } = useTheme();
@@ -58,7 +57,6 @@ const SearchScreen = ({ navigation }: any) => {
   const styles = searchScreenStyle(colors);
 
   const userId: string = currentUser?.uid ? currentUser?.uid : '';
-  console.log('🚀 ~ SearchScreen ~ userId:', userId);
 
   const handleActionComplete = () => {
     dSearch(searchQuery);
@@ -138,10 +136,12 @@ const SearchScreen = ({ navigation }: any) => {
         setUserData(data);
         setIsLoading(false);
         setIsRefreshing(false);
+        setHasSearched(true);
       } else {
         setIsLoading(false);
         setIsRefreshing(false);
         setUserData([]);
+        setHasSearched(false);
       }
     } catch (error) {
       setIsLoading(false);
@@ -210,7 +210,7 @@ const SearchScreen = ({ navigation }: any) => {
       <View style={styles.searchBarStyle}>
         <Searchbar
           mode="bar"
-          inputStyle={{ color: colors.text }}
+          inputStyle={styles.searchBarInputStyle}
           placeholder={getText('search')}
           onChangeText={e => {
             setIsLoading(true);
@@ -263,20 +263,18 @@ const SearchScreen = ({ navigation }: any) => {
             </View>
           )}
         />
+      ) : hasSearched ? (
+        <View style={styles.txtViewStyle}>
+          <Text style={styles.suggestedViewStyle}>
+            {getText('noUserFound')}
+          </Text>
+        </View>
       ) : (
         <View style={styles.txtViewStyle}>
-          <Text
-            style={{
-              marginHorizontal: 20,
-              marginVertical: 10,
-            }}
-          >
-            Suggested Account
+          <Text style={styles.suggestedViewStyle}>
+            {getText('suggestAccount')}
           </Text>
           <FlatList
-            refreshControl={
-              <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-            }
             data={allUserData}
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => {
@@ -306,12 +304,20 @@ export default SearchScreen;
 
 const searchScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
+    suggestedViewStyle: {
+      fontSize: fs(14),
+      fontWeight: '600',
+      color: colors.text,
+      marginVertical: 10,
+      marginHorizontal: 20,
+    },
+    searchBarInputStyle: { color: colors.text },
     loaderStyle: { flex: 1, justifyContent: 'center' },
     mainLayout: { flex: 1, backgroundColor: colors.background },
     searchStyle: {
+      borderRadius: 30,
       color: colors.white,
       backgroundColor: colors.listBackgroundColor,
-      borderRadius: 30,
     },
     settingIcon: {
       marginBottom: '2%',
@@ -328,23 +334,23 @@ const searchScreenStyle = (colors: ColorProps) =>
       borderBottomColor: colors.modalBorderStyle,
     },
     logoView: {
-      marginTop: 10,
       flex: 1,
+      marginTop: 10,
       marginHorizontal: 10,
     },
     imageStyle: { alignSelf: 'center' },
     actionBtn: {
-      marginTop: 10,
       padding: 10,
+      marginTop: 10,
       flexDirection: 'row',
     },
 
     searchBarStyle: { padding: 10 },
     txtViewStyle: {
       flex: 1,
-      backgroundColor: colors.background,
       borderRadius: 10,
       marginHorizontal: 5,
+      backgroundColor: colors.background,
     },
     textStyle: {
       fontSize: fs(16),

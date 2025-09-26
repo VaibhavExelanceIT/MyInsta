@@ -1,14 +1,12 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { useTranslation } from 'react-i18next';
 import { RadioButton, useTheme } from 'react-native-paper';
 
 import { fs } from '../helper/fontSize';
 import { ColorProps } from '../constants/color';
-import { useThemeColors } from '../hooks/useThemeColors';
-
 import { getText } from '../constants/language/i18next';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 interface RadioButtonProp {
   value: string;

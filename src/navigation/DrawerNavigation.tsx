@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Alert,
   Image,
   StyleSheet,
+  I18nManager,
   TouchableOpacity,
   useWindowDimensions,
-  I18nManager,
-  Alert,
 } from 'react-native';
 
 import {
@@ -25,13 +25,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
+import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
 import ThemeSwitch from '../components/ThemeSwitch';
+import { getText } from '../constants/language/i18next';
 import BottomTabNavigation from './BottomTabNavigation';
 import { useThemeColors } from '../hooks/useThemeColors';
-
-import { useTheme } from '../hooks/useTheme';
-import { getText } from '../constants/language/i18next';
 
 const Drawer = createDrawerNavigator();
 
@@ -42,17 +41,19 @@ const DrawerNavigation = ({ navigation }: any) => {
     { label: getText('urdu'), value: 'ar' },
   ]);
 
+  const [selectedLanguage, setSelectedLanguage] = useState<string>();
+
   const [uri, setUri] = useState<string>();
   const [isOpen, setIsOpen] = useState(false);
   const [value, setValue] = useState<string>('en');
   const [userEmail, setEmail] = useState<string>('');
   const [focused, setFocused] = useState('HomeScreen');
 
-  const { i18n } = useTranslation();
   const colors = useThemeColors();
+  const { i18n } = useTranslation();
+  const { isDarkMode } = useTheme();
   const dimensions = useWindowDimensions();
   const styles = drawerNavigationStyle(colors);
-  const { isDarkMode } = useTheme();
   isDarkMode
     ? DropDownPicker.setTheme('DARK')
     : DropDownPicker.setTheme('LIGHT');
@@ -74,13 +75,25 @@ const DrawerNavigation = ({ navigation }: any) => {
       .where('email', '==', email)
       .onSnapshot(documentSnapshot => {
         documentSnapshot.forEach(doc => {
-          console.log('User data: ', doc.data());
           setUri(doc.data().userImage);
         });
       });
   };
 
   useEffect(() => {
+    const fetchdata = async () => {
+      const jsonValue = await AsyncStorage.getItem('user-language');
+
+      items.find(cv => {
+        if (cv.value === jsonValue) {
+          setSelectedLanguage(cv.label);
+          setValue(cv.value);
+        }
+      });
+    };
+
+    fetchdata();
+
     const unsubscribeAuth = auth().onAuthStateChanged(user => {
       if (user?.email) {
         setEmail(user.email);
@@ -127,7 +140,7 @@ const DrawerNavigation = ({ navigation }: any) => {
 
       if (providerId === 'google.com') {
         await GoogleSignin.revokeAccess();
-        await GoogleSignin.signOut(); // Google SDK sign out
+        await GoogleSignin.signOut();
       }
 
       await auth().signOut();
@@ -190,7 +203,7 @@ const DrawerNavigation = ({ navigation }: any) => {
                 setItems={setItems}
                 showBadgeDot={true}
                 itemSeparator={true}
-                placeholder={getText('selectedLanguage')}
+                placeholder={selectedLanguage}
                 style={styles.dropDownStyle}
                 onChangeValue={e => e && changeLanguage(e)}
                 containerStyle={[styles.dropDownContainer]}
@@ -245,8 +258,7 @@ const DrawerNavigation = ({ navigation }: any) => {
             <View style={styles.logoutView}>
               <TouchableOpacity
                 onPress={() => {
-                  const providerIds = user?.providerData.map(p => p.providerId);
-                  console.log('🚀 ~ providerIds:', providerIds);
+                  // const providerIds = user?.providerData.map(p => p.providerId);
                   signOutGoogle();
                 }}
               >
@@ -267,9 +279,9 @@ export default DrawerNavigation;
 const drawerNavigationStyle = (colors: ColorProps) =>
   StyleSheet.create({
     viewContainer: {
-      justifyContent: 'space-between',
       padding: 20,
       flexDirection: 'row',
+      justifyContent: 'space-between',
     },
     dropDownContainer: {
       width: '35%',
@@ -284,8 +296,8 @@ const drawerNavigationStyle = (colors: ColorProps) =>
     textStyle: {
       padding: 5,
       elevation: 10,
-      fontWeight: '700',
       borderRadius: 10,
+      fontWeight: '700',
       color: colors.white,
       backgroundColor: 'red',
     },
@@ -297,9 +309,9 @@ const drawerNavigationStyle = (colors: ColorProps) =>
       alignSelf: 'center',
     },
     headerImage: {
-      marginTop: 20,
       width: 100,
       height: 100,
+      marginTop: 20,
       borderRadius: 50,
       alignSelf: 'center',
       backgroundColor: 'black',
@@ -309,9 +321,9 @@ const drawerNavigationStyle = (colors: ColorProps) =>
       height: 20,
     },
     bottomStyle: {
-      borderColor: colors.darwerTint,
       marginBottom: 10,
       borderRadius: 10,
+      borderColor: colors.darwerTint,
     },
     logoutView: {
       flex: 0.1,

@@ -1,34 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Text,
+  View,
   Image,
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
-  View,
 } from 'react-native';
 
 import * as Yup from 'yup';
 
 import { useFormik } from 'formik';
+import { useTranslation } from 'react-i18next';
 import firestore from '@react-native-firebase/firestore';
+import { showMessage } from 'react-native-flash-message';
+import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
-import { useTheme } from '../hooks/useTheme';
-import { ColorProps } from '../constants/color';
-import { useThemeColors } from '../hooks/useThemeColors';
-import { BackArrowDark, BackArrowLight } from '../helper/icon';
-import { useNavigation } from '@react-navigation/native';
-import { instadark, instalight } from '../helper/images';
 import { fs } from '../helper/fontSize';
+import { useTheme } from '../hooks/useTheme';
+import { ArrayUrl } from '../helper/imagesUrl';
 import InputText from '../components/InputText';
+import { ColorProps } from '../constants/color';
+import { getText } from '../constants/language/i18next';
+import { instadark, instalight } from '../helper/images';
+import { useThemeColors } from '../hooks/useThemeColors';
 import ButtonComponent from '../components/ButtonComponent';
 import LoaderComponent from '../components/LoaderComponent';
-import { showMessage } from 'react-native-flash-message';
-import { ArrayUrl } from '../helper/imagesUrl';
-import { getText } from '../constants/language/i18next';
-import { useTranslation } from 'react-i18next';
+import { BackArrowDark, BackArrowLight } from '../helper/icon';
 
 interface userData {
   DOB: string;
@@ -64,8 +64,6 @@ const EditProfileScreen = ({ route }: any) => {
   }, []);
 
   const userId: string = route.params.userId;
-
-  const isEdit: string = route.params.isEdit;
 
   const navigation = useNavigation<any>();
   const colors = useThemeColors();
@@ -115,8 +113,6 @@ const EditProfileScreen = ({ route }: any) => {
     }
   };
   const randomIndex = Math.floor(Math.random() * ArrayUrl.length);
-  // console.log('🚀 ~ EditProfileScreen ~ randomIndex:', randomIndex);
-  // console.log(ArrayUrl[randomIndex]);
 
   const formik = useFormik({
     initialValues: {

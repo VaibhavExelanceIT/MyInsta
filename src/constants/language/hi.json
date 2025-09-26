@@ -96,5 +96,7 @@
   "noEmailFound":"इस ईमेल पते से संबंधित कोई उपयोगकर्ता नहीं है.",
   "noNotification":"कोई सूचना नहीं",
    "mobileNoDigitOnly":"मोबाइल नंबर में केवल अंक ही होते हैं",
-   "userRegisterMessage": "यूसर को रजिस्टर करें..."
+   "userRegisterMessage": "यूसर को रजिस्टर करें...",
+   "noPostText": "कृपया पोस्ट देखने के लिए अन्य उपयोगकर्ता का फॉलो करें।",
+   "suggestAccount":"सुझावित उपयोगकर्ता"
   } 

@@ -97,6 +97,7 @@
 "noEmailFound":"There is no user corresponding to this email address.",
 "noNotification":"No Notifications",
  "mobileNoDigitOnly":"Mobile No only contains digits",
-  "userRegisterMessage": "Register the User..."
-
+  "userRegisterMessage": "Register the User...",
+  "noPostText": "Please Follow Other User to see post.",
+  "suggestAccount":"Suggested Account"
   } 

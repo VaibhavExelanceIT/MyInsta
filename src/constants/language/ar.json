@@ -96,6 +96,8 @@
   "noEmailFound":"لا يوجد مستخدم يتوافق مع عنوان البريد الإلكتروني هذا.",
   "noNotification":"لا إخطارات",
    "mobileNoDigitOnly":"رقم الجوال يحتوي على أرقام فقط",
-    "userRegisterMessage": "تسجيل المستخدم..."
+    "userRegisterMessage": "تسجيل المستخدم...",
+    "noPostText": "يرجى متابعة المستخدم الآخر لرؤية المنشور.",
+    "suggestAccount":"المستخدم المقترح"
   
 } 

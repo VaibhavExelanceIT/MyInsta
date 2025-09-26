@@ -19,11 +19,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
+import { getText } from '../constants/language/i18next';
 import { useThemeColors } from '../hooks/useThemeColors';
 import ProfilePostItem from '../components/ProfilePostItem';
 import { SettingMenu, SettingMenuDark } from '../helper/icon';
 import ProfileTopComponent from '../components/ProfileTopComponent';
-import { getText } from '../constants/language/i18next';
 
 interface Post {
   id: string;
@@ -168,7 +168,7 @@ const ProfileScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         {!!usersData && (
-          <View style={{ flex: 0.5 }}>
+          <View style={styles.userDataView}>
             <ProfileTopComponent
               totalPost={post.length}
               profilePhoto={usersData.imageUrl}
@@ -179,17 +179,7 @@ const ProfileScreen = () => {
             />
           </View>
         )}
-        <View
-          style={{
-            flex: 1,
-            padding: 10,
-            borderTopWidth: 0.5,
-            flexDirection: 'row',
-            borderBottomWidth: 1,
-            justifyContent: 'space-around',
-            borderTopColor: colors.dashcolor,
-          }}
-        />
+        <View style={styles.ViewStyle} />
 
         {isLoading ? (
           <ActivityIndicator
@@ -225,6 +215,16 @@ export default ProfileScreen;
 
 const profileScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
+    ViewStyle: {
+      flex: 1,
+      padding: 10,
+      borderTopWidth: 0.5,
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      justifyContent: 'space-around',
+      borderTopColor: colors.dashcolor,
+    },
+    userDataView: { flex: 0.5 },
     profileTextStyle: {
       fontSize: fs(25),
       fontWeight: '600',

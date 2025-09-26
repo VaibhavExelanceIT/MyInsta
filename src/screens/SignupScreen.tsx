@@ -5,8 +5,8 @@ import {
   Image,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   I18nManager,
+  TouchableOpacity,
 } from 'react-native';
 
 import * as Yup from 'yup';
@@ -95,14 +95,14 @@ const getSchemas = () => {
 };
 
 const SignupScreen = () => {
-  const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [schemas, setSchemas] = useState(getSchemas());
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
+
   const currentDate = new Date();
   const navigation = useNavigation<any>();
   const { isDarkMode } = useTheme();
-
   const colors = useThemeColors();
   const styles = signupScreenStyle(colors);
   const token = useFCMToken();
@@ -167,7 +167,10 @@ const SignupScreen = () => {
         .get();
 
       if (!isUserPresent.empty) {
-        navigation.navigate('DrawerNavigation', { email: userEmail });
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'DrawerNavigation', params: { email: userEmail } }],
+        });
       } else {
         navigation.navigate('UserDetailsScreeen', { email: userEmail });
       }
@@ -237,7 +240,12 @@ const SignupScreen = () => {
                 description: `${getText('logged_in_message')}`,
                 type: 'success',
               });
-              navigation.navigate('DrawerNavigation', { email: values.email });
+              navigation.reset({
+                index: 0,
+                routes: [
+                  { name: 'DrawerNavigation', params: { email: values.email } },
+                ],
+              });
             })
             .catch(error => {
               showMessage({
@@ -468,9 +476,9 @@ const signupScreenStyle = (colors: ColorProps) =>
       backgroundColor: colors.background,
     },
     errorText: {
-      color: colors.declineBtnStyle,
       fontSize: fs(15),
       fontWeight: '800',
+      color: colors.declineBtnStyle,
     },
     logoView: {
       marginBottom: 10,
@@ -513,8 +521,8 @@ const signupScreenStyle = (colors: ColorProps) =>
     },
 
     textStyle: {
-      color: colors.white,
-      fontWeight: 'bold',
       fontSize: fs(15),
+      fontWeight: 'bold',
+      color: colors.white,
     },
   });

@@ -5,14 +5,15 @@ import {
   Image,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
   I18nManager,
+  TouchableOpacity,
 } from 'react-native';
 
 import * as Yup from 'yup';
 
 import { useFormik } from 'formik';
 import auth from '@react-native-firebase/auth';
+import { useTranslation } from 'react-i18next';
 import firestore from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
 import { useNavigation } from '@react-navigation/native';
@@ -23,16 +24,14 @@ import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
 import InputText from '../components/InputText';
+import { useFCMToken } from '../hooks/useFCMToken';
+import { getText } from '../constants/language/i18next';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { instadark, instalight } from '../helper/images';
 import ButtonComponent from '../components/ButtonComponent';
 import LoaderComponent from '../components/LoaderComponent';
 import { BackArrowDark, BackArrowLight } from '../helper/icon';
-
 import RadioButtonComponent from '../components/RadioButtonComponent';
-import { useFCMToken } from '../hooks/useFCMToken';
-import { getText } from '../constants/language/i18next';
-import { useTranslation } from 'react-i18next';
 
 const getSchemas = () => {
   const firstName = Yup.string().required(getText('firstNameRequiredError'));
@@ -59,13 +58,13 @@ const getSchemas = () => {
 
   return {
     userDeatilsValidationSchema: Yup.object({
-      firstName,
-      lastName,
-      gender,
-      mobileNo,
       DOB,
       email,
+      gender,
       password,
+      lastName,
+      mobileNo,
+      firstName,
       confirmPassword,
     }),
   };
@@ -87,11 +86,11 @@ interface userData {
   requestCome: Array<string>;
 }
 const UserDetailsScreeen = ({ route }: any) => {
-  const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
-  const [schemas, setSchemas] = useState(getSchemas());
-
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [schemas, setSchemas] = useState(getSchemas());
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isDatePickerVisible, setIsDatePickerVisibility] = useState(false);
+
   const currentDate = new Date();
   const colors = useThemeColors();
   const { isDarkMode } = useTheme();
@@ -185,7 +184,12 @@ const UserDetailsScreeen = ({ route }: any) => {
                 description: `${getText('logged_in_message')}`,
                 type: 'success',
               });
-              navigation.navigate('DrawerNavigation', { email: values.email });
+              navigation.reset({
+                index: 0,
+                routes: [
+                  { name: 'DrawerNavigation', params: { email: values.email } },
+                ],
+              });
             })
             .catch(() => {
               showMessage({
@@ -389,9 +393,9 @@ const userDetailsScreeenStyle = (colors: ColorProps) =>
       color: colors.text,
     },
     textStyle: {
-      color: colors.white,
       fontWeight: 'bold',
       textAlign: 'center',
+      color: colors.white,
     },
     btnStyle: {
       padding: 10,
@@ -402,28 +406,28 @@ const userDetailsScreeenStyle = (colors: ColorProps) =>
 
     textDarkStyle: {
       fontSize: fs(25),
-      color: colors.text,
       fontWeight: '600',
+      color: colors.text,
       textAlign: 'center',
       textDecorationLine: 'underline',
       textDecorationColor: colors.text,
     },
 
     container: {
-      backgroundColor: colors.background,
       flex: 1,
       padding: 20,
       height: '80%',
       justifyContent: 'center',
+      backgroundColor: colors.background,
     },
     logoView: {
       marginVertical: 10,
       alignSelf: 'center',
     },
     errorText: {
-      color: colors.declineBtnStyle,
       fontSize: fs(15),
       fontWeight: '800',
+      color: colors.declineBtnStyle,
     },
     backButtonStyle: {
       marginBottom: 5,

@@ -1,24 +1,26 @@
 import React, {
-  createContext,
   useState,
   Dispatch,
-  SetStateAction,
   useEffect,
+  createContext,
+  SetStateAction,
 } from 'react';
 import { useColorScheme } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { showMessage } from 'react-native-flash-message';
-import { LanguageConstant } from '../constants/language_constants';
+
 import { t } from 'i18next';
+
+import { LanguageConstant } from '../constants/language_constants';
 
 type Theme = 'light' | 'dark' | 'system';
 
 type ThemeContextType = {
   theme: Theme;
   isDarkMode: boolean;
-  setTheme: Dispatch<SetStateAction<Theme>>;
   toggleTheme: (newTheme: Theme) => void;
+  setTheme: Dispatch<SetStateAction<Theme>>;
 };
 
 export const ThemeContext = createContext<ThemeContextType>({

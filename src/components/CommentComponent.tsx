@@ -6,8 +6,8 @@ import { showMessage } from 'react-native-flash-message';
 
 import { fs } from '../helper/fontSize';
 import { ColorProps } from '../constants/color';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { getText } from '../constants/language/i18next';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 interface CommentProps {
   comment: string;
@@ -56,7 +56,7 @@ const CommentComponent: React.FC<CommentProps> = ({ comment, userID }) => {
   return (
     <View>
       {isLoading ? (
-        <Text style={{ color: colors.text }}>{getText('loading')}</Text>
+        <Text style={styles.loaderStyle}>{getText('loading')}</Text>
       ) : (
         <View style={styles.viewStyle}>
           {isUserData.length > 0 && (
@@ -83,6 +83,7 @@ export default CommentComponent;
 
 const commentComponentStyle = (color: ColorProps) =>
   StyleSheet.create({
+    loaderStyle: { color: color.text },
     commentStyle: {
       margin: 4,
       fontSize: fs(12),

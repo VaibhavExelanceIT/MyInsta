@@ -3,9 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { getAuth } from '@react-native-firebase/auth';
 import { ActivityIndicator } from 'react-native-paper';
+import messaging from '@react-native-firebase/messaging';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import messaging from '@react-native-firebase/messaging';
 
 import {
   LoginScreen,
@@ -45,7 +45,6 @@ const RootStack = () => {
       remoteMessage => {
         const screen = remoteMessage?.data?.screen.toString();
         if (screen) {
-          console.log('📩 Notification opened:', screen);
           navigate(screen);
         }
       },
@@ -56,7 +55,6 @@ const RootStack = () => {
       .then(remoteMessage => {
         const screen = remoteMessage?.data?.screen.toString();
         if (screen) {
-          console.log('📩 Initial notification:', screen);
           navigate(screen);
         }
       });

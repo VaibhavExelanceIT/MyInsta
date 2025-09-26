@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,6 @@ import {
 import * as Yup from 'yup';
 
 import { Formik } from 'formik';
-import { useTranslation } from 'react-i18next';
 import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
@@ -31,9 +30,8 @@ import {
 } from '../helper/icon';
 import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
-import { instadark, instalight } from '../helper/images';
-import { LanguageConstant } from '../constants/language_constants';
 import { getText } from '../constants/language/i18next';
+import { instadark, instalight } from '../helper/images';
 
 interface PostType {
   title: string;
@@ -239,43 +237,43 @@ const addPostScreenScreen = (colors: ColorProps) =>
       alignSelf: 'center',
     },
     textStyle: {
-      color: colors.white,
-      textAlign: 'center',
       fontSize: fs(15),
       fontWeight: '800',
+      color: colors.white,
+      textAlign: 'center',
     },
     btnStyle: {
-      backgroundColor: colors.primaryblue,
-      marginVertical: 10,
       padding: 10,
       borderRadius: 20,
+      marginVertical: 10,
+      backgroundColor: colors.primaryblue,
     },
     mainLayout: {
-      backgroundColor: colors.background,
       flex: 1,
       justifyContent: 'flex-start',
+      backgroundColor: colors.background,
     },
     scrollView: {
       margin: 20,
     },
     textInputStyle: {
-      backgroundColor: colors.inputTextBackground,
+      paddingLeft: 20,
       borderWidth: 0.5,
       borderRadius: 30,
-      paddingLeft: 20,
       marginVertical: 10,
+      backgroundColor: colors.inputTextBackground,
     },
     postUploadStyle: {
-      justifyContent: 'space-between',
       flexDirection: 'row',
+      justifyContent: 'space-between',
     },
     imagePost: {
-      marginVertical: 20,
-      marginHorizontal: 10,
-      height: 50,
       flex: 1,
-      justifyContent: 'center',
+      height: 50,
+      marginVertical: 20,
       alignItems: 'center',
+      marginHorizontal: 10,
+      justifyContent: 'center',
     },
     addPostScreen: {
       fontSize: fs(30),
@@ -284,21 +282,21 @@ const addPostScreenScreen = (colors: ColorProps) =>
       color: colors.text,
     },
     imgStyle: {
-      padding: 10,
       margin: 10,
-      height: 200,
       width: 200,
+      padding: 10,
+      height: 200,
     },
     sortStyle: {
-      flexDirection: 'row',
+      elevation: 5,
       paddingTop: 10,
       paddingBottom: 10,
+      flexDirection: 'row',
+      borderBottomWidth: 1,
       paddingHorizontal: 10,
       justifyContent: 'space-between',
       backgroundColor: colors.background,
       borderBottomColor: colors.modalBorderStyle,
-      borderBottomWidth: 1,
-      elevation: 5,
     },
     userIcon: {
       marginBottom: '2%',

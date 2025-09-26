@@ -19,22 +19,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
 import PostComponent from '../components/PostComponent';
+import { getText } from '../constants/language/i18next';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { instadark, instalight, personAdd } from '../helper/images';
 import { SettingMenu, SettingMenuDark } from '../helper/icon';
+import { instadark, instalight, personAdd } from '../helper/images';
 import BottomSheetComponent, {
   CommentType,
   BottomSheetHandler,
 } from '../components/BottomSheetComponent';
-import { getText } from '../constants/language/i18next';
 
 interface Post {
   name: string;
-  userImage: string;
+  title: string;
   userId: string;
   postId: string;
+  userImage: string;
   like: Array<string>;
-  title: string;
   dateAndTime: string;
   description: string;
   currentUserID: string;
@@ -50,37 +50,39 @@ interface userData {
 
 const HomeScreen = ({ navigation }: any) => {
   const [post, setPost] = useState<Post[]>([]);
-
   const [isloading, setIsLoading] = useState(true);
-  const [isrefreshing, setIsRefreshing] = useState(false);
-  const [currentUserImage, setCurrentUserImage] = useState<string>('');
   const [postID, setPostID] = useState<string>('');
   const [initializing, setInitializing] = useState(true);
+  const [isrefreshing, setIsRefreshing] = useState(false);
   const [postUserID, setPostUserID] = useState<string>('');
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUserImage, setCurrentUserImage] = useState<string>('');
+  const [selectedComments, setSelectedComments] = useState<CommentType[]>([]);
+
+  const colors = useThemeColors();
 
   const { isDarkMode } = useTheme();
-  const colors = useThemeColors();
   const styles = homeScreenStyle(colors);
 
   const userId = currentUser ? currentUser.uid : '';
-
   const bottomSheetRef = useRef<BottomSheetHandler>(null);
-  const [selectedComments, setSelectedComments] = useState<CommentType[]>([]);
 
   useEffect(() => {
-    setIsLoading(true);
-    const unsubscribe = auth().onAuthStateChanged(user => {
+    const unsubscribeAuth = auth().onAuthStateChanged(user => {
       setCurrentUser(user);
       if (initializing) setInitializing(false);
     });
 
-    return unsubscribe;
-  }, [initializing]);
+    if (currentUser && !initializing) {
+      getPost();
+    }
 
-  useEffect(() => {
-    getPost();
-  }, [currentUser]);
+    return () => {
+      unsubscribeAuth();
+
+      postListeners.forEach(unsub => unsub());
+    };
+  }, [currentUser, initializing]);
 
   const handleOpenBottomSheet = (
     comments: CommentType[],
@@ -94,68 +96,78 @@ const HomeScreen = ({ navigation }: any) => {
   };
 
   const onRefresh = () => {
-    setIsLoading(true);
     setIsRefreshing(true);
     getPost();
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 1000);
   };
 
-  const getData = async (id: string, name: string, userImage: string) => {
+  let postListeners: (() => void)[] = [];
+
+  const getData = (id: string, name: string, userImage: string) => {
     try {
-      const data = await firestore()
+      const unsubscribe = firestore()
         .collection('UsersData')
         .doc(id)
         .collection('PostData')
-        .get();
+        .onSnapshot(snapshot => {
+          const postsdata: Post[] = snapshot.docs.map(item => {
+            return {
+              name,
+              userImage,
+              userId: id,
+              postId: item.id,
+              currentUserID: userId,
+              like: item.data().like,
+              title: item.data().title,
+              comment: item.data().comment,
+              postURL: item.data().postURL,
+              dateAndTime: item.data().dateAndTime,
+              description: item.data().description,
+            };
+          });
 
-      data.docs.forEach(item => {
-        setPost(prevState => [
-          ...prevState,
-          {
-            name: name,
-            userImage: userImage,
-            userId: id,
-            postId: item.id,
-            currentUserID: userId,
-            ...item.data(),
-          } as Post,
-        ]);
+          setPost(prevState => {
+            const filtered = prevState.filter(p => p.userId !== id);
+            return [...filtered, ...postsdata];
+          });
+
+          setIsLoading(false);
+          setIsRefreshing(false);
+        });
+
+      postListeners.push(unsubscribe);
+    } catch (error) {
+      showMessage({
+        message: getText('error'),
+        description: `${getText('error_message')}`,
+        type: 'danger',
       });
       setIsLoading(false);
-      return data.docs;
-    } catch (error) {
-      setIsLoading(false);
-      return;
     }
   };
 
   const getPost = async () => {
+    setIsLoading(true);
     setPost([]);
+
+    postListeners.forEach(unsub => unsub());
+    postListeners = [];
+
     try {
       const userIds: userData[] | undefined = await getAllUsersDataFirestore();
-      await Promise.allSettled(
-        (userIds ?? []).map(async (cv: userData) => {
-          return await getData(cv.id, cv.userName, cv.userImage);
-        }),
-      );
-      await firestore()
-        .collection('UsersData')
-        .doc(userId)
-        .get()
-        .then(doc => {
-          if (doc.exists()) {
-            const currentUserImage = doc.data()?.userImage;
-            setCurrentUserImage(currentUserImage);
-          }
-        });
-      setIsLoading(false);
+
+      (userIds ?? []).forEach(cv => {
+        getData(cv.id, cv.userName, cv.userImage);
+      });
+
+      const doc = await firestore().collection('UsersData').doc(userId).get();
+      if (doc.exists()) {
+        setCurrentUserImage(doc.data()?.userImage);
+      }
     } catch (error) {
       setIsLoading(false);
       showMessage({
         message: getText('error'),
-        description: `${getText('error_message')} `,
+        description: `${getText('error_message')}`,
         type: 'danger',
       });
     }
@@ -179,7 +191,6 @@ const HomeScreen = ({ navigation }: any) => {
           userImage: ele.data().userImage,
         }));
 
-      setIsLoading(false);
       return filteredUsers;
     } catch (error) {
       setIsLoading(false);
@@ -225,7 +236,7 @@ const HomeScreen = ({ navigation }: any) => {
           >
             <Image source={personAdd} style={styles.addImageStyle} />
           </TouchableWithoutFeedback>
-          <Text>Please Follow Other User to see post.</Text>
+          <Text style={styles.noPostStyle}>{getText('noPostText')}</Text>
         </View>
       ) : (
         <FlatList
@@ -240,14 +251,14 @@ const HomeScreen = ({ navigation }: any) => {
               <PostComponent
                 likes={item.like}
                 title={item.title}
+                userName={item.name}
+                userId={item.userId}
+                postId={item.postId}
                 comment={item.comment}
                 date={item.dateAndTime}
                 imagePost={item.postURL}
-                description={item.description}
-                userName={item.name}
                 imageUrl={item.userImage}
-                userId={item.userId}
-                postId={item.postId}
+                description={item.description}
                 currentUserID={item.currentUserID}
                 onOpenComments={() =>
                   handleOpenBottomSheet(item.comment, item.postId, item.userId)
@@ -275,9 +286,12 @@ export default HomeScreen;
 
 const homeScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
+    noPostStyle: {
+      color: colors.text,
+    },
     addImageStyle: {
-      height: 50,
       width: 50,
+      height: 50,
     },
     noPostView: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     imageStyle: { alignSelf: 'center' },

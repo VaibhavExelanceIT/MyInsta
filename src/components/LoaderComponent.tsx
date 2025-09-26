@@ -5,8 +5,8 @@ import { ActivityIndicator } from 'react-native-paper';
 
 import { fs } from '../helper/fontSize';
 import { ColorProps } from '../constants/color';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { getText } from '../constants/language/i18next';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 interface LoaderProps {
   isLoading: boolean;

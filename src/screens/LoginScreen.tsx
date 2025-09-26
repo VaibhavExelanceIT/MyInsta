@@ -21,6 +21,7 @@ import {
   signInWithEmailAndPassword,
 } from '@react-native-firebase/auth';
 import RNRestart from 'react-native-restart';
+import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
@@ -35,12 +36,11 @@ import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
 import InputText from '../components/InputText';
 import { useFCMToken } from '../hooks/useFCMToken';
+import { getText } from '../constants/language/i18next';
 import { useThemeColors } from '../hooks/useThemeColors';
 import ButtonComponent from '../components/ButtonComponent';
 import LoaderComponent from '../components/LoaderComponent';
-import { getText } from '../constants/language/i18next';
 import { instadark, instalight, googlelogo } from '../helper/images';
-import { useTranslation } from 'react-i18next';
 
 const getSchemas = () => {
   const email = Yup.string()
@@ -61,6 +61,8 @@ interface UserType {
 }
 
 const LoginScreen = () => {
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+
   const [items, setItems] = useState([
     { label: getText('english'), value: 'en' },
     { label: getText('hindi'), value: 'hi' },
@@ -82,6 +84,19 @@ const LoginScreen = () => {
   const { i18n } = useTranslation();
 
   useEffect(() => {
+    const fetchdata = async () => {
+      const jsonValue = await AsyncStorage.getItem('user-language');
+
+      console.log('items:', items);
+      items.find(cv => {
+        if (cv.value === jsonValue) {
+          setSelectedLanguage(cv.label);
+          setValue(cv.value);
+        }
+      });
+    };
+
+    fetchdata();
     const handleLanguageChange = () => {
       const newSchemas = getSchemas();
       setSchemas(newSchemas);
@@ -187,7 +202,7 @@ const LoginScreen = () => {
           values.email,
           values.password,
         );
-        navigation.navigate('DrawerNavigation', { email: values.email });
+        navigation.replace('DrawerNavigation', { email: values.email });
       } else {
         showMessage({
           message: getText('error'),
@@ -198,6 +213,7 @@ const LoginScreen = () => {
         });
         navigation.navigate('SignupScreen');
       }
+      getID();
 
       setIsModalVisible(false);
       setIsLoading(false);
@@ -278,7 +294,7 @@ const LoginScreen = () => {
           setItems={setItems}
           showBadgeDot={true}
           itemSeparator={true}
-          placeholder={getText('selectedLanguage')}
+          placeholder={selectedLanguage}
           style={styles.dropDownStyle}
           onChangeValue={e => changeLanguage(e)}
           containerStyle={[styles.dropDownContainer]}

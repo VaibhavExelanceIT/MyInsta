@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Text,
   View,
+  Image,
   FlatList,
   StyleSheet,
   RefreshControl,
-  ActivityIndicator,
   TouchableOpacity,
-  Image,
-  Text,
+  ActivityIndicator,
 } from 'react-native';
 
-// import { t } from 'i18next';/
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,9 +17,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
+import { getText } from '../constants/language/i18next';
 import { instadark, instalight } from '../helper/images';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { getText } from '../constants/language/i18next';
+
 import { SettingMenu, SettingMenuDark } from '../helper/icon';
 import UserRequestListComponent from '../components/UserRequestListComponent';
 
@@ -53,14 +53,11 @@ const NotificationScreen = ({ navigation }: any) => {
   const styles = notificationScreenStyle(colors);
 
   useEffect(() => {
-    // Reset
     setUserData([]);
 
-    // Subscribe to both listeners once
     const unsubscribeUsers = getAllUsersDataFirestore();
     const unsubscribeRequest: any = getRequestCome();
 
-    // Clean up listeners when component unmounts
     return () => {
       unsubscribeUsers && unsubscribeUsers();
       unsubscribeRequest && unsubscribeRequest();
@@ -107,10 +104,6 @@ const NotificationScreen = ({ navigation }: any) => {
           setIsLoading(false);
           setIsRefreshing(false);
           setUserData(fetchedUsers);
-          console.log(
-            '🚀 ~ getAllUsersDataFirestore ~ fetchedUsers:',
-            fetchedUsers,
-          );
         });
       return unsubscribe;
     } catch (error) {
@@ -125,19 +118,12 @@ const NotificationScreen = ({ navigation }: any) => {
         .collection('UsersData')
         .doc(userId)
         .onSnapshot(documentSnapshot => {
-          console.log(
-            '🚀 ~ getRequestCome ~ documentSnapshot:',
-            documentSnapshot,
-          );
           if (documentSnapshot.exists()) {
             const data = documentSnapshot.data();
-            console.log('🚀 ~ getRequestCome ~ data:', data);
-
             setUserRequestData(data?.requestCome);
           } else {
             return null;
           }
-
           setIsLoading(false);
           setIsRefreshing(false);
         });
@@ -232,8 +218,8 @@ const notificationScreenStyle = (colors: ColorProps) =>
 
     txtViewStyle: {
       flex: 1,
-      justifyContent: 'center',
       alignSelf: 'center',
+      justifyContent: 'center',
     },
     textStyle: {
       fontSize: fs(16),

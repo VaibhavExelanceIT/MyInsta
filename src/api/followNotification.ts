@@ -9,15 +9,17 @@ export async function sendNotification(
   screen: string,
 ) {
   try {
+    console.log(token, title, body);
+
     const response = await axios.post(`${BASE_URL}/send`, {
       token,
       title,
       body,
       screen,
     });
+
     return response.data;
   } catch (error: any) {
-    console.log(error);
     console.error(
       'Error sending notification:',
       error.response?.data || error.message,

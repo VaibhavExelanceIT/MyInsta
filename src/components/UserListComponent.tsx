@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import firestore, {
-  arrayRemove,
   arrayUnion,
+  arrayRemove,
 } from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
 
 import { fs } from '../helper/fontSize';
 import ButtonComponent from './ButtonComponent';
 import { ColorProps } from '../constants/color';
+import { getText } from '../constants/language/i18next';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { sendNotification } from '../api/followNotification';
-import { getText } from '../constants/language/i18next';
 
 interface UserListProp {
   userId?: string;
@@ -43,9 +43,21 @@ const UserListComponent: React.FC<UserListProp> = ({
     const data = await firestore().collection('UsersData').doc(userId).get();
     return data.data()?.token;
   };
+
+  const getCurrentUserName = async () => {
+    const data = await firestore()
+      .collection('UsersData')
+      .doc(currentUserId)
+      .get();
+
+    return data.data()?.firstName;
+  };
+
   const followRequest = async () => {
     try {
       const token: string = await getToken();
+      const name: string = await getCurrentUserName();
+
       await database
         .doc(currentUserId)
         .update({ requestSent: arrayUnion(userId) })
@@ -62,19 +74,16 @@ const UserListComponent: React.FC<UserListProp> = ({
       sendNotification(
         token,
         'You have new follow request',
-        `vaibhav sent you a followed Request`,
+        `${name} sent you a followed Request`,
         'NotificationScreen',
       );
 
-      console.log('🚀 ~ followRequest ~ currentUserId:', currentUserId);
-      console.log('🚀 ~ followRequest ~ userId:', userId);
       showMessage({
         message: getText('followRequestSent'),
         type: 'success',
       });
       onActionComplete();
     } catch (error) {
-      console.log('🚀 ~ followRequest ~ error:', error);
       showMessage({
         message: getText('error'),
         description: getText('error_message'),
@@ -105,7 +114,6 @@ const UserListComponent: React.FC<UserListProp> = ({
       });
       onActionComplete();
     } catch (error) {
-      console.log('🚀 ~ removeRequest ~ error:', error);
       showMessage({
         message: getText('error'),
         description: getText('error_message'),
@@ -136,7 +144,6 @@ const UserListComponent: React.FC<UserListProp> = ({
       });
       onActionComplete();
     } catch (error) {
-      console.log('🚀 ~ onUnfollow ~ error:', error);
       showMessage({
         message: getText('error'),
         description: getText('error_message'),
