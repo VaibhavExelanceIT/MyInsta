@@ -100,4 +100,6 @@ export const LanguageConstant = {
   userRegisterMessage: 'userRegisterMessage',
   noPostText: 'noPostText',
   suggestAccount: 'suggestAccount',
+  atleastOneImageRequired: 'atleastOneImageRequired',
+  noUserFound: 'noUserFound',
 };

@@ -52,7 +52,7 @@ const CarouselComponent: React.FC<CarouselProp> = ({
     <View>
       <FlatList
         style={styles.flatListStyle}
-        keyExtractor={i => `${i}`}
+        keyExtractor={(item, index) => index.toString()}
         data={imagePost}
         horizontal={true}
         scrollEnabled={true}
@@ -80,6 +80,7 @@ const CarouselComponent: React.FC<CarouselProp> = ({
       <View style={styles.paginationView}>
         {imagePost?.map((_, index) => (
           <View
+            key={index.toString()}
             style={[
               styles.paginationDotStyle,
               {

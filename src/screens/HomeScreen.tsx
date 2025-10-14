@@ -70,16 +70,17 @@ const HomeScreen = ({ navigation }: any) => {
   useEffect(() => {
     const unsubscribeAuth = auth().onAuthStateChanged(user => {
       setCurrentUser(user);
+      console.log('🚀 ~ HomeScreen ~ initializing:', initializing);
       if (initializing) setInitializing(false);
     });
 
+    console.log('🚀 ~ HomeScreen ~ currentUser:', currentUser);
     if (currentUser && !initializing) {
       getPost();
     }
 
     return () => {
       unsubscribeAuth();
-
       postListeners.forEach(unsub => unsub());
     };
   }, [currentUser, initializing]);
@@ -103,6 +104,9 @@ const HomeScreen = ({ navigation }: any) => {
   let postListeners: (() => void)[] = [];
 
   const getData = (id: string, name: string, userImage: string) => {
+    console.log('🚀 ~ getData ~ userImage:', userImage);
+    console.log('🚀 ~ getData ~ name:', name);
+    console.log('🚀 ~ getData ~ id:', id);
     try {
       const unsubscribe = firestore()
         .collection('UsersData')
@@ -148,12 +152,18 @@ const HomeScreen = ({ navigation }: any) => {
   const getPost = async () => {
     setIsLoading(true);
     setPost([]);
+    console.log('inside getPost');
 
     postListeners.forEach(unsub => unsub());
     postListeners = [];
 
     try {
       const userIds: userData[] | undefined = await getAllUsersDataFirestore();
+
+      if (userIds?.length === 0) {
+        setIsLoading(false);
+        return;
+      }
 
       (userIds ?? []).forEach(cv => {
         getData(cv.id, cv.userName, cv.userImage);

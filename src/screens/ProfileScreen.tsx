@@ -51,6 +51,7 @@ interface User {
 
 const ProfileScreen = () => {
   const [post, setPost] = useState<Post[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [usersData, setUserData] = useState<User>();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -73,6 +74,7 @@ const ProfileScreen = () => {
         .doc(id)
         .collection('PostData')
         .onSnapshot(documentSnapshot => {
+          setPost([]);
           documentSnapshot.docs.forEach(item => {
             setPost(prevState => [...prevState, item.data() as Post]);
             setIsLoading(false);
@@ -110,27 +112,29 @@ const ProfileScreen = () => {
     usersData?.id ? getData(usersData?.id) : '';
   }, [usersData]);
 
-  const getAllUsersDataFirestore = () => {
+  const getAllUsersDataFirestore = async () => {
     try {
-      firestore()
+      const document = await firestore()
         .collection('UsersData')
         .where('email', '==', currentUser?.email)
-        .onSnapshot(ds => {
-          const documentSnapshot = ds.docs[0].data();
-          const data: User = {
-            DOB: documentSnapshot.DOB,
-            email: documentSnapshot.email,
-            id: ds.docs[0].id,
-            gender: documentSnapshot.gender,
-            mobileNo: documentSnapshot.mobileNo,
-            lastName: documentSnapshot.lastName,
-            imageUrl: documentSnapshot.userImage,
-            followers: documentSnapshot.follower,
-            following: documentSnapshot.following,
-            firstName: documentSnapshot.firstName,
-          };
-          setUserData(data);
-        });
+        .get();
+
+      const documentSnapshot = document.docs[0].data();
+      const data: User = {
+        DOB: documentSnapshot.DOB,
+        email: documentSnapshot.email,
+        id: document.docs[0].id,
+        gender: documentSnapshot.gender,
+        mobileNo: documentSnapshot.mobileNo,
+        lastName: documentSnapshot.lastName,
+        imageUrl: documentSnapshot.userImage,
+        followers: documentSnapshot.follower,
+        following: documentSnapshot.following,
+        firstName: documentSnapshot.firstName,
+      };
+      setUserData(data);
+
+      setIsLoading(false);
     } catch (error) {
       showMessage({
         message: getText('error'),
@@ -160,6 +164,7 @@ const ProfileScreen = () => {
         </View>
       </View>
       <ScrollView
+        key={usersData?.id}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
         }
@@ -170,12 +175,12 @@ const ProfileScreen = () => {
         {!!usersData && (
           <View style={styles.userDataView}>
             <ProfileTopComponent
+              currentUserId={userId}
               totalPost={post.length}
               profilePhoto={usersData.imageUrl}
               follower={usersData.followers.length}
               following={usersData.following.length}
               userName={usersData.firstName + ' ' + usersData.lastName}
-              currentUserId={userId}
             />
           </View>
         )}
@@ -183,22 +188,24 @@ const ProfileScreen = () => {
 
         {isLoading ? (
           <ActivityIndicator
+            size={'large'}
             style={styles.loaderStyle}
             color={colors.activityIndicatorStyle}
-            size={'large'}
           />
         ) : post.length > 0 ? (
           <View style={styles.postStyle}>
             <FlatList
-              scrollEnabled
               data={post}
               numColumns={3}
               horizontal={false}
+              scrollEnabled={false}
               showsVerticalScrollIndicator={false}
               renderItem={({ item }) => (
                 <ProfilePostItem image={item.postURL} />
               )}
-              keyExtractor={item => item.id}
+              keyExtractor={(item, index) =>
+                item.id ? item.id.toString() : index.toString()
+              }
             />
           </View>
         ) : (

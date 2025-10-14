@@ -61,7 +61,7 @@ interface UserType {
 }
 
 const LoginScreen = () => {
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [selectedLanguage, setSelectedLanguage] = useState(getText('English'));
 
   const [items, setItems] = useState([
     { label: getText('english'), value: 'en' },
@@ -87,7 +87,6 @@ const LoginScreen = () => {
     const fetchdata = async () => {
       const jsonValue = await AsyncStorage.getItem('user-language');
 
-      console.log('items:', items);
       items.find(cv => {
         if (cv.value === jsonValue) {
           setSelectedLanguage(cv.label);
@@ -146,8 +145,10 @@ const LoginScreen = () => {
       setIsLoading(true);
       setIsModalVisible(true);
       const signInResult = await GoogleSignin.signIn();
+      console.log('🚀 ~ googleSignIn ~ signInResult:', signInResult);
 
       let idToken: any = signInResult.data?.idToken;
+      console.log('🚀 ~ googleSignIn ~ idToken:', idToken);
 
       if (!idToken) {
         throw new Error('No ID token found');
@@ -155,8 +156,10 @@ const LoginScreen = () => {
       const googleCredential = GoogleAuthProvider.credential(
         signInResult?.data?.idToken,
       );
+      console.log('🚀 ~ googleSignIn ~ googleCredential:', googleCredential);
 
       const userEmail = signInResult?.data?.user?.email;
+      console.log('🚀 ~ googleSignIn ~ userEmail:', userEmail);
 
       const isUserPresent = await firestore()
         .collection('UsersData')
@@ -165,15 +168,16 @@ const LoginScreen = () => {
 
       setIsLoading(false);
       setIsModalVisible(false);
-
       signInWithCredential(getAuth(), googleCredential);
-      getID(isUserPresent.docs[0].id);
+
       if (!isUserPresent.empty) {
+        getID(isUserPresent.docs[0].id);
         navigation.replace('DrawerNavigation', { email: userEmail });
       } else {
         navigation.navigate('UserDetailsScreeen', { email: userEmail });
       }
     } catch (error) {
+      console.log('🚀 ~ googleSignIn ~ error:', error);
       setIsLoading(false);
       setIsModalVisible(false);
       showMessage({

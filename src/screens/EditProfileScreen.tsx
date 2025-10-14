@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  I18nManager,
 } from 'react-native';
 
 import * as Yup from 'yup';
@@ -51,6 +52,7 @@ const EditProfileScreen = ({ route }: any) => {
 
   const { i18n } = useTranslation();
 
+  const isRTL = I18nManager.isRTL;
   useEffect(() => {
     const handleLanguageChange = () => {
       const newSchemas = getSchemas();
@@ -136,11 +138,19 @@ const EditProfileScreen = ({ route }: any) => {
       <View style={styles.backButtonStyle}>
         {isDarkMode ? (
           <TouchableOpacity onPress={goBackHandler}>
-            <BackArrowLight height={20} width={20} />
+            <BackArrowLight
+              height={20}
+              width={20}
+              style={isRTL && styles.backRTLStyle}
+            />
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={goBackHandler}>
-            <BackArrowDark height={20} width={20} />
+            <BackArrowDark
+              height={20}
+              width={20}
+              style={isRTL && styles.backRTLStyle}
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -224,6 +234,7 @@ export default EditProfileScreen;
 
 const EditProfileStyle = (colors: ColorProps) =>
   StyleSheet.create({
+    backRTLStyle: { transform: [{ rotate: '180deg' }] },
     textStyle: {
       color: colors.white,
       fontWeight: 'bold',

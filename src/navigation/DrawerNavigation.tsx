@@ -31,6 +31,7 @@ import ThemeSwitch from '../components/ThemeSwitch';
 import { getText } from '../constants/language/i18next';
 import BottomTabNavigation from './BottomTabNavigation';
 import { useThemeColors } from '../hooks/useThemeColors';
+import { fs } from '../helper/fontSize';
 
 const Drawer = createDrawerNavigator();
 
@@ -67,7 +68,7 @@ const DrawerNavigation = ({ navigation }: any) => {
     },
     { name: 'ProfileScreen', label: getText('profile') },
   ];
-  const user = auth().currentUser;
+  // const user = auth().currentUser;
 
   const getData = (email: string) => {
     firestore()
@@ -213,12 +214,15 @@ const DrawerNavigation = ({ navigation }: any) => {
               </>
             </View>
 
-            <View style={styles.imageView}>
-              <Image src={uri} resizeMode="center" style={styles.headerImage} />
-              <Text style={styles.userEmailStyle}>{userEmail}</Text>
-            </View>
-
             <DrawerContentScrollView {...props}>
+              <View style={styles.imageView}>
+                <Image
+                  src={uri}
+                  resizeMode="center"
+                  style={styles.headerImage}
+                />
+                <Text style={styles.userEmailStyle}>{userEmail}</Text>
+              </View>
               <View style={styles.container}>
                 {navigationData.map(item => {
                   const isFocused = focused === item.name;
@@ -258,7 +262,6 @@ const DrawerNavigation = ({ navigation }: any) => {
             <View style={styles.logoutView}>
               <TouchableOpacity
                 onPress={() => {
-                  // const providerIds = user?.providerData.map(p => p.providerId);
                   signOutGoogle();
                 }}
               >
@@ -284,7 +287,7 @@ const drawerNavigationStyle = (colors: ColorProps) =>
       justifyContent: 'space-between',
     },
     dropDownContainer: {
-      width: '35%',
+      width: '50%',
       borderWidth: 0,
       alignSelf: 'center',
     },
@@ -309,10 +312,10 @@ const drawerNavigationStyle = (colors: ColorProps) =>
       alignSelf: 'center',
     },
     headerImage: {
-      width: 100,
-      height: 100,
-      marginTop: 20,
-      borderRadius: 50,
+      width: 150,
+      height: 150,
+      // marginTop: 20,
+      borderRadius: 75,
       alignSelf: 'center',
       backgroundColor: 'black',
     },
@@ -326,9 +329,13 @@ const drawerNavigationStyle = (colors: ColorProps) =>
       borderColor: colors.darwerTint,
     },
     logoutView: {
-      flex: 0.1,
       margin: 20,
       flexDirection: 'row-reverse',
     },
-    userEmailStyle: { color: colors.text },
+    userEmailStyle: {
+      color: colors.text,
+      fontSize: fs(13),
+      fontWeight: '500',
+      textAlign: 'center',
+    },
   });

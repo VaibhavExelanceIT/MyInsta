@@ -77,6 +77,8 @@ const NotificationScreen = ({ navigation }: any) => {
         snapshot.forEach(doc => {
           fetchedUsers.push({ ...doc.data(), id: doc.id } as userData);
         });
+        console.log('🚀 ~ onRefresh ~ fetchedUsers:', fetchedUsers);
+
         setUserData(fetchedUsers);
         setIsLoading(false);
         setIsRefreshing(false);
@@ -91,16 +93,14 @@ const NotificationScreen = ({ navigation }: any) => {
   const getAllUsersDataFirestore = () => {
     try {
       setUserData([]);
-      const fetchedUsers: userData[] = [];
       const unsubscribe = firestore()
         .collection('UsersData')
         .onSnapshot(documentSnapshot => {
+          const fetchedUsers: userData[] = [];
           documentSnapshot.forEach(doc => {
-            console.log('inside the forEach');
-            console.log(doc.data());
-
             fetchedUsers.push({ ...doc.data(), id: doc.id } as userData);
           });
+          console.log('fetchedUsers', fetchedUsers);
           setIsLoading(false);
           setIsRefreshing(false);
           setUserData(fetchedUsers);

@@ -9,8 +9,6 @@ export async function sendNotification(
   screen: string,
 ) {
   try {
-    console.log(token, title, body);
-
     const response = await axios.post(`${BASE_URL}/send`, {
       token,
       title,

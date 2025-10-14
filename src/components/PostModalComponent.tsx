@@ -44,7 +44,7 @@ const PostCarouselComponent: React.FC<PostCarouselProp> = ({
                 imagePost={imagePost}
                 reSizeMethod="resize"
                 reSizeMode="center"
-                height={600}
+                height={580}
                 clickEnable={false}
               />
             </View>

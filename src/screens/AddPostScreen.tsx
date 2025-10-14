@@ -40,6 +40,7 @@ interface PostType {
 
 const AddPostScreen = () => {
   const [uri, setUri] = useState<string[]>([]);
+  const [isClicked, setIsClicked] = useState<boolean>(false);
 
   const colors = useThemeColors();
   const { isDarkMode } = useTheme();
@@ -49,17 +50,22 @@ const AddPostScreen = () => {
 
   const currentDate = new Date();
 
-  const dateTime =
-    currentDate.toLocaleDateString() + ' ' + currentDate.toLocaleTimeString();
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+  const day = String(currentDate.getDate()).padStart(2, '0');
+
+  const hours = String(currentDate.getHours()).padStart(2, '0');
+  const minutes = String(currentDate.getMinutes()).padStart(2, '0');
+  const seconds = String(currentDate.getSeconds()).padStart(2, '0');
+
+  const dateTime = `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
+  console.log(dateTime);
 
   const currentUser = auth().currentUser;
   const userId = currentUser ? currentUser.uid : null;
 
   const validationSchema = Yup.object().shape({
     title: Yup.string().required(getText('titleRequired')),
-    images: Yup.array()
-      .min(1, 'Please select at least one image')
-      .required('Please select at least one image'),
   });
 
   const submitHandler = (value: PostType, resetForm: () => void) => {
@@ -106,6 +112,7 @@ const AddPostScreen = () => {
   };
 
   const imageGallery = () => {
+    setIsClicked(false);
     setUri(ArrayUrl);
   };
 
@@ -161,9 +168,9 @@ const AddPostScreen = () => {
               </TouchableOpacity>
             )}
           </View>
-          {uri.length == 0 && (
+          {isClicked && (
             <Text style={styles.errorText}>
-              {'Atleast One Image should be selected'}
+              {getText('atleastOneImageRequired')}
             </Text>
           )}
 
@@ -173,7 +180,9 @@ const AddPostScreen = () => {
               description: '',
             }}
             onSubmit={(values, { resetForm }) => {
-              submitHandler(values, resetForm);
+              uri.length == 0
+                ? setIsClicked(true)
+                : submitHandler(values, resetForm);
             }}
             validationSchema={validationSchema}
           >

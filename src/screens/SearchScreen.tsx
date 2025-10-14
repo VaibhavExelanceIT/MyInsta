@@ -263,11 +263,9 @@ const SearchScreen = ({ navigation }: any) => {
             </View>
           )}
         />
-      ) : hasSearched ? (
+      ) : hasSearched && searchQuery.length != 0 ? (
         <View style={styles.txtViewStyle}>
-          <Text style={styles.suggestedViewStyle}>
-            {getText('noUserFound')}
-          </Text>
+          <Text style={styles.noUserStyle}>{getText('noUserFound')}</Text>
         </View>
       ) : (
         <View style={styles.txtViewStyle}>
@@ -304,6 +302,16 @@ export default SearchScreen;
 
 const searchScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
+    noUserStyle: {
+      fontSize: fs(14),
+      fontWeight: '600',
+      color: colors.text,
+      marginVertical: 10,
+      marginHorizontal: 20,
+      textAlign: 'center',
+      textAlignVertical: 'center',
+      flex: 1,
+    },
     suggestedViewStyle: {
       fontSize: fs(14),
       fontWeight: '600',

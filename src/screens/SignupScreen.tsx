@@ -476,7 +476,7 @@ const signupScreenStyle = (colors: ColorProps) =>
       backgroundColor: colors.background,
     },
     errorText: {
-      fontSize: fs(15),
+      fontSize: fs(12),
       fontWeight: '800',
       color: colors.declineBtnStyle,
     },

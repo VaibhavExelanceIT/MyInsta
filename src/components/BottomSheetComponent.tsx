@@ -161,7 +161,6 @@ const BottomSheetComponent = forwardRef<
       backdropComponent={props => (
         <BottomSheetBackdrop
           {...props}
-          // opacity={0.5}
           pressBehavior={'close'}
           appearsOnIndex={0}
           disappearsOnIndex={-1}

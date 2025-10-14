@@ -288,6 +288,7 @@ const UserDetailsScreeen = ({ route }: any) => {
             onBlur={formik.handleBlur('mobileNo')}
             onChange={formik.handleChange('mobileNo')}
             placeholder={getText('mobile_no')}
+            isMobileNo={true}
           />
           {formik.errors.mobileNo && formik.touched.mobileNo && (
             <Text style={styles.errorText}>{formik.errors.mobileNo}</Text>
@@ -346,6 +347,7 @@ const UserDetailsScreeen = ({ route }: any) => {
             onBlur={formik.handleBlur('confirmPassword')}
             onChange={formik.handleChange('confirmPassword')}
             placeholder={getText('confirm_password')}
+            isPassword={true}
           />
           {formik.errors.confirmPassword && formik.touched.confirmPassword && (
             <Text style={styles.errorText}>
