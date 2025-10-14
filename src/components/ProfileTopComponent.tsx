@@ -9,22 +9,23 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-import { t } from 'i18next';
 import firestore from '@react-native-firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
 
 import { CrossLight } from '../helper/icon';
 import { ColorProps } from '../constants/color';
 import ButtonComponent from './ButtonComponent';
 import { useThemeColors } from '../hooks/useThemeColors';
 import ProfileTextComponent from './ProfileTextComponent';
-import { LanguageConstant } from '../constants/language_constants';
+
 import UserFollowerList from './UserFollowerList';
+import { getText } from '../constants/language/i18next';
 
 interface ProfileTopProp {
   follower: number;
+  userName: string;
   following: number;
   totalPost: number;
-  userName: string;
   profilePhoto: string;
   currentUserId: string;
 }
@@ -51,25 +52,27 @@ const ProfileTopComponent: React.FC<ProfileTopProp> = ({
   const onModalClose = () => {
     setIsModalOpen(false);
   };
-
+  const navigation = useNavigation<any>();
   const getFollowingData = async () => {
     const usersCollection = await firestore()
       .collection('UsersData')
       .doc(currentUserId)
       .get();
 
-    const followingCollection = await firestore().collection('UsersData').get();
-    setIsUserData([]);
+    firestore()
+      .collection('UsersData')
+      .onSnapshot(documentSnapshot => {
+        setIsUserData([]);
+        const filteredUsers = documentSnapshot.docs
+          .filter(ele => usersCollection.data()?.following?.includes(ele.id))
+          .map(ele => ({
+            imageUrl: ele.data().userImage,
+            userName: ele.data().firstName + ' ' + ele.data().lastName,
+          }));
 
-    const filteredUsers = followingCollection.docs
-      .filter(ele => usersCollection.data()?.following?.includes(ele.id))
-      .map(ele => ({
-        imageUrl: ele.data().userImage,
-        userName: ele.data().firstName + ' ' + ele.data().lastName,
-      }));
-
-    setIsUserData(filteredUsers);
-    setModalOpen();
+        setIsUserData(filteredUsers);
+        setModalOpen();
+      });
   };
 
   const getFollowerData = async () => {
@@ -78,22 +81,31 @@ const ProfileTopComponent: React.FC<ProfileTopProp> = ({
       .doc(currentUserId)
       .get();
 
-    const followerCollection = await firestore().collection('UsersData').get();
-    setIsUserData([]);
+    firestore()
+      .collection('UsersData')
+      .onSnapshot(documentSnapshot => {
+        setIsUserData([]);
+        const filteredUsers = documentSnapshot.docs
+          .filter(ele => usersCollection.data()?.follower?.includes(ele.id))
+          .map(ele => ({
+            imageUrl: ele.data().userImage,
+            userName: ele.data().firstName + ' ' + ele.data().lastName,
+          }));
 
-    const filteredUsers = followerCollection.docs
-      .filter(ele => usersCollection.data()?.follower?.includes(ele.id))
-      .map(ele => ({
-        imageUrl: ele.data().userImage,
-        userName: ele.data().firstName + ' ' + ele.data().lastName,
-      }));
-
-    setIsUserData(filteredUsers);
-    setModalOpen();
+        setIsUserData(filteredUsers);
+        setModalOpen();
+      });
   };
 
   const setModalOpen = () => {
     setIsModalOpen(true);
+  };
+
+  const handleOnEditbtn = () => {
+    navigation.navigate('EditProfileScreen', {
+      userId: currentUserId,
+      isEdit: true,
+    });
   };
   return (
     <View style={styles.container}>
@@ -102,7 +114,7 @@ const ProfileTopComponent: React.FC<ProfileTopProp> = ({
 
         <ProfileTextComponent
           textData={totalPost}
-          textTitle={t(LanguageConstant.post)}
+          textTitle={getText('post')}
         />
 
         <TouchableOpacity
@@ -111,7 +123,7 @@ const ProfileTopComponent: React.FC<ProfileTopProp> = ({
         >
           <ProfileTextComponent
             textData={follower}
-            textTitle={t(LanguageConstant.follower)}
+            textTitle={getText('follower')}
           />
         </TouchableOpacity>
 
@@ -121,7 +133,7 @@ const ProfileTopComponent: React.FC<ProfileTopProp> = ({
         >
           <ProfileTextComponent
             textData={following}
-            textTitle={t(LanguageConstant.following)}
+            textTitle={getText('following')}
           />
         </TouchableOpacity>
       </View>
@@ -130,8 +142,8 @@ const ProfileTopComponent: React.FC<ProfileTopProp> = ({
       </View>
       <View style={styles.btnView}>
         <ButtonComponent
-          onClick={() => {}}
-          title={t(LanguageConstant.editProfile)}
+          onClick={handleOnEditbtn}
+          title={getText('editProfile')}
           btnStyle={styles.btnStyle}
           textStyle={styles.textStyle}
         />

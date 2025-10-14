@@ -6,6 +6,7 @@ import AddPostScreen from '../screens/AddPostScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import UserDetailsScreeen from '../screens/UserDetailsScreeen';
 import NotificationScreen from '../screens/NotificationScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 
 export {
   HomeScreen,
@@ -14,6 +15,7 @@ export {
   SearchScreen,
   AddPostScreen,
   ProfileScreen,
+  EditProfileScreen,
   UserDetailsScreeen,
   NotificationScreen,
 };

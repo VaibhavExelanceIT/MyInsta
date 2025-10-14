@@ -1,21 +1,26 @@
 import React, {
-  createContext,
   useState,
   Dispatch,
-  SetStateAction,
   useEffect,
+  createContext,
+  SetStateAction,
 } from 'react';
 import { useColorScheme } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { showMessage } from 'react-native-flash-message';
+
+import { t } from 'i18next';
+
+import { LanguageConstant } from '../constants/language_constants';
 
 type Theme = 'light' | 'dark' | 'system';
 
 type ThemeContextType = {
   theme: Theme;
   isDarkMode: boolean;
-  setTheme: Dispatch<SetStateAction<Theme>>;
   toggleTheme: (newTheme: Theme) => void;
+  setTheme: Dispatch<SetStateAction<Theme>>;
 };
 
 export const ThemeContext = createContext<ThemeContextType>({
@@ -35,7 +40,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     const loadTheme = async () => {
       try {
         const savedTheme = await AsyncStorage.getItem('theme');
-        console.log('🚀 ~ loadTheme ~ savedTheme:', savedTheme);
+
         if (
           savedTheme === 'light' ||
           savedTheme === 'dark' ||
@@ -44,18 +49,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
           setTheme(savedTheme);
         }
       } catch (error) {
-        console.log('some thing went wrong');
-        console.log('Error loading theme:', error);
+        showMessage({
+          message: t(LanguageConstant.error),
+          description: t(LanguageConstant.failedloadThemePreference),
+          type: 'danger',
+        });
       }
     };
     loadTheme();
   }, []);
 
   useEffect(() => {
-    console.log('🚀 ~ ThemeContext ~ theme:', theme);
-
     AsyncStorage.setItem('theme', theme).catch(err =>
-      console.log('Error saving theme:', err),
+      showMessage({
+        message: t(LanguageConstant.error),
+        description: t(LanguageConstant.failedSaveThemePreference),
+        type: 'danger',
+      }),
     );
   }, [theme]);
 

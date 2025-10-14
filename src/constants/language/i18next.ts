@@ -9,9 +9,9 @@ import hindi from './hi.json';
 import arabic from './ar.json';
 
 const resources = {
-  en: { translation: english },
   hi: { translation: hindi },
   ar: { translation: arabic },
+  en: { translation: english },
 };
 
 const loadSavedLanguage = async () => {
@@ -23,9 +23,13 @@ const loadSavedLanguage = async () => {
   }
 };
 
+export const getText = (text: string) => {
+  return i18n.t(text);
+};
+
 const initializeI18n = async () => {
-  const savedLanguage = await loadSavedLanguage();
   const locales = RNLocalize.getLocales();
+  const savedLanguage = await loadSavedLanguage();
   const deviceLanguage = locales[0]?.languageTag.split('-')[0];
 
   i18n.use(initReactI18next).init({

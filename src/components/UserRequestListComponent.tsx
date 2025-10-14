@@ -1,7 +1,6 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-import { t } from 'i18next';
 import firestore, {
   arrayRemove,
   arrayUnion,
@@ -11,9 +10,9 @@ import { showMessage } from 'react-native-flash-message';
 import { fs } from '../helper/fontSize';
 import { ColorProps } from '../constants/color';
 import ButtonComponent from './ButtonComponent';
+import { getText } from '../constants/language/i18next';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { CorrectLight, CrossLight } from '../helper/icon';
-import { LanguageConstant } from '../constants/language_constants';
 
 interface UserRequestListProp {
   userId: string;
@@ -50,13 +49,13 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
       removeRequest();
 
       showMessage({
-        message: `${t(LanguageConstant.youFollowed)}` + userName,
+        message: `${getText('youFollowed')}` + userName,
         type: 'success',
       });
     } catch (error) {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
+        message: getText('error'),
+        description: getText('error_message'),
         type: 'success',
       });
     }
@@ -79,13 +78,13 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
         });
 
       showMessage({
-        message: t(LanguageConstant.cancelFollowRequest),
+        message: getText('cancelFollowRequest'),
         type: 'success',
       });
     } catch (error) {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
+        message: getText('error'),
+        description: getText('error_message'),
         type: 'success',
       });
     }
@@ -103,7 +102,7 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
           <>
             <View style={styles.buttonStyle}>
               <ButtonComponent
-                title={t(LanguageConstant.decline)}
+                title={getText('decline')}
                 onClick={removeRequest}
                 btnStyle={styles.btnDeclineStyle}
                 textStyle={styles.txtDeclineStyle}
@@ -112,7 +111,7 @@ const UserRequestListComponent: React.FC<UserRequestListProp> = ({
             </View>
             <View style={styles.buttonStyle}>
               <ButtonComponent
-                title={t(LanguageConstant.accept)}
+                title={getText('accept')}
                 onClick={acceptRequest}
                 btnStyle={styles.btnAcceptStyle}
                 textStyle={styles.txtAcceptStyle}
@@ -132,35 +131,35 @@ const userRequestListComponentStyle = (colors: ColorProps) =>
   StyleSheet.create({
     btnDeclineStyle: {
       padding: 10,
+      borderWidth: 2,
       borderRadius: 6,
       marginVertical: 10,
-      borderWidth: 2,
       backgroundColor: colors.declineBtnStyle,
       borderColor: colors.declineBtnBorderStyle,
     },
     btnAcceptStyle: {
       padding: 10,
-      marginVertical: 10,
-      borderRadius: 6,
       borderWidth: 2,
+      borderRadius: 6,
+      marginVertical: 10,
       backgroundColor: colors.acceptBtnStyle,
       borderColor: colors.acceptBtnBorderStyle,
     },
     txtAcceptStyle: {
       flex: 1,
-      textAlign: 'center',
       fontSize: fs(16),
       fontWeight: '500',
-      textAlignVertical: 'center',
+      textAlign: 'center',
       color: colors.white,
+      textAlignVertical: 'center',
     },
     txtDeclineStyle: {
       flex: 1,
-      textAlign: 'center',
       fontSize: fs(16),
       fontWeight: '500',
-      textAlignVertical: 'center',
       color: colors.white,
+      textAlign: 'center',
+      textAlignVertical: 'center',
     },
 
     btnStyle: {
@@ -171,39 +170,38 @@ const userRequestListComponentStyle = (colors: ColorProps) =>
     },
 
     mainLayout: {
-      backgroundColor: colors.listBackgroundColor,
-      elevation: 3,
-      marginVertical: 5,
-      marginHorizontal: 10,
-      borderRadius: 20,
-      flexDirection: 'row',
       padding: 10,
+      elevation: 3,
+      borderRadius: 20,
+      marginVertical: 5,
+      flexDirection: 'row',
+      marginHorizontal: 10,
       borderBottomWidth: 0.2,
       borderBottomColor: colors.commentTextStyle,
+      backgroundColor: colors.listBackgroundColor,
     },
     imageStyle: {
-      flexDirection: 'row',
-      alignSelf: 'center',
       flex: 1,
       height: 70,
       maxWidth: 70,
       borderRadius: 50,
+      alignSelf: 'center',
+      flexDirection: 'row',
     },
     txtNameStyle: {
-      color: colors.text,
       flex: 1,
       padding: 20,
       fontSize: fs(15),
       fontWeight: '500',
+      color: colors.text,
       textAlignVertical: 'center',
     },
     textStyle: {
       flex: 1,
-      color: colors.white,
-
       fontSize: fs(16),
       fontWeight: '500',
       textAlign: 'center',
+      color: colors.white,
     },
     textView: {
       flex: 1,

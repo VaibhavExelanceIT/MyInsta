@@ -5,14 +5,13 @@ import {
   Modal,
   Image,
   Alert,
+  ScrollView,
   StyleSheet,
   I18nManager,
   TouchableOpacity,
-  ScrollView,
 } from 'react-native';
 
 import * as Yup from 'yup';
-import { t } from 'i18next';
 import { useFormik } from 'formik';
 import {
   getAuth,
@@ -22,6 +21,7 @@ import {
   signInWithEmailAndPassword,
 } from '@react-native-firebase/auth';
 import RNRestart from 'react-native-restart';
+import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
@@ -30,66 +30,82 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
-import InputText from '../components/InputText';
-import i18n from '../constants/language/i18next';
-import { ColorProps } from '../constants/color';
-import { useThemeColors } from '../hooks/useThemeColors';
-import ButtonComponent from '../components/ButtonComponent';
-import { LanguageConstant } from '../constants/language_constants';
-import { instadark, instalight, googlelogo } from '../helper/images';
 import { fs } from '../helper/fontSize';
 import { CrossLight } from '../helper/icon';
-import LoaderComponent from '../components/LoaderComponent';
 import { useTheme } from '../hooks/useTheme';
+import { ColorProps } from '../constants/color';
+import InputText from '../components/InputText';
+import { useFCMToken } from '../hooks/useFCMToken';
+import { getText } from '../constants/language/i18next';
+import { useThemeColors } from '../hooks/useThemeColors';
+import ButtonComponent from '../components/ButtonComponent';
+import LoaderComponent from '../components/LoaderComponent';
+import { instadark, instalight, googlelogo } from '../helper/images';
 
-let validationSchema = Yup.object().shape({
-  email: Yup.string()
-    .required(t(LanguageConstant.email_required))
-    .email(t(LanguageConstant.email_error)),
-  password: Yup.string()
-    .label(t(LanguageConstant.password))
-    .required(t(LanguageConstant.password_required))
-    .matches(/\d/, t(LanguageConstant.password_must_number))
-    .matches(/\w*[a-z]\w*/, t(LanguageConstant.password_must_small))
-    .matches(/\w*[A-Z]\w*/, t(LanguageConstant.password_must_capital)),
-});
+const getSchemas = () => {
+  const email = Yup.string()
+    .email(getText('email_error'))
+    .required(getText('email_required'));
+
+  const password = Yup.string().required(getText('password_required'));
+
+  return {
+    loginValidationSchema: Yup.object({ email, password }),
+    forgetValidationSchema: Yup.object({ email }),
+  };
+};
+
 interface UserType {
   email: string;
   password: string;
 }
 
 const LoginScreen = () => {
+  const [selectedLanguage, setSelectedLanguage] = useState(getText('English'));
+
   const [items, setItems] = useState([
-    { label: t(LanguageConstant.english), value: 'en' },
-    { label: t(LanguageConstant.hindi), value: 'hi' },
-    { label: t(LanguageConstant.urdu), value: 'ar' },
+    { label: getText('english'), value: 'en' },
+    { label: getText('hindi'), value: 'hi' },
+    { label: getText('urdu'), value: 'ar' },
   ]);
+  const [schemas, setSchemas] = useState(getSchemas());
+
   const [value, setValue] = useState<any>();
   const [isOpen, setIsOpen] = useState(false);
-
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const { isDarkMode } = useTheme();
-
-  const auth = getAuth();
+  const token = useFCMToken();
   const colors = useThemeColors();
-
   const navigation = useNavigation<any>();
   const styles = loginScreenStyle(colors);
+  const auth = getAuth();
+  const { i18n } = useTranslation();
 
   useEffect(() => {
-    GoogleSignin.configure({
-      webClientId:
-        '956857887247-jttn9l0vhgdgabp27o8634sg2uvmc0d0.apps.googleusercontent.com',
-      iosClientId:
-        '956857887247-fv38un1ht58puru0atl6vio70dabj7t6.apps.googleusercontent.com',
-    });
+    const fetchdata = async () => {
+      const jsonValue = await AsyncStorage.getItem('user-language');
 
-    const user = auth.currentUser;
-    if (user) {
-      navigation.navigate('DrawerNavigation');
-    }
+      items.find(cv => {
+        if (cv.value === jsonValue) {
+          setSelectedLanguage(cv.label);
+          setValue(cv.value);
+        }
+      });
+    };
+
+    fetchdata();
+    const handleLanguageChange = () => {
+      const newSchemas = getSchemas();
+      setSchemas(newSchemas);
+
+      formik.resetForm({ values: formik.values });
+      formikForgetPassword.resetForm({ values: formik.values });
+    };
+
+    i18n.on('languageChanged', handleLanguageChange);
+    return () => i18n.off('languageChanged', handleLanguageChange);
   }, []);
 
   isDarkMode
@@ -104,12 +120,23 @@ const LoginScreen = () => {
       const isRTL = language === 'ar';
       if (I18nManager.isRTL !== isRTL) {
         I18nManager.forceRTL(isRTL);
+        RNRestart.Restart();
       }
-      RNRestart.Restart();
     } catch (error) {
       Alert.alert('Error while changing language');
     }
   };
+
+  const getID = async (id?: string) => {
+    const user = auth.currentUser;
+
+    id == null ? user && storeToken(user?.uid) : storeToken(id);
+  };
+
+  const storeToken = async (id: string) => {
+    await firestore().collection('UsersData').doc(id).update({ token: token });
+  };
+
   const googleSignIn = async () => {
     try {
       await GoogleSignin.hasPlayServices({
@@ -118,37 +145,44 @@ const LoginScreen = () => {
       setIsLoading(true);
       setIsModalVisible(true);
       const signInResult = await GoogleSignin.signIn();
+      console.log('🚀 ~ googleSignIn ~ signInResult:', signInResult);
 
       let idToken: any = signInResult.data?.idToken;
+      console.log('🚀 ~ googleSignIn ~ idToken:', idToken);
+
       if (!idToken) {
         throw new Error('No ID token found');
       }
       const googleCredential = GoogleAuthProvider.credential(
         signInResult?.data?.idToken,
       );
+      console.log('🚀 ~ googleSignIn ~ googleCredential:', googleCredential);
 
       const userEmail = signInResult?.data?.user?.email;
+      console.log('🚀 ~ googleSignIn ~ userEmail:', userEmail);
 
       const isUserPresent = await firestore()
         .collection('UsersData')
         .where('email', '==', userEmail)
         .get();
 
+      setIsLoading(false);
+      setIsModalVisible(false);
+      signInWithCredential(getAuth(), googleCredential);
+
       if (!isUserPresent.empty) {
-        navigation.navigate('DrawerNavigation', { email: userEmail });
+        getID(isUserPresent.docs[0].id);
+        navigation.replace('DrawerNavigation', { email: userEmail });
       } else {
         navigation.navigate('UserDetailsScreeen', { email: userEmail });
       }
-
-      setIsLoading(false);
-      setIsModalVisible(false);
-      return signInWithCredential(getAuth(), googleCredential);
     } catch (error) {
+      console.log('🚀 ~ googleSignIn ~ error:', error);
       setIsLoading(false);
       setIsModalVisible(false);
       showMessage({
-        message: t(LanguageConstant.error),
-        description: `${t(LanguageConstant.error_message)} ${error}`,
+        message: getText('error'),
+        description: `${getText('error_message')} ${error}`,
         type: 'danger',
       });
     }
@@ -161,35 +195,39 @@ const LoginScreen = () => {
       .get();
 
     try {
-      await signInWithEmailAndPassword(
-        getAuth(),
-        values.email,
-        values.password,
-      );
-
       if (!isUserPresent.empty) {
         showMessage({
-          message: t(LanguageConstant.success),
-          description: t(LanguageConstant.logged_in_message),
+          message: getText('success'),
+          description: getText('logged_in_message'),
           type: 'success',
         });
-        navigation.navigate('DrawerNavigation', { email: values.email });
+        await signInWithEmailAndPassword(
+          getAuth(),
+          values.email,
+          values.password,
+        );
+        navigation.replace('DrawerNavigation', { email: values.email });
       } else {
         showMessage({
-          message: t(LanguageConstant.success),
-          description: t(LanguageConstant.enterUserDetails),
-          type: 'warning',
+          message: getText('error'),
+          description: `${getText('user_not_found')}\n${getText(
+            'userRegisterMessage',
+          )} `,
+          type: 'danger',
         });
-        navigation.navigate('UserDetailsScreeen', { email: values.email });
+        navigation.navigate('SignupScreen');
       }
+      getID();
+
       setIsModalVisible(false);
       setIsLoading(false);
+      getID();
     } catch (error) {
       setIsModalVisible(false);
       setIsLoading(false);
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.email_password_error),
+        message: getText('error'),
+        description: getText('email_password_error'),
         type: 'danger',
       });
     }
@@ -198,33 +236,58 @@ const LoginScreen = () => {
   const resetPassword = async (email: string) => {
     try {
       await firebase.auth().sendPasswordResetEmail(email);
-      Alert.alert('Email Send Successfully....');
+      showMessage({
+        message: getText('success'),
+        description: getText('emailSendMessage'),
+        type: 'success',
+      });
     } catch (error: any) {
       if (error.message === 'Firebase: Error (auth/user-not-found).') {
-        Alert.alert('There is no user corresponding to this email address.');
-      } else if (error.Code === 'auth/invalid-email') {
-        Alert.alert(error);
+        showMessage({
+          message: getText('error'),
+          description: getText('noEmailFound'),
+          type: 'danger',
+        });
+      } else if (error.code === 'auth/invalid-email') {
+        showMessage({
+          message: getText('error'),
+          description: getText('email_error'),
+          type: 'danger',
+        });
       }
-      Alert.alert(error.message);
+      showMessage({
+        message: getText('error'),
+        description: `There is some Error ${error.message}`,
+        type: 'danger',
+      });
+    } finally {
+      setIsLoading(false);
+      setIsModalVisible(false);
     }
   };
 
   const formik = useFormik({
-    initialValues: {
-      email: 'vai@gmail.com',
-      password: 'Vai@123456',
-    },
-
+    initialValues: { email: '', password: '' },
+    validationSchema: schemas.loginValidationSchema,
     onSubmit: values => {
       setIsLoading(true);
       setIsModalVisible(true);
       userSignIn(values);
     },
-    validationSchema,
+  });
+
+  const formikForgetPassword = useFormik({
+    initialValues: { email: '' },
+    validationSchema: schemas.forgetValidationSchema,
+    onSubmit: values => {
+      setIsLoading(true);
+      setIsModalVisible(true);
+      resetPassword(values.email);
+    },
   });
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.dropDownView}>
         <DropDownPicker
           open={isOpen}
@@ -235,7 +298,7 @@ const LoginScreen = () => {
           setItems={setItems}
           showBadgeDot={true}
           itemSeparator={true}
-          placeholder={t(LanguageConstant.selectedLanguage)}
+          placeholder={selectedLanguage}
           style={styles.dropDownStyle}
           onChangeValue={e => changeLanguage(e)}
           containerStyle={[styles.dropDownContainer]}
@@ -247,9 +310,7 @@ const LoginScreen = () => {
           <View style={styles.logoView}>
             <Image source={isDarkMode ? instalight : instadark} />
           </View>
-          <Text style={styles.textDarkStyle}>
-            {t(LanguageConstant.loginForm)}
-          </Text>
+          <Text style={styles.textDarkStyle}>{getText('loginForm')}</Text>
         </View>
 
         <View style={styles.formView}>
@@ -258,7 +319,7 @@ const LoginScreen = () => {
               value={formik.values.email}
               onBlur={formik.handleBlur('email')}
               onChange={formik.handleChange('email')}
-              placeholder={t(LanguageConstant.email)}
+              placeholder={getText('email')}
             />
             {formik.errors.email && formik.touched.email && (
               <Text style={styles.errorText}>{formik.errors.email}</Text>
@@ -267,8 +328,10 @@ const LoginScreen = () => {
               value={formik.values.password}
               onBlur={formik.handleBlur('password')}
               onChange={formik.handleChange('password')}
-              placeholder={t(LanguageConstant.password)}
+              placeholder={getText('password')}
+              isPassword={true}
             />
+
             {formik.errors.password && formik.touched.password && (
               <Text style={styles.errorText}>{formik.errors.password}</Text>
             )}
@@ -277,11 +340,11 @@ const LoginScreen = () => {
               onPress={() => setIsModalVisible(true)}
             >
               <Text style={styles.forgetTextStyle}>
-                {t(LanguageConstant.forgetPassword)}
+                {getText('forgetPassword')}
               </Text>
             </TouchableOpacity>
             <ButtonComponent
-              title={t(LanguageConstant.login)}
+              title={getText('login')}
               onClick={formik.handleSubmit}
               btnStyle={styles.btnStyle}
               textStyle={styles.textStyle}
@@ -289,23 +352,19 @@ const LoginScreen = () => {
           </>
 
           <View style={styles.signUpView}>
-            <Text style={styles.text}>
-              {t(LanguageConstant.doNotHaveAccount)}
-            </Text>
+            <Text style={styles.text}>{getText('doNotHaveAccount')}</Text>
             <TouchableOpacity
               onPress={() => {
                 navigation.navigate('SignupScreen');
               }}
             >
-              <Text style={styles.signUpStyle}>
-                {t(LanguageConstant.signup)}
-              </Text>
+              <Text style={styles.signUpStyle}>{getText('signup')}</Text>
             </TouchableOpacity>
           </View>
         </View>
         <View style={styles.googleView}>
           <View style={styles.dashStyle} />
-          <Text style={styles.orStyle}>{t(LanguageConstant.or)}</Text>
+          <Text style={styles.orStyle}>{getText('or')}</Text>
           <View style={styles.dashStyle} />
         </View>
 
@@ -316,7 +375,7 @@ const LoginScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
-
+        {/* ================================================================================ */}
         <Modal
           transparent={true}
           animationType="slide"
@@ -341,22 +400,23 @@ const LoginScreen = () => {
                     <CrossLight height={20} width={20} />
                   </TouchableOpacity>
                   <InputText
-                    placeholder={t(LanguageConstant.email)}
-                    value={formik.values.email}
-                    onChange={formik.handleChange('email')}
-                    onBlur={formik.handleBlur('email')}
+                    placeholder={getText('email')}
+                    value={formikForgetPassword.values.email}
+                    onChange={formikForgetPassword.handleChange('email')}
+                    onBlur={formikForgetPassword.handleBlur('email')}
                   />
-                  {formik.errors.email && formik.touched.email && (
-                    <Text style={styles.errorText}>{formik.errors.email}</Text>
-                  )}
+                  {formikForgetPassword.errors.email &&
+                    formikForgetPassword.touched.email && (
+                      <Text style={styles.errorText}>
+                        {formikForgetPassword.errors.email}
+                      </Text>
+                    )}
 
                   <TouchableOpacity
                     style={[styles.button]}
-                    onPress={() => formik.handleSubmit()}
+                    onPress={() => formikForgetPassword.handleSubmit()}
                   >
-                    <Text style={styles.textStyle}>
-                      {t(LanguageConstant.submit)}
-                    </Text>
+                    <Text style={styles.textStyle}>{getText('submit')}</Text>
                   </TouchableOpacity>
                 </>
               </View>
@@ -365,10 +425,8 @@ const LoginScreen = () => {
         </Modal>
       </ScrollView>
       <View style={styles.textViewStyle}>
-        <Text style={styles.textStyleFrom}>{t(LanguageConstant.from)}</Text>
-        <Text style={styles.textStyleFacebook}>
-          {t(LanguageConstant.facebook)}
-        </Text>
+        <Text style={styles.textStyleFrom}>{getText('from')}</Text>
+        <Text style={styles.textStyleFacebook}>{getText('facebook')}</Text>
       </View>
     </SafeAreaView>
   );
@@ -457,7 +515,7 @@ const loginScreenStyle = (colors: ColorProps) =>
       color: colors.text,
     },
     errorText: {
-      color: 'red',
+      color: colors.declineBtnStyle,
       fontSize: fs(13),
       fontWeight: '800',
     },

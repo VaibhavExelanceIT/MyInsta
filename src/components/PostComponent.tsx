@@ -2,68 +2,69 @@ import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import moment from 'moment';
-import { t } from 'i18next';
+
 import firestore, {
-  arrayRemove,
   arrayUnion,
+  arrayRemove,
 } from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
 
 import {
   Message,
   HeartDark,
+  LikedHeart,
   MessageDark,
   CommnetDark,
-  LikedHeart,
 } from '../helper/icon';
+import { fs } from '../helper/fontSize';
 import { Comment } from '../helper/icon';
+import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
+import CarouselComponent from './CarouselComponent';
 import Heart from '../assets/icons/HeartOutline.svg';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { LanguageConstant } from '../constants/language_constants';
-import { fs } from '../helper/fontSize';
-import CarouselComponent from './CarouselComponent';
-import { useTheme } from '../hooks/useTheme';
+import { getText } from '../constants/language/i18next';
 
 interface PostProp {
   date: string;
-  likes: Array<string>;
   title: string;
-  comment: Array<object>;
-  imageUrl: string;
-  description: string;
-  imagePost: Array<string>;
-  userName: string;
   userId: string;
   postId: string;
+  imageUrl: string;
+  userName: string;
+  description: string;
+  likes: Array<string>;
   currentUserID: string;
+  comment: Array<object>;
+  imagePost: Array<string>;
   onOpenComments: () => void;
 }
 
 const PostComponent: React.FC<PostProp> = ({
+  date,
   likes,
   title,
-  description,
-  imagePost,
-  date,
-  imageUrl,
-  userName,
   userId,
   postId,
+  imageUrl,
+  userName,
+  imagePost,
+  description,
   currentUserID,
   onOpenComments,
 }) => {
+  const [likeCount, setLikeCount] = useState(likes.length);
   const [isLiked, setIsLiked] = useState(likes.includes(currentUserID));
-  const [islikeCount, setIsLikeCount] = useState(likes.length);
 
   const colors = useThemeColors();
   const { isDarkMode } = useTheme();
+
   const styles = postComponentStyle(colors);
 
   const postCreationDateTime = moment(date, 'MM/DD/YYYY hh:mm:ss a');
   const calculatedDateTime = postCreationDateTime.fromNow();
 
-  const liked = async () => {
+  const handleLiked = async () => {
     try {
       await firestore()
         .collection('UsersData')
@@ -74,19 +75,17 @@ const PostComponent: React.FC<PostProp> = ({
         .catch(err => {
           throw err;
         });
-      setIsLikeCount(prev => prev + 1);
+      setLikeCount(prev => prev + 1);
     } catch (error) {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
+        message: getText('error'),
+        description: getText('error_message'),
         type: 'success',
       });
     }
-
-    console.log('Post Liked');
   };
 
-  const disLiked = async () => {
+  const handleDisliked = async () => {
     try {
       await firestore()
         .collection('UsersData')
@@ -97,11 +96,11 @@ const PostComponent: React.FC<PostProp> = ({
         .catch(err => {
           throw err;
         });
-      setIsLikeCount(prev => prev - 1);
+      setLikeCount(prev => prev - 1);
     } catch (error) {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
+        message: getText('error'),
+        description: getText('error_message'),
         type: 'success',
       });
     }
@@ -135,7 +134,7 @@ const PostComponent: React.FC<PostProp> = ({
           <TouchableOpacity
             onPress={() => {
               setIsLiked(!isLiked);
-              isLiked ? disLiked() : liked();
+              isLiked ? handleDisliked() : handleLiked();
             }}
           >
             {isDarkMode ? (
@@ -168,9 +167,7 @@ const PostComponent: React.FC<PostProp> = ({
         </View>
       </View>
 
-      <Text style={styles.likeStyle}>
-        {islikeCount + ' ' + t(LanguageConstant.likes)}
-      </Text>
+      <Text style={styles.likeStyle}>{likeCount + ' ' + getText('likes')}</Text>
 
       {description && (
         <View style={styles.descriptionStyle}>

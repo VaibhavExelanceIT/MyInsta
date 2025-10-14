@@ -2,15 +2,14 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
+  Alert,
   Image,
   StyleSheet,
+  I18nManager,
   TouchableOpacity,
   useWindowDimensions,
-  I18nManager,
-  Alert,
 } from 'react-native';
 
-import { t } from 'i18next';
 import {
   DrawerItem,
   createDrawerNavigator,
@@ -18,6 +17,7 @@ import {
 } from '@react-navigation/drawer';
 import RNRestart from 'react-native-restart';
 import auth from '@react-native-firebase/auth';
+import { useTranslation } from 'react-i18next';
 import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -25,21 +25,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
+import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
-import i18n from '../constants/language/i18next';
 import ThemeSwitch from '../components/ThemeSwitch';
+import { getText } from '../constants/language/i18next';
 import BottomTabNavigation from './BottomTabNavigation';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { LanguageConstant } from '../constants/language_constants';
+import { fs } from '../helper/fontSize';
 
 const Drawer = createDrawerNavigator();
 
 const DrawerNavigation = ({ navigation }: any) => {
   const [items, setItems] = useState([
-    { label: t(LanguageConstant.english), value: 'en' },
-    { label: t(LanguageConstant.hindi), value: 'hi' },
-    { label: t(LanguageConstant.urdu), value: 'ar' },
+    { label: getText('english'), value: 'en' },
+    { label: getText('hindi'), value: 'hi' },
+    { label: getText('urdu'), value: 'ar' },
   ]);
+
+  const [selectedLanguage, setSelectedLanguage] = useState<string>();
+
   const [uri, setUri] = useState<string>();
   const [isOpen, setIsOpen] = useState(false);
   const [value, setValue] = useState<string>('en');
@@ -47,41 +51,57 @@ const DrawerNavigation = ({ navigation }: any) => {
   const [focused, setFocused] = useState('HomeScreen');
 
   const colors = useThemeColors();
+  const { i18n } = useTranslation();
+  const { isDarkMode } = useTheme();
   const dimensions = useWindowDimensions();
-
   const styles = drawerNavigationStyle(colors);
-
+  isDarkMode
+    ? DropDownPicker.setTheme('DARK')
+    : DropDownPicker.setTheme('LIGHT');
   const navigationData = [
-    { name: 'HomeScreen', label: t(LanguageConstant.home) },
-    { name: 'SearchScreen', label: t(LanguageConstant.search) },
-    { name: 'AddPostScreen', label: t(LanguageConstant.addPost) },
+    { name: 'HomeScreen', label: getText('home') },
+    { name: 'SearchScreen', label: getText('search') },
+    { name: 'AddPostScreen', label: getText('addPost') },
     {
       name: 'NotificationScreen',
-      label: t(LanguageConstant.notification),
+      label: getText('notification'),
     },
-    { name: 'ProfileScreen', label: t(LanguageConstant.profile) },
+    { name: 'ProfileScreen', label: getText('profile') },
   ];
+  // const user = auth().currentUser;
 
-  const getData = async (email: string) => {
-    const users = await firestore()
+  const getData = (email: string) => {
+    firestore()
       .collection('UsersData')
       .where('email', '==', email)
-      .get();
-
-    setUri(users.docs[0].data().userImage);
+      .onSnapshot(documentSnapshot => {
+        documentSnapshot.forEach(doc => {
+          setUri(doc.data().userImage);
+        });
+      });
   };
 
   useEffect(() => {
+    const fetchdata = async () => {
+      const jsonValue = await AsyncStorage.getItem('user-language');
+
+      items.find(cv => {
+        if (cv.value === jsonValue) {
+          setSelectedLanguage(cv.label);
+          setValue(cv.value);
+        }
+      });
+    };
+
+    fetchdata();
+
     const unsubscribeAuth = auth().onAuthStateChanged(user => {
       if (user?.email) {
         setEmail(user.email);
         getData(user.email);
       }
     });
-    return unsubscribeAuth;
-  }, []);
 
-  useEffect(() => {
     const unsubscribe = navigation.addListener('state', () => {
       const state = navigation.getState();
 
@@ -108,40 +128,42 @@ const DrawerNavigation = ({ navigation }: any) => {
         setFocused(currentRoute);
       }
     });
-    return unsubscribe;
+
+    return unsubscribe && unsubscribeAuth;
   }, []);
 
   const signOutGoogle = async () => {
     try {
-      const currentUser = GoogleSignin.getCurrentUser();
-      if (currentUser) {
+      const user = auth().currentUser;
+      if (!user) return;
+
+      const providerId = user.providerData[0]?.providerId;
+
+      if (providerId === 'google.com') {
         await GoogleSignin.revokeAccess();
         await GoogleSignin.signOut();
-        showMessage({
-          message: t(LanguageConstant.success),
-          description: t(LanguageConstant.user_signout_message),
-          type: 'success',
-        });
-        navigation.popToTop();
-      } else {
-        await auth().signOut();
-        showMessage({
-          message: t(LanguageConstant.success),
-          description: t(LanguageConstant.user_signout_message),
-          type: 'success',
-        });
-        navigation.popToTop();
       }
+
+      await auth().signOut();
+      showMessage({
+        message: getText('success'),
+        description: getText('user_signout_message'),
+        type: 'success',
+      });
+
+      navigation.reset({ index: 0, routes: [{ name: 'loginScreen' }] });
     } catch (error) {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_signin_out),
+        message: getText('error'),
+        description: getText('error_signin_out'),
         type: 'danger',
       });
     }
   };
 
   const changeLanguage = async (language: string) => {
+    console.log('🚀 ~ changeLanguage ~ language:', language);
+
     try {
       await i18n.changeLanguage(language);
       await AsyncStorage.setItem('user-language', language);
@@ -149,8 +171,8 @@ const DrawerNavigation = ({ navigation }: any) => {
       const isRTL = language === 'ar';
       if (I18nManager.isRTL !== isRTL) {
         I18nManager.forceRTL(isRTL);
+        RNRestart.Restart();
       }
-      RNRestart.Restart();
     } catch (error) {
       Alert.alert('Error while changing language');
     }
@@ -163,9 +185,9 @@ const DrawerNavigation = ({ navigation }: any) => {
         headerShown: false,
         overlayColor: 'transparent',
         drawerStyle: {
-          backgroundColor: colors.background,
           borderRightWidth: 1,
           borderColor: colors.darwerTint,
+          backgroundColor: colors.background,
         },
         drawerType: dimensions.width >= 768 ? 'permanent' : 'front',
       }}
@@ -182,7 +204,7 @@ const DrawerNavigation = ({ navigation }: any) => {
                 setItems={setItems}
                 showBadgeDot={true}
                 itemSeparator={true}
-                placeholder={t(LanguageConstant.selectedLanguage)}
+                placeholder={selectedLanguage}
                 style={styles.dropDownStyle}
                 onChangeValue={e => e && changeLanguage(e)}
                 containerStyle={[styles.dropDownContainer]}
@@ -192,12 +214,15 @@ const DrawerNavigation = ({ navigation }: any) => {
               </>
             </View>
 
-            <View style={styles.imageView}>
-              <Image src={uri} resizeMode="center" style={styles.headerImage} />
-              <Text style={styles.userEmailStyle}>{userEmail}</Text>
-            </View>
-
             <DrawerContentScrollView {...props}>
+              <View style={styles.imageView}>
+                <Image
+                  src={uri}
+                  resizeMode="center"
+                  style={styles.headerImage}
+                />
+                <Text style={styles.userEmailStyle}>{userEmail}</Text>
+              </View>
               <View style={styles.container}>
                 {navigationData.map(item => {
                   const isFocused = focused === item.name;
@@ -238,12 +263,9 @@ const DrawerNavigation = ({ navigation }: any) => {
               <TouchableOpacity
                 onPress={() => {
                   signOutGoogle();
-                  props.navigation.navigate('loginScreen');
                 }}
               >
-                <Text style={styles.textStyle}>
-                  {t(LanguageConstant.logout)}
-                </Text>
+                <Text style={styles.textStyle}>{getText('logout')}</Text>
               </TouchableOpacity>
             </View>
           </SafeAreaView>
@@ -260,12 +282,12 @@ export default DrawerNavigation;
 const drawerNavigationStyle = (colors: ColorProps) =>
   StyleSheet.create({
     viewContainer: {
-      justifyContent: 'space-between',
       padding: 20,
       flexDirection: 'row',
+      justifyContent: 'space-between',
     },
     dropDownContainer: {
-      width: '35%',
+      width: '50%',
       borderWidth: 0,
       alignSelf: 'center',
     },
@@ -277,8 +299,8 @@ const drawerNavigationStyle = (colors: ColorProps) =>
     textStyle: {
       padding: 5,
       elevation: 10,
-      fontWeight: '700',
       borderRadius: 10,
+      fontWeight: '700',
       color: colors.white,
       backgroundColor: 'red',
     },
@@ -290,10 +312,10 @@ const drawerNavigationStyle = (colors: ColorProps) =>
       alignSelf: 'center',
     },
     headerImage: {
-      marginTop: 20,
-      width: 100,
-      height: 100,
-      borderRadius: 50,
+      width: 150,
+      height: 150,
+      // marginTop: 20,
+      borderRadius: 75,
       alignSelf: 'center',
       backgroundColor: 'black',
     },
@@ -302,14 +324,18 @@ const drawerNavigationStyle = (colors: ColorProps) =>
       height: 20,
     },
     bottomStyle: {
-      borderColor: colors.darwerTint,
       marginBottom: 10,
       borderRadius: 10,
+      borderColor: colors.darwerTint,
     },
     logoutView: {
-      flex: 0.1,
       margin: 20,
       flexDirection: 'row-reverse',
     },
-    userEmailStyle: { color: colors.text },
+    userEmailStyle: {
+      color: colors.text,
+      fontSize: fs(13),
+      fontWeight: '500',
+      textAlign: 'center',
+    },
   });

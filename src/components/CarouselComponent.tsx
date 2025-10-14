@@ -10,27 +10,27 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ColorProps } from '../constants/color';
-import { screenWidth, useThemeColors } from '../hooks/useThemeColors';
-import RenderImageComponent from './RenderImageComponent';
 import PostCarouselComponent from './PostModalComponent';
+import RenderImageComponent from './RenderImageComponent';
+import { screenWidth, useThemeColors } from '../hooks/useThemeColors';
 
 interface CarouselProp {
-  imagePost: Array<string>;
-  reSizeMethod: 'auto' | 'resize' | 'scale' | 'none' | undefined;
-  reSizeMode: ImageResizeMode | undefined;
   height: number;
   clickEnable: boolean;
+  imagePost: Array<string>;
+  reSizeMode: ImageResizeMode | undefined;
+  reSizeMethod: 'auto' | 'resize' | 'scale' | 'none' | undefined;
 }
 
 const CarouselComponent: React.FC<CarouselProp> = ({
-  imagePost,
-  reSizeMethod,
-  reSizeMode,
   height,
+  imagePost,
+  reSizeMode,
   clickEnable,
+  reSizeMethod,
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const colors = useThemeColors();
   const styles = carouselComponentStyle(colors);
@@ -52,7 +52,7 @@ const CarouselComponent: React.FC<CarouselProp> = ({
     <View>
       <FlatList
         style={styles.flatListStyle}
-        keyExtractor={i => `${i}`}
+        keyExtractor={(item, index) => index.toString()}
         data={imagePost}
         horizontal={true}
         scrollEnabled={true}
@@ -66,10 +66,11 @@ const CarouselComponent: React.FC<CarouselProp> = ({
               <TouchableOpacity disabled={!clickEnable} onPress={onImageClick}>
                 <RenderImageComponent
                   imageUri={item}
-                  width={screenWidth}
-                  reSizeMethod={reSizeMethod}
-                  reSizeMode={reSizeMode}
                   height={height}
+                  width={screenWidth}
+                  reSizeMode={reSizeMode}
+                  reSizeMethod={reSizeMethod}
+                  isModalOpen={!clickEnable}
                 />
               </TouchableOpacity>
             </GestureHandlerRootView>
@@ -79,6 +80,7 @@ const CarouselComponent: React.FC<CarouselProp> = ({
       <View style={styles.paginationView}>
         {imagePost?.map((_, index) => (
           <View
+            key={index.toString()}
             style={[
               styles.paginationDotStyle,
               {

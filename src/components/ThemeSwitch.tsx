@@ -15,20 +15,22 @@ import { useThemeColors } from '../hooks/useThemeColors';
 
 const ThemeSwitch = () => {
   const { isDarkMode, toggleTheme } = useContext(ThemeContext);
-  const translateX = useRef(new Animated.Value(isDarkMode ? 20 : 0)).current;
+
+  // Define offsets for both directions
+  const leftOffset = 0;
+  const rightOffset = I18nManager.isRTL ? -20 : 20;
+
+  // Initial position should depend on theme + RTL
+  const translateX = useRef(
+    new Animated.Value(isDarkMode ? rightOffset : leftOffset),
+  ).current;
 
   const toggleSwitch = () => {
     const nextTheme = isDarkMode ? 'light' : 'dark';
     toggleTheme(nextTheme);
 
     Animated.timing(translateX, {
-      toValue: isDarkMode
-        ? I18nManager.isRTL
-          ? -20
-          : 0
-        : I18nManager.isRTL
-        ? 0
-        : 20,
+      toValue: isDarkMode ? leftOffset : rightOffset,
       duration: 150,
       useNativeDriver: true,
     }).start();
@@ -62,7 +64,6 @@ const ThemeSwitch = () => {
     </View>
   );
 };
-
 const ThemeSwitchStyle = (color: ColorProps) =>
   StyleSheet.create({
     imageView: { height: 30, width: 30 },

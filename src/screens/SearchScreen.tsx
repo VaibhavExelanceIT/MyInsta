@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Text,
   View,
@@ -10,9 +10,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
-import { t } from 'i18next';
 import { Searchbar } from 'react-native-paper';
 import auth from '@react-native-firebase/auth';
+import { showMessage } from 'react-native-flash-message';
 import firestore from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -27,10 +27,10 @@ import {
 import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
+import { getText } from '../constants/language/i18next';
 import { instadark, instalight } from '../helper/images';
 import { useThemeColors } from '../hooks/useThemeColors';
 import UserListComponent from '../components/UserListComponent';
-import { LanguageConstant } from '../constants/language_constants';
 
 interface userData {
   id: string;
@@ -46,6 +46,8 @@ const SearchScreen = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [usersData, setUserData] = useState<userData[]>([]);
+  const [allUserData, setAllUserData] = useState<userData[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const colors = useThemeColors();
 
@@ -53,6 +55,7 @@ const SearchScreen = ({ navigation }: any) => {
 
   const currentUser = auth().currentUser;
   const styles = searchScreenStyle(colors);
+
   const userId: string = currentUser?.uid ? currentUser?.uid : '';
 
   const handleActionComplete = () => {
@@ -133,10 +136,12 @@ const SearchScreen = ({ navigation }: any) => {
         setUserData(data);
         setIsLoading(false);
         setIsRefreshing(false);
+        setHasSearched(true);
       } else {
         setIsLoading(false);
         setIsRefreshing(false);
         setUserData([]);
+        setHasSearched(false);
       }
     } catch (error) {
       setIsLoading(false);
@@ -154,6 +159,34 @@ const SearchScreen = ({ navigation }: any) => {
   };
 
   const dSearch = useMemo(() => debounce(userSearch, 1000), []);
+
+  const Userdata = () => {
+    try {
+      const unsubscribe = firestore()
+        .collection('UsersData')
+        .onSnapshot(snapshot => {
+          const users: userData[] = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          })) as userData[];
+
+          setAllUserData(users);
+          setIsLoading(false);
+        });
+
+      return () => unsubscribe();
+    } catch (error) {
+      showMessage({
+        message: getText('error'),
+        description: getText('error_message'),
+        type: 'danger',
+      });
+    }
+  };
+
+  useEffect(() => {
+    Userdata();
+  }, []);
 
   return (
     <SafeAreaView style={styles.mainLayout} edges={['top', 'left', 'right']}>
@@ -177,8 +210,8 @@ const SearchScreen = ({ navigation }: any) => {
       <View style={styles.searchBarStyle}>
         <Searchbar
           mode="bar"
-          inputStyle={{ color: colors.text }}
-          placeholder={t(LanguageConstant.search)}
+          inputStyle={styles.searchBarInputStyle}
+          placeholder={getText('search')}
           onChangeText={e => {
             setIsLoading(true);
             handleSearch(e);
@@ -230,9 +263,35 @@ const SearchScreen = ({ navigation }: any) => {
             </View>
           )}
         />
+      ) : hasSearched && searchQuery.length != 0 ? (
+        <View style={styles.txtViewStyle}>
+          <Text style={styles.noUserStyle}>{getText('noUserFound')}</Text>
+        </View>
       ) : (
         <View style={styles.txtViewStyle}>
-          <Text style={styles.textStyle}>{t(LanguageConstant.noPostTxt)}</Text>
+          <Text style={styles.suggestedViewStyle}>
+            {getText('suggestAccount')}
+          </Text>
+          <FlatList
+            data={allUserData}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => {
+              return (
+                <View>
+                  <UserListComponent
+                    isFollowed={item.follower.includes(userId)}
+                    isRequested={item.requestCome.includes(userId)}
+                    userId={item.id}
+                    currentUserId={userId}
+                    imageUrl={item.userImage}
+                    firstName={item.firstName}
+                    lastName={item.lastName}
+                    onActionComplete={handleActionComplete}
+                  />
+                </View>
+              );
+            }}
+          />
         </View>
       )}
     </SafeAreaView>
@@ -243,12 +302,30 @@ export default SearchScreen;
 
 const searchScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
+    noUserStyle: {
+      fontSize: fs(14),
+      fontWeight: '600',
+      color: colors.text,
+      marginVertical: 10,
+      marginHorizontal: 20,
+      textAlign: 'center',
+      textAlignVertical: 'center',
+      flex: 1,
+    },
+    suggestedViewStyle: {
+      fontSize: fs(14),
+      fontWeight: '600',
+      color: colors.text,
+      marginVertical: 10,
+      marginHorizontal: 20,
+    },
+    searchBarInputStyle: { color: colors.text },
     loaderStyle: { flex: 1, justifyContent: 'center' },
     mainLayout: { flex: 1, backgroundColor: colors.background },
     searchStyle: {
+      borderRadius: 30,
       color: colors.white,
       backgroundColor: colors.listBackgroundColor,
-      borderRadius: 30,
     },
     settingIcon: {
       marginBottom: '2%',
@@ -265,22 +342,23 @@ const searchScreenStyle = (colors: ColorProps) =>
       borderBottomColor: colors.modalBorderStyle,
     },
     logoView: {
-      marginTop: 10,
       flex: 1,
+      marginTop: 10,
       marginHorizontal: 10,
     },
     imageStyle: { alignSelf: 'center' },
     actionBtn: {
-      marginTop: 10,
       padding: 10,
+      marginTop: 10,
       flexDirection: 'row',
     },
 
     searchBarStyle: { padding: 10 },
     txtViewStyle: {
       flex: 1,
-      justifyContent: 'center',
-      alignSelf: 'center',
+      borderRadius: 10,
+      marginHorizontal: 5,
+      backgroundColor: colors.background,
     },
     textStyle: {
       fontSize: fs(16),

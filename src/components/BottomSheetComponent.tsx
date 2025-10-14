@@ -1,32 +1,31 @@
 import React, {
-  forwardRef,
-  useImperativeHandle,
+  memo,
   useRef,
   useMemo,
-  useCallback,
   useState,
   useEffect,
-  memo,
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
 } from 'react';
 import { Text, StyleSheet, View, Image } from 'react-native';
 
-import { t } from 'i18next';
 import BottomSheet, {
   BottomSheetBackdrop,
-  BottomSheetScrollView,
   BottomSheetTextInput,
+  BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
 import firestore from '@react-native-firebase/firestore';
 import { showMessage } from 'react-native-flash-message';
 
-import { ColorProps } from '../constants/color';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { fs } from '../helper/fontSize';
-import CommentComponent from './CommentComponent';
-import ButtonComponent from './ButtonComponent';
-import { Message, MessageDark } from '../helper/icon';
 import { useTheme } from '../hooks/useTheme';
-import { LanguageConstant } from '../constants/language_constants';
+import ButtonComponent from './ButtonComponent';
+import { ColorProps } from '../constants/color';
+import CommentComponent from './CommentComponent';
+import { Message, MessageDark } from '../helper/icon';
+import { getText } from '../constants/language/i18next';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 export interface BottomSheetHandler {
   open: () => void;
@@ -39,26 +38,29 @@ export interface CommentType {
 }
 
 interface BottomSheetComponentProps {
-  comments: Array<CommentType>;
-  currentUserImage: string;
-  postUserID: string;
-  postID: string;
   userId: string;
+  postID: string;
+  postUserID: string;
+  currentUserImage: string;
+  comments: Array<CommentType>;
 }
 
 const BottomSheetComponent = forwardRef<
   BottomSheetHandler,
   BottomSheetComponentProps
 >(({ comments, currentUserImage, postUserID, postID, userId }, ref) => {
-  const [isImage, setIsImage] = useState(currentUserImage);
-
   const [isOpen, setIsOpen] = useState(false);
+  const [isImage, setIsImage] = useState(currentUserImage);
   const [textInputValue, setTextInputValue] = useState('');
 
-  const { isDarkMode } = useTheme();
-
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['20%', '70%'], []);
+  const snapPoints = useMemo(() => ['70%'], []);
+  const handleSheetChanges = useCallback((index: number) => {
+    setIsOpen(index !== -1);
+  }, []);
+  const colors = useThemeColors();
+  const { isDarkMode } = useTheme();
+  const styles = BottomSheetComponentStyle(colors);
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -70,13 +72,6 @@ const BottomSheetComponent = forwardRef<
   useEffect(() => {
     setIsImage(currentUserImage);
   }, [currentUserImage]);
-  const colors = useThemeColors();
-
-  const styles = BottomSheetComponentStyle(colors);
-
-  const handleSheetChanges = useCallback((index: number) => {
-    setIsOpen(index !== -1);
-  }, []);
 
   const addComment = async (comment: string) => {
     try {
@@ -95,12 +90,12 @@ const BottomSheetComponent = forwardRef<
           throw err;
         });
       showMessage({
-        message: `${t(LanguageConstant.commentSuccess)}`,
+        message: `${getText('commentSuccess')}`,
         type: 'success',
       });
     } catch (error) {
       showMessage({
-        message: `${t(LanguageConstant.commentError)}`,
+        message: `${getText('commentError')}`,
         type: 'danger',
       });
     }
@@ -109,14 +104,13 @@ const BottomSheetComponent = forwardRef<
   const handleCloseModalPress = () => {
     if (textInputValue.trim() === '') {
       showMessage({
-        message: `${t(LanguageConstant.commentNotEmpty)}`,
+        message: `${getText('commentNotEmpty')}`,
         type: 'danger',
       });
       return;
     }
     addComment(textInputValue);
     sheetRef.current?.close();
-
     setTextInputValue('');
   };
 
@@ -132,7 +126,7 @@ const BottomSheetComponent = forwardRef<
             value={textInputValue}
             onChangeText={setTextInputValue}
             multiline
-            placeholder={t(LanguageConstant.enterComment)}
+            placeholder={getText('enterComment')}
             placeholderTextColor={colors.text}
             style={styles.commentTextInputStyle}
             maxLength={150}
@@ -156,25 +150,29 @@ const BottomSheetComponent = forwardRef<
     <BottomSheet
       index={-1}
       ref={sheetRef}
-      onChange={handleSheetChanges}
+      enablePanDownToClose
       snapPoints={snapPoints}
       handleStyle={styles.handle}
-      handleIndicatorStyle={styles.handleIndicator}
-      containerStyle={styles.sheetContainer}
-      keyboardBehavior="interactive"
-      keyboardBlurBehavior="none"
-      enablePanDownToClose
-      android_keyboardInputMode="adjustResize"
-      backdropComponent={BottomSheetBackdrop}
       enableDynamicSizing={false}
+      keyboardBlurBehavior="none"
+      onChange={handleSheetChanges}
+      keyboardBehavior="interactive"
+      android_keyboardInputMode="adjustResize"
+      backdropComponent={props => (
+        <BottomSheetBackdrop
+          {...props}
+          pressBehavior={'close'}
+          appearsOnIndex={0}
+          disappearsOnIndex={-1}
+        />
+      )}
+      handleIndicatorStyle={styles.handleIndicator}
     >
       <BottomSheetScrollView style={styles.content}>
         <View style={{ flex: 1 }}>
           <View style={styles.viewStyle}>
             <View style={styles.headerView}>
-              <Text style={styles.headerTextStyle}>
-                {t(LanguageConstant.comment)}
-              </Text>
+              <Text style={styles.headerTextStyle}>{getText('comment')}</Text>
             </View>
             {comments.length > 0 ? (
               comments.map((item, index) => (
@@ -187,7 +185,7 @@ const BottomSheetComponent = forwardRef<
               ))
             ) : (
               <Text style={styles.noCommentStyle}>
-                `${t(LanguageConstant.emptyCommentMessage)}`,
+                {`${getText('emptyCommentMessage')}`}
               </Text>
             )}
           </View>
@@ -203,21 +201,19 @@ export default memo(BottomSheetComponent);
 const BottomSheetComponentStyle = (colors: ColorProps) =>
   StyleSheet.create({
     fotter: {
-      position: 'relative',
       left: 0,
       right: 0,
-      backgroundColor: 'green',
-      flexDirection: 'row',
       height: 80,
       alignItems: 'center',
+      position: 'relative',
+      flexDirection: 'row',
+      backgroundColor: 'green',
     },
-    sheetContainer: {
-      // backgroundColor: isOpen ? colors.backgroundtint : 'transparent',
-    },
+
     handle: {
+      height: 30,
       borderTopEndRadius: 15,
       borderTopStartRadius: 15,
-      height: 30,
       backgroundColor: colors.background,
     },
     handleIndicator: {

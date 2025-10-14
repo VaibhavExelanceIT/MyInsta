@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,8 @@ import {
 } from 'react-native';
 
 import * as Yup from 'yup';
-import { t } from 'i18next';
+
 import { Formik } from 'formik';
-import { useTranslation } from 'react-i18next';
 import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
@@ -31,12 +30,8 @@ import {
 } from '../helper/icon';
 import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
+import { getText } from '../constants/language/i18next';
 import { instadark, instalight } from '../helper/images';
-import { LanguageConstant } from '../constants/language_constants';
-
-const validationSchema = Yup.object().shape({
-  title: Yup.string().required(t(LanguageConstant.titleRequired)),
-});
 
 interface PostType {
   title: string;
@@ -45,8 +40,8 @@ interface PostType {
 
 const AddPostScreen = () => {
   const [uri, setUri] = useState<string[]>([]);
+  const [isClicked, setIsClicked] = useState<boolean>(false);
 
-  const { t } = useTranslation();
   const colors = useThemeColors();
   const { isDarkMode } = useTheme();
   const navigation = useNavigation<any>();
@@ -55,11 +50,23 @@ const AddPostScreen = () => {
 
   const currentDate = new Date();
 
-  const dateTime =
-    currentDate.toLocaleDateString() + ' ' + currentDate.toLocaleTimeString();
+  const year = currentDate.getFullYear();
+  const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+  const day = String(currentDate.getDate()).padStart(2, '0');
+
+  const hours = String(currentDate.getHours()).padStart(2, '0');
+  const minutes = String(currentDate.getMinutes()).padStart(2, '0');
+  const seconds = String(currentDate.getSeconds()).padStart(2, '0');
+
+  const dateTime = `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
+  console.log(dateTime);
 
   const currentUser = auth().currentUser;
   const userId = currentUser ? currentUser.uid : null;
+
+  const validationSchema = Yup.object().shape({
+    title: Yup.string().required(getText('titleRequired')),
+  });
 
   const submitHandler = (value: PostType, resetForm: () => void) => {
     if (userId !== null) {
@@ -79,8 +86,8 @@ const AddPostScreen = () => {
         })
         .then(() => {
           showMessage({
-            message: t(LanguageConstant.success),
-            description: t(LanguageConstant.postCreatedSuccesfull),
+            message: getText('success'),
+            description: getText('postCreatedSuccesfull'),
             type: 'success',
           });
           setUri([]);
@@ -91,20 +98,21 @@ const AddPostScreen = () => {
         .catch(() => {
           showMessage({
             type: 'danger',
-            message: t(LanguageConstant.error),
-            description: t(LanguageConstant.error_message),
+            message: getText('error'),
+            description: getText('error_message'),
           });
         });
     } else {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.user_not_found),
+        message: getText('error'),
+        description: getText('user_not_found'),
         type: 'danger',
       });
     }
   };
 
   const imageGallery = () => {
+    setIsClicked(false);
     setUri(ArrayUrl);
   };
 
@@ -133,9 +141,7 @@ const AddPostScreen = () => {
       </View>
       <View style={styles.viewStyle}>
         <ScrollView style={styles.scrollView}>
-          <Text style={styles.addPostScreen}>
-            {t(LanguageConstant.create_post)}
-          </Text>
+          <Text style={styles.addPostScreen}>{getText('create_post')}</Text>
           <View style={styles.postUploadStyle}>
             {uri.length > 0 ? (
               <FlatList
@@ -158,19 +164,25 @@ const AddPostScreen = () => {
                 ) : (
                   <AddOutline height={70} width={70} />
                 )}
-                <Text style={styles.textStyle}>
-                  {t(LanguageConstant.add_image)}
-                </Text>
+                <Text style={styles.textStyle}>{getText('add_image')}</Text>
               </TouchableOpacity>
             )}
           </View>
+          {isClicked && (
+            <Text style={styles.errorText}>
+              {getText('atleastOneImageRequired')}
+            </Text>
+          )}
+
           <Formik
             initialValues={{
               title: '',
               description: '',
             }}
             onSubmit={(values, { resetForm }) => {
-              submitHandler(values, resetForm);
+              uri.length == 0
+                ? setIsClicked(true)
+                : submitHandler(values, resetForm);
             }}
             validationSchema={validationSchema}
           >
@@ -184,7 +196,7 @@ const AddPostScreen = () => {
             }) => (
               <>
                 <TextInput
-                  placeholder={t(LanguageConstant.title_placeholder)}
+                  placeholder={getText('title_placeholder')}
                   style={styles.textInputStyle}
                   value={values.title}
                   onBlur={handleBlur('title')}
@@ -198,7 +210,7 @@ const AddPostScreen = () => {
                 )}
 
                 <TextInput
-                  placeholder={t(LanguageConstant.description_placeHolder)}
+                  placeholder={getText('description_placeHolder')}
                   style={styles.textInputStyle}
                   value={values.description}
                   onBlur={handleBlur('description')}
@@ -212,9 +224,7 @@ const AddPostScreen = () => {
                   style={styles.btnStyle}
                   onPress={() => handleSubmit()}
                 >
-                  <Text style={[styles.textStyle]}>
-                    {t(LanguageConstant.submit)}
-                  </Text>
+                  <Text style={[styles.textStyle]}>{getText('submit')}</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -236,43 +246,43 @@ const addPostScreenScreen = (colors: ColorProps) =>
       alignSelf: 'center',
     },
     textStyle: {
-      color: colors.white,
-      textAlign: 'center',
       fontSize: fs(15),
       fontWeight: '800',
+      color: colors.white,
+      textAlign: 'center',
     },
     btnStyle: {
-      backgroundColor: colors.primaryblue,
-      marginVertical: 10,
       padding: 10,
       borderRadius: 20,
+      marginVertical: 10,
+      backgroundColor: colors.primaryblue,
     },
     mainLayout: {
-      backgroundColor: colors.background,
       flex: 1,
       justifyContent: 'flex-start',
+      backgroundColor: colors.background,
     },
     scrollView: {
       margin: 20,
     },
     textInputStyle: {
-      backgroundColor: colors.inputTextBackground,
+      paddingLeft: 20,
       borderWidth: 0.5,
       borderRadius: 30,
-      paddingLeft: 20,
       marginVertical: 10,
+      backgroundColor: colors.inputTextBackground,
     },
     postUploadStyle: {
-      justifyContent: 'space-between',
       flexDirection: 'row',
+      justifyContent: 'space-between',
     },
     imagePost: {
-      marginVertical: 20,
-      marginHorizontal: 10,
-      height: 50,
       flex: 1,
-      justifyContent: 'center',
+      height: 50,
+      marginVertical: 20,
       alignItems: 'center',
+      marginHorizontal: 10,
+      justifyContent: 'center',
     },
     addPostScreen: {
       fontSize: fs(30),
@@ -281,21 +291,21 @@ const addPostScreenScreen = (colors: ColorProps) =>
       color: colors.text,
     },
     imgStyle: {
-      padding: 10,
       margin: 10,
-      height: 200,
       width: 200,
+      padding: 10,
+      height: 200,
     },
     sortStyle: {
-      flexDirection: 'row',
+      elevation: 5,
       paddingTop: 10,
       paddingBottom: 10,
+      flexDirection: 'row',
+      borderBottomWidth: 1,
       paddingHorizontal: 10,
       justifyContent: 'space-between',
       backgroundColor: colors.background,
       borderBottomColor: colors.modalBorderStyle,
-      borderBottomWidth: 1,
-      elevation: 5,
     },
     userIcon: {
       marginBottom: '2%',

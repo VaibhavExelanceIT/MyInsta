@@ -10,7 +10,6 @@ import {
   ScrollView,
 } from 'react-native';
 
-import { t } from 'i18next';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
@@ -20,10 +19,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
+import { getText } from '../constants/language/i18next';
 import { useThemeColors } from '../hooks/useThemeColors';
 import ProfilePostItem from '../components/ProfilePostItem';
 import { SettingMenu, SettingMenuDark } from '../helper/icon';
-import { LanguageConstant } from '../constants/language_constants';
 import ProfileTopComponent from '../components/ProfileTopComponent';
 
 interface Post {
@@ -52,6 +51,7 @@ interface User {
 
 const ProfileScreen = () => {
   const [post, setPost] = useState<Post[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [usersData, setUserData] = useState<User>();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -67,25 +67,24 @@ const ProfileScreen = () => {
   const colors = useThemeColors();
   const styles = profileScreenStyle(colors);
 
-  const getPostData = async (id: string) => {
+  const getPostData = (id: string) => {
     try {
-      const data = await firestore()
+      firestore()
         .collection('UsersData')
         .doc(id)
         .collection('PostData')
-        .get();
-
-      data.docs.forEach(item => {
-        setPost(prevState => [...prevState, item.data() as Post]);
-      });
-
-      setIsLoading(false);
-
-      return data.docs;
+        .onSnapshot(documentSnapshot => {
+          setPost([]);
+          documentSnapshot.docs.forEach(item => {
+            setPost(prevState => [...prevState, item.data() as Post]);
+            setIsLoading(false);
+            return documentSnapshot.docs;
+          });
+        });
     } catch (error) {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
+        message: getText('error'),
+        description: getText('error_message'),
         type: 'danger',
       });
     }
@@ -99,7 +98,7 @@ const ProfileScreen = () => {
   };
 
   const userData = async () => {
-    return await getAllUsersDataFirestore();
+    return getAllUsersDataFirestore();
   };
   useEffect(() => {
     userData();
@@ -108,23 +107,23 @@ const ProfileScreen = () => {
   useEffect(() => {
     setPost([]);
     const getData = async (id: string) => {
-      usersData?.id ? await getPostData(id) : '';
+      usersData?.id ? getPostData(id) : '';
     };
     usersData?.id ? getData(usersData?.id) : '';
   }, [usersData]);
 
   const getAllUsersDataFirestore = async () => {
     try {
-      const usersCollection = await firestore()
+      const document = await firestore()
         .collection('UsersData')
         .where('email', '==', currentUser?.email)
         .get();
 
-      const documentSnapshot = usersCollection.docs[0].data();
+      const documentSnapshot = document.docs[0].data();
       const data: User = {
         DOB: documentSnapshot.DOB,
         email: documentSnapshot.email,
-        id: usersCollection.docs[0].id,
+        id: document.docs[0].id,
         gender: documentSnapshot.gender,
         mobileNo: documentSnapshot.mobileNo,
         lastName: documentSnapshot.lastName,
@@ -134,10 +133,12 @@ const ProfileScreen = () => {
         firstName: documentSnapshot.firstName,
       };
       setUserData(data);
+
+      setIsLoading(false);
     } catch (error) {
       showMessage({
-        message: t(LanguageConstant.error),
-        description: t(LanguageConstant.error_message),
+        message: getText('error'),
+        description: getText('error_message'),
         type: 'danger',
       });
     }
@@ -159,12 +160,11 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.logoView}>
-          <Text style={styles.profileTextStyle}>
-            {t(LanguageConstant.profile)}
-          </Text>
+          <Text style={styles.profileTextStyle}>{getText('profile')}</Text>
         </View>
       </View>
       <ScrollView
+        key={usersData?.id}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
         }
@@ -173,54 +173,44 @@ const ProfileScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         {!!usersData && (
-          <View style={{ flex: 0.5 }}>
+          <View style={styles.userDataView}>
             <ProfileTopComponent
+              currentUserId={userId}
               totalPost={post.length}
               profilePhoto={usersData.imageUrl}
               follower={usersData.followers.length}
               following={usersData.following.length}
               userName={usersData.firstName + ' ' + usersData.lastName}
-              currentUserId={userId}
             />
           </View>
         )}
-        <View
-          style={{
-            flex: 1,
-            padding: 10,
-            borderTopWidth: 0.5,
-            flexDirection: 'row',
-            borderBottomWidth: 1,
-            justifyContent: 'space-around',
-            borderTopColor: colors.dashcolor,
-          }}
-        />
+        <View style={styles.ViewStyle} />
 
         {isLoading ? (
           <ActivityIndicator
+            size={'large'}
             style={styles.loaderStyle}
             color={colors.activityIndicatorStyle}
-            size={'large'}
           />
         ) : post.length > 0 ? (
           <View style={styles.postStyle}>
             <FlatList
-              scrollEnabled
               data={post}
               numColumns={3}
               horizontal={false}
+              scrollEnabled={false}
               showsVerticalScrollIndicator={false}
               renderItem={({ item }) => (
                 <ProfilePostItem image={item.postURL} />
               )}
-              keyExtractor={item => item.id}
+              keyExtractor={(item, index) =>
+                item.id ? item.id.toString() : index.toString()
+              }
             />
           </View>
         ) : (
           <View style={styles.postStyle}>
-            <Text style={styles.textStyle}>
-              {t(LanguageConstant.noPostTxt)}
-            </Text>
+            <Text style={styles.textStyle}>{getText('noPostTxt')}</Text>
           </View>
         )}
       </ScrollView>
@@ -232,6 +222,16 @@ export default ProfileScreen;
 
 const profileScreenStyle = (colors: ColorProps) =>
   StyleSheet.create({
+    ViewStyle: {
+      flex: 1,
+      padding: 10,
+      borderTopWidth: 0.5,
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      justifyContent: 'space-around',
+      borderTopColor: colors.dashcolor,
+    },
+    userDataView: { flex: 0.5 },
     profileTextStyle: {
       fontSize: fs(25),
       fontWeight: '600',

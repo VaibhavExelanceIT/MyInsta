@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-import { t } from 'i18next';
 import firestore from '@react-native-firebase/firestore';
+import { showMessage } from 'react-native-flash-message';
 
 import { fs } from '../helper/fontSize';
 import { ColorProps } from '../constants/color';
+import { getText } from '../constants/language/i18next';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { LanguageConstant } from '../constants/language_constants';
 
 interface CommentProps {
   comment: string;
@@ -21,8 +21,8 @@ interface UserData {
 }
 
 const CommentComponent: React.FC<CommentProps> = ({ comment, userID }) => {
-  const [isUserData, setIsUserData] = useState<Array<UserData>>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUserData, setIsUserData] = useState<Array<UserData>>([]);
 
   const colors = useThemeColors();
   const styles = commentComponentStyle(colors);
@@ -41,7 +41,11 @@ const CommentComponent: React.FC<CommentProps> = ({ comment, userID }) => {
       setIsUserData(userData);
       setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching user data: ', error);
+      showMessage({
+        message: getText('error_message'),
+        type: 'danger',
+      });
+
       setIsLoading(false);
     }
   };
@@ -52,9 +56,7 @@ const CommentComponent: React.FC<CommentProps> = ({ comment, userID }) => {
   return (
     <View>
       {isLoading ? (
-        <Text style={{ color: colors.text }}>
-          {t(LanguageConstant.loading)}
-        </Text>
+        <Text style={styles.loaderStyle}>{getText('loading')}</Text>
       ) : (
         <View style={styles.viewStyle}>
           {isUserData.length > 0 && (
@@ -81,11 +83,12 @@ export default CommentComponent;
 
 const commentComponentStyle = (color: ColorProps) =>
   StyleSheet.create({
+    loaderStyle: { color: color.text },
     commentStyle: {
-      fontWeight: 'black',
-      fontSize: fs(12),
       margin: 4,
+      fontSize: fs(12),
       color: color.text,
+      fontWeight: 'black',
     },
     nameStyle: { fontWeight: '700', fontSize: fs(12), color: color.text },
     imageStyle: { borderRadius: 20, marginRight: 10 },

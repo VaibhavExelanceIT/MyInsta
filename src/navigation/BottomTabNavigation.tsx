@@ -31,20 +31,21 @@ import {
   BellOutlineLight,
   SearchOutlineDark,
 } from '../helper/icon';
-import { useThemeColors } from '../hooks/useThemeColors';
 import { useTheme } from '../hooks/useTheme';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 const Tab = createBottomTabNavigator();
 const BottomTabNavigation = () => {
   const { isDarkMode } = useTheme();
   const colors = useThemeColors();
+
   return (
     <Tab.Navigator
       screenOptions={{
         animation: 'fade',
         headerShown: false,
-        tabBarShowLabel: false,
         tabBarVariant: 'uikit',
+        tabBarShowLabel: false,
         tabBarStyle: {
           height: '10%',
           paddingTop: 10,

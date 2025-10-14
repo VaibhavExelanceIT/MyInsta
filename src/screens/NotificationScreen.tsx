@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Text,
   View,
+  Image,
   FlatList,
   StyleSheet,
   RefreshControl,
-  ActivityIndicator,
   TouchableOpacity,
-  Image,
-  Text,
+  ActivityIndicator,
 } from 'react-native';
 
-import { t } from 'i18next';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,10 +17,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { fs } from '../helper/fontSize';
 import { useTheme } from '../hooks/useTheme';
 import { ColorProps } from '../constants/color';
+import { getText } from '../constants/language/i18next';
 import { instadark, instalight } from '../helper/images';
 import { useThemeColors } from '../hooks/useThemeColors';
+
 import { SettingMenu, SettingMenuDark } from '../helper/icon';
-import { LanguageConstant } from '../constants/language_constants';
 import UserRequestListComponent from '../components/UserRequestListComponent';
 
 interface userData {
@@ -54,56 +54,80 @@ const NotificationScreen = ({ navigation }: any) => {
 
   useEffect(() => {
     setUserData([]);
-    getRequestCome();
-    getAllUsersDataFirestore();
+
+    const unsubscribeUsers = getAllUsersDataFirestore();
+    const unsubscribeRequest: any = getRequestCome();
+
+    return () => {
+      unsubscribeUsers && unsubscribeUsers();
+      unsubscribeRequest && unsubscribeRequest();
+    };
   }, []);
 
   const onRefresh = () => {
-    getRequestCome();
+    setUserData([]);
     setIsLoading(true);
     setIsRefreshing(true);
-    getAllUsersDataFirestore();
+
+    firestore()
+      .collection('UsersData')
+      .get()
+      .then(snapshot => {
+        const fetchedUsers: userData[] = [];
+        snapshot.forEach(doc => {
+          fetchedUsers.push({ ...doc.data(), id: doc.id } as userData);
+        });
+        console.log('🚀 ~ onRefresh ~ fetchedUsers:', fetchedUsers);
+
+        setUserData(fetchedUsers);
+        setIsLoading(false);
+        setIsRefreshing(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setIsLoading(false);
+        setIsRefreshing(false);
+      });
   };
 
-  const getAllUsersDataFirestore = async () => {
+  const getAllUsersDataFirestore = () => {
     try {
-      const fetchedUsers: userData[] = [];
-      const usersCollection = await firestore().collection('UsersData').get();
-
-      usersCollection.forEach(documentSnapshot => {
-        const data = documentSnapshot.data();
-        fetchedUsers.push({
-          ...data,
-          id: documentSnapshot.id,
-        } as userData);
-      });
-      setIsLoading(false);
-      setIsRefreshing(false);
-      setUserData(fetchedUsers);
+      setUserData([]);
+      const unsubscribe = firestore()
+        .collection('UsersData')
+        .onSnapshot(documentSnapshot => {
+          const fetchedUsers: userData[] = [];
+          documentSnapshot.forEach(doc => {
+            fetchedUsers.push({ ...doc.data(), id: doc.id } as userData);
+          });
+          console.log('fetchedUsers', fetchedUsers);
+          setIsLoading(false);
+          setIsRefreshing(false);
+          setUserData(fetchedUsers);
+        });
+      return unsubscribe;
     } catch (error) {
       setIsLoading(false);
     }
   };
 
-  const getRequestCome = async () => {
+  const getRequestCome = () => {
     try {
-      const usersCollection = await firestore()
+      setUserData([]);
+      const unsubscribe = firestore()
         .collection('UsersData')
         .doc(userId)
-        .get();
-
-      if (usersCollection.exists()) {
-        const data = usersCollection.data();
-
-        setUserRequestData(data?.requestCome);
-      } else {
-        return null;
-      }
-
-      setIsLoading(false);
-      setIsRefreshing(false);
-
-      return usersRequestData;
+        .onSnapshot(documentSnapshot => {
+          if (documentSnapshot.exists()) {
+            const data = documentSnapshot.data();
+            setUserRequestData(data?.requestCome);
+          } else {
+            return null;
+          }
+          setIsLoading(false);
+          setIsRefreshing(false);
+        });
+      return unsubscribe;
     } catch (error) {
       setIsLoading(false);
       return [];
@@ -158,7 +182,7 @@ const NotificationScreen = ({ navigation }: any) => {
         />
       ) : (
         <View style={styles.txtViewStyle}>
-          <Text style={styles.textStyle}>{t(LanguageConstant.noPostTxt)}</Text>
+          <Text style={styles.textStyle}>{getText('noNotification')}</Text>
         </View>
       )}
     </SafeAreaView>
@@ -194,8 +218,8 @@ const notificationScreenStyle = (colors: ColorProps) =>
 
     txtViewStyle: {
       flex: 1,
-      justifyContent: 'center',
       alignSelf: 'center',
+      justifyContent: 'center',
     },
     textStyle: {
       fontSize: fs(16),
